@@ -1,0 +1,715 @@
+<!doctype html>
+<html class="no-js" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<title>Sankey</title>
+		<meta name="description" content="" />
+
+		<meta property="og:title" content="Sankey" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="" />
+		<meta property="og:image" content="" />
+		<meta property="og:image:alt" content="" />
+
+		<meta name="theme-color" content="#fafafa" />
+
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="icon.png" />
+
+		<style>
+			:root {
+				color-scheme: light;
+				--color-hero-highlight: #F0FB00;
+				--color-final-service: #EA7179;
+				--color-sector: #D72C49;
+				--color-equipment: #EC582F;
+				--color-device: #F79525;
+				--color-final-energy: #3DD19B;
+				--color-fuel: #A3D9E1;
+				--color-emissions: #224BB8;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				min-height: 100%;
+			}
+
+			body {
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+				line-height: 1.4;
+			}
+
+			#hero-intro {
+				background: #000;
+				position: relative;
+			}
+
+			.hero-stage {
+				height: 100vh;
+				overflow: hidden;
+				position: relative;
+			}
+
+			.hero-globe {
+				left: 50%;
+				max-width: min(92vw, 1120px);
+				opacity: 0;
+				position: absolute;
+				top: 52%;
+				transform: translate(-50%, -50%);
+				transform-origin: 50% 50%;
+				width: 72vw;
+				will-change: transform, opacity;
+				z-index: 1;
+			}
+
+			.hero-logo {
+				left: 50%;
+				opacity: 0;
+				position: absolute;
+				top: clamp(1.4rem, 4.4vh, 3rem);
+				transform: translateX(-50%);
+				width: min(350px, 80vw);
+				will-change: transform, opacity;
+				z-index: 4;
+			}
+
+			.hero-logo svg {
+				height: auto;
+				display: block;
+				width: 100%;
+			}
+
+			.hero-copy {
+				display: grid;
+				gap: clamp(0.8rem, 2.2vh, 1.6rem);
+				left: 50%;
+				max-width: min(1240px, 95vw);
+				place-items: center;
+				position: absolute;
+				top: 52%;
+				transform: translate(-50%, -50%);
+				width: 100%;
+				z-index: 5;
+			}
+
+			.hero-headline {
+				color: var(--color-hero-highlight);
+				font-size: clamp(2.2rem, 9vw, 8.1rem);
+				font-weight: 860;
+				letter-spacing: -0.03em;
+				line-height: 0.88;
+				margin: 0;
+				opacity: 0;
+				text-align: center;
+				text-transform: uppercase;
+				text-wrap: balance;
+				will-change: transform, opacity;
+			}
+
+			.hero-subtitle {
+				color: #e8edf5;
+				font-size: clamp(1.05rem, 2.3vw, 1.6rem);
+				font-weight: 500;
+				line-height: 1.25;
+				margin: 0;
+				max-width: 54ch;
+				opacity: 0;
+				text-align: center;
+				transform: translateY(28px);
+				will-change: transform, opacity;
+			}
+
+			#intro-anchor {
+				height: 0;
+				overflow: hidden;
+			}
+
+			#emissions-landscape {
+				background: radial-gradient(120% 90% at 55% 52%, rgba(255, 172, 34, 0.14), transparent 54%), #010101;
+				color: #fff;
+				overflow: clip;
+				padding: 0;
+			}
+
+			.landscape-layout {
+				min-height: 320vh;
+				position: relative;
+			}
+
+			.landscape-copy {
+				display: grid;
+				gap: 8vh;
+				margin-top: -100vh;
+				padding: 14vh 6vw 22vh;
+				place-items: center;
+				position: relative;
+				z-index: 2;
+			}
+
+			.landscape-snippet {
+				color: #e5ee35;
+				display: flex;
+				font-size: clamp(1.9rem, 5vw, 3rem);
+				font-weight: 850;
+				letter-spacing: -0.03em;
+				line-height: 0.96;
+				margin: 0;
+				max-width: 1200px;
+				min-height: 88vh;
+				opacity: 0.92;
+				text-align: center;
+				text-shadow: 0 0 16px rgba(211, 220, 47, 0.2), 0 0 48px rgba(211, 220, 47, 0.09);
+				text-wrap: balance;
+				z-index: 2;
+			}
+
+			.landscape-snippet + .landscape-snippet {
+				margin-top: 4vh;
+			}
+
+			[data-animation="word-reveal"] {
+				contain: paint;
+			}
+
+			.reveal-word {
+				display: inline-block;
+				opacity: 0.12;
+				transform: translate3d(0, 0.55em, 0) scale(0.95);
+				filter: blur(7px);
+				will-change: opacity, transform, filter;
+			}
+
+			.landscape-visual {
+				display: grid;
+				isolation: isolate;
+				place-items: center;
+				position: sticky;
+				top: 0;
+				height: 100vh;
+				z-index: 1;
+			}
+
+			.bars-canvas {
+				height: min(74vh, 620px);
+				filter: brightness(0.9) saturate(1.15);
+				position: relative;
+				width: min(96vw, 1240px);
+			}
+
+			.vector-bar {
+				background: var(--color-final-service);
+				height: clamp(240px, 58vh, 520px);
+				left: 50%;
+				position: absolute;
+				top: 50%;
+				transform: translate(-50%, -50%);
+				width: clamp(22px, 2.1vw, 34px);
+			}
+
+			.vector-bar[data-bar="0"] {
+				background: var(--color-final-service);
+			}
+
+			.vector-bar[data-bar="1"] {
+				background: var(--color-sector);
+			}
+
+			.vector-bar[data-bar="2"] {
+				background: var(--color-equipment);
+			}
+
+			.vector-bar[data-bar="3"] {
+				background: var(--color-device);
+			}
+
+			.vector-bar[data-bar="4"] {
+				background: var(--color-final-energy);
+			}
+
+			.vector-bar[data-bar="5"] {
+				background: var(--color-fuel);
+			}
+
+			.vector-bar[data-bar="6"] {
+				background: var(--color-emissions);
+			}
+
+			#full-sankey {
+				background:
+					radial-gradient(120% 120% at 10% 10%, rgba(0, 141, 255, 0.14), transparent 45%),
+					linear-gradient(180deg, #031226 0%, #020b18 100%);
+				color: #e8f4ff;
+				padding: 4.2rem 2.2rem;
+			}
+
+			.sankey-shell {
+				border: 1px solid rgba(115, 170, 220, 0.22);
+				border-radius: 14px;
+				overflow: hidden;
+			}
+
+			.sankey-meta {
+				align-items: center;
+				backdrop-filter: blur(8px);
+				background: rgba(2, 14, 29, 0.92);
+				border-bottom: 1px solid rgba(115, 170, 220, 0.22);
+				display: flex;
+				gap: 0.9rem;
+				justify-content: space-between;
+				padding: 0.85rem 1rem;
+			}
+
+			.sankey-title {
+				font-size: 0.95rem;
+				font-weight: 650;
+				letter-spacing: 0.02em;
+				margin: 0;
+			}
+
+			#sankey-status {
+				color: rgba(229, 241, 255, 0.85);
+				font-size: 0.8rem;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+			}
+
+			#sankey-chart {
+				display: block;
+				height: 74vh;
+				min-height: 640px;
+				width: 100%;
+			}
+
+			.sankey-stage-label {
+				fill: rgba(198, 222, 245, 0.75);
+				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 12px;
+				font-weight: 600;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+
+			.sankey-node rect {
+				fill: rgba(154, 173, 194, 0.85);
+				rx: 0;
+				ry: 0;
+				stroke: rgba(220, 238, 255, 0.45);
+				stroke-width: 1;
+			}
+
+			.sankey-node.stage-1 rect {
+				fill: var(--color-final-service);
+			}
+
+			.sankey-node.stage-2 rect {
+				fill: var(--color-sector);
+			}
+
+			.sankey-node.stage-3 rect {
+				fill: var(--color-equipment);
+			}
+
+			.sankey-node.stage-4 rect {
+				fill: var(--color-device);
+			}
+
+			.sankey-node.stage-5 rect {
+				fill: var(--color-final-energy);
+			}
+
+			.sankey-node.stage-6 rect {
+				fill: var(--color-fuel);
+			}
+
+			.sankey-node.stage-7 rect {
+				fill: var(--color-emissions);
+			}
+
+			.sankey-node text {
+				fill: #eef5ff;
+				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 11px;
+				pointer-events: none;
+			}
+
+			.sankey-link {
+				fill: none;
+				mix-blend-mode: screen;
+				stroke: rgba(208, 222, 235, 0.38);
+				transition: opacity 220ms ease, stroke 220ms ease;
+			}
+
+			.sankey-link.is-active {
+				stroke: rgba(110, 188, 255, 0.95);
+			}
+
+			.sankey-link.is-faded,
+			.sankey-node.is-faded {
+				opacity: 0.08;
+			}
+
+			.sankey-node.is-selected rect {
+				stroke: #d4ecff;
+				stroke-width: 1.6;
+			}
+
+			@media (max-width: 900px) {
+				.hero-globe {
+					max-width: 160vw;
+					top: 51%;
+					width: 150vw;
+				}
+
+				.hero-copy {
+					top: 53%;
+					width: min(94vw, 42rem);
+				}
+
+				.hero-headline {
+					font-size: clamp(2.1rem, 13.6vw, 4.7rem);
+					line-height: 0.9;
+				}
+
+				.hero-subtitle {
+					font-size: clamp(0.95rem, 4.4vw, 1.2rem);
+					max-width: 32ch;
+				}
+
+				.landscape-layout {
+					min-height: 270vh;
+				}
+
+				.landscape-visual {
+					height: 100vh;
+					position: sticky;
+					top: 0;
+				}
+
+				.landscape-copy {
+					margin-top: -100vh;
+					padding: 12vh 8vw 16vh;
+				}
+
+				.landscape-snippet {
+					font-size: clamp(1.45rem, 8.8vw, 2.6rem);
+					max-width: 15ch;
+					min-height: 74vh;
+				}
+
+				.bars-canvas {
+					height: min(62vh, 460px);
+					width: 120vw;
+				}
+
+				#full-sankey {
+					padding: 2.5rem 1rem;
+				}
+
+				#sankey-chart {
+					height: 65vh;
+					min-height: 520px;
+				}
+
+				.sankey-meta {
+					align-items: flex-start;
+					flex-direction: column;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.hero-globe,
+				.hero-logo,
+				.hero-headline,
+				.hero-subtitle {
+					transform: none !important;
+					will-change: auto;
+				}
+
+				.reveal-word {
+					filter: none !important;
+					opacity: 1 !important;
+					transform: none !important;
+					will-change: auto;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<section id="hero-intro" aria-label="Opening hero scene">
+			<div class="hero-stage">
+				<img class="hero-globe" src="globe.png" alt="Earth globe visual" />
+				<div class="hero-logo" aria-hidden="true">
+					<svg id="logo--light" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="262.547" height="46.656" viewBox="0 0 262.547 46.656">
+						<defs>
+							<clipPath id="clip-path">
+								<rect id="Rectangle_1" data-name="Rectangle 1" width="262.547" height="46.656" fill="#000"></rect>
+							</clipPath>
+						</defs>
+						<g id="Group_1" data-name="Group 1" clip-path="url(#clip-path)">
+							<path d="M438.3,16.687q0-6.926,0-13.852c0-.753,0-.756.771-.756,3.89,0,7.781-.035,11.67.014a13.623,13.623,0,0,1,6.277,1.343,7.835,7.835,0,0,1,4.4,6.058,8.46,8.46,0,0,1-1.1,5.916,8.328,8.328,0,0,1-4.2,3.349,18.282,18.282,0,0,1-1.978.617c-.354.1-.362.222-.144.51q3.385,4.467,6.747,8.952c.512.679,1.031,1.352,1.545,2.03.257.339.188.49-.257.485q-1.594-.018-3.189.006a.754.754,0,0,1-.669-.347q-2.329-3.134-4.666-6.262c-1.1-1.477-2.214-2.946-3.313-4.426a.651.651,0,0,0-.585-.284c-2.451.006-4.9.011-7.354-.006-.469,0-.507.235-.506.6q.01,5.035,0,10.07c0,.678,0,.667-.66.653-.71-.015-1.422-.031-2.131,0-.506.024-.673-.137-.671-.66.019-4.671.011-9.341.011-14.012m3.449-5.54h0c0,1.74.016,3.48-.01,5.22-.008.487.129.635.626.631,2.734-.023,5.47-.007,8.2-.014a9.884,9.884,0,0,0,2.741-.308c2.518-.726,4.355-2.11,4.724-4.9a5.127,5.127,0,0,0-1.569-4.691,7.123,7.123,0,0,0-4.891-1.762c-3.107-.059-6.215-.012-9.323-.025-.4,0-.515.133-.512.525.018,1.775.008,3.551.008,5.326" transform="translate(-340.924 -1.608)" fill="#000"></path>
+							<path d="M1072.709,7.919V9.5q0,10.6,0,21.209c0,.682,0,.675-.689.667-.71-.009-1.422-.012-2.132,0-.346.007-.48-.131-.468-.474.016-.479,0-.959,0-1.439q0-13.322,0-26.644c0-.686.033-.721.72-.723.657,0,1.315.009,1.972,0a.834.834,0,0,1,.73.348q3.752,4.795,7.512,9.582,3.084,3.932,6.167,7.865,1.906,2.423,3.836,4.826c.1.125.181.381.373.314s.1-.314.1-.479q.007-10.791,0-21.582c0-.868,0-.869.881-.871.64,0,1.28.016,1.919,0,.423-.014.563.167.558.572-.014,1.048,0,2.1,0,3.144q0,12.389,0,24.779c0,.78,0,.78-.794.784h-.32c-1.736,0-1.711-.015-2.768-1.39-1.6-2.08-3.236-4.128-4.855-6.191q-3.085-3.931-6.169-7.863-2.992-3.8-6-7.594a.868.868,0,0,0-.576-.418" transform="translate(-831.858 -1.629)" fill="#000"></path>
+							<path d="M930.635,16.705c0-4.654.009-9.308-.012-13.962,0-.548.162-.684.7-.681,3.82.023,7.64-.008,11.46.023a14.29,14.29,0,0,1,6.5,1.341,8.067,8.067,0,0,1,4.495,8.38c-.289,3.38-2.222,5.577-5.24,6.9a11.512,11.512,0,0,1-2.02.639c-.516.12-.391.33-.182.609q1.148,1.531,2.3,3.06,2.012,2.677,4.025,5.353c.587.777,1.195,1.54,1.773,2.324.115.156.361.313.236.548-.111.208-.356.1-.54.1-1.01.018-2.02.013-3.029.039a.756.756,0,0,1-.668-.356q-2.525-3.387-5.048-6.776-1.444-1.94-2.88-3.886a.772.772,0,0,0-.68-.331c-2.381.01-4.762.015-7.142,0-.487,0-.6.2-.594.638.012,3.322.006,6.644.007,9.965,0,.748-.039.793-.778.778-.709-.015-1.42-.069-2.128-.05-.454.012-.562-.152-.561-.585.014-4.69.009-9.379.009-14.069Zm3.393-5.583c0,1.722.018,3.445-.011,5.167-.009.531.142.709.689.7,2.646-.023,5.292,0,7.938-.01a12.773,12.773,0,0,0,2.8-.286c2.7-.611,5.13-2.609,4.907-6.107a4.973,4.973,0,0,0-1.325-3.218,7.105,7.105,0,0,0-5.2-2.053q-4.63-.144-9.266-.028c-.424.01-.542.146-.537.558.02,1.758.008,3.516.008,5.273" transform="translate(-723.893 -1.604)" fill="#000"></path>
+							<path d="M762.053,15.758c.082-4.913,1.583-8.783,4.9-11.87a13.915,13.915,0,0,1,5.746-3.2,15.484,15.484,0,0,1,5.3-.6,14.363,14.363,0,0,1,9.707,4.35,14.668,14.668,0,0,1,3.821,7.061,16.031,16.031,0,0,1,.093,6.737,14.754,14.754,0,0,1-5.478,9.015,13.821,13.821,0,0,1-5.15,2.541,15.813,15.813,0,0,1-7.58.138,13.841,13.841,0,0,1-7.511-4.441,15.079,15.079,0,0,1-3.541-7.206,10.369,10.369,0,0,1-.306-2.524M776.977,3.221a9.907,9.907,0,0,0-4.314.82c-4.569,1.952-6.866,6.035-7.064,10.732a12.388,12.388,0,0,0,1.3,6.011,11.147,11.147,0,0,0,11.565,6.269,10.65,10.65,0,0,0,8.5-5.9A12.282,12.282,0,0,0,787.152,9.7a10.889,10.889,0,0,0-10.175-6.476" transform="translate(-592.759 -0.045)" fill="#000"></path>
+							<path d="M322.2,21.6l-.311.005a3.04,3.04,0,0,0-.316-.032c-2.292,0-4.583.015-6.874-.01-.532-.006-.705.143-.7.689.024,3.019,0,6.038.02,9.058,0,.4-.115.534-.511.519-.692-.025-1.386-.026-2.078,0-.423.015-.55-.148-.55-.56q.013-13.96,0-27.919c0-.407.118-.574.546-.566,3.708.073,7.418-.089,11.128.088a14.18,14.18,0,0,1,4,.677A8.506,8.506,0,0,1,331.9,8.3a10,10,0,0,1,.644,4.535,8.089,8.089,0,0,1-2.193,5.281,10.6,10.6,0,0,1-6.343,3.165c-.605.094-1.207.209-1.81.314m-8.1-9.425c0,1.918.016,3.835-.01,5.752-.007.52.169.668.673.662q2.69-.037,5.38,0a14.744,14.744,0,0,0,4.265-.433,6.916,6.916,0,0,0,3.545-2.211,6,6,0,0,0,1.263-4.631,5.346,5.346,0,0,0-2.459-4.144,8.568,8.568,0,0,0-4.633-1.328c-2.467-.061-4.936,0-7.4-.021-.5,0-.635.18-.629.66.023,1.9.01,3.8.009,5.7" transform="translate(-241.817 -2.164)" fill="#000"></path>
+							<path d="M641.089.022A15.322,15.322,0,0,1,652.2,4.291c.338.321.366.541.04.869-.551.552-1.081,1.126-1.607,1.7-.232.254-.4.31-.689.034a12.978,12.978,0,0,0-5.825-3.356,11.43,11.43,0,0,0-5.942.038,10.812,10.812,0,0,0-4.7,2.682,11.07,11.07,0,0,0-2.91,4.746,13.066,13.066,0,0,0,.132,8.555,10.991,10.991,0,0,0,7.153,7.042,11.4,11.4,0,0,0,6.959-.041,13.474,13.474,0,0,0,5.235-3.247c.48-.447.5-.439.97.034s1,.959,1.508,1.424c.219.2.227.349.014.568a15.669,15.669,0,0,1-6.85,4.319,16.2,16.2,0,0,1-6.9.446,13.947,13.947,0,0,1-7.606-3.6,14.62,14.62,0,0,1-4.353-7.5,15.877,15.877,0,0,1,.468-9.216,14.377,14.377,0,0,1,4.483-6.461A14.041,14.041,0,0,1,637.266.519a12.189,12.189,0,0,1,3.823-.5" transform="translate(-487.22 0)" fill="#000"></path>
+							<path d="M.018,15.546a15.05,15.05,0,0,1,2.576-9A13.9,13.9,0,0,1,9.788,1a16.613,16.613,0,0,1,7.544-.67,15.105,15.105,0,0,1,8.5,4.11c.309.283.318.508.042.8q-.879.928-1.74,1.872c-.185.2-.323.12-.493-.024A24.4,24.4,0,0,0,21.3,5.251a11.166,11.166,0,0,0-7.853-1.864,10.9,10.9,0,0,0-9.323,7.93,12.242,12.242,0,0,0-.378,6.449c.865,4.1,3.1,7.27,7.123,8.749a11.315,11.315,0,0,0,11.489-1.962c.5-.4.981-.818,1.459-1.24a.415.415,0,0,1,.678.015c.527.551,1.071,1.085,1.62,1.614.211.2.227.365.012.578a16.331,16.331,0,0,1-6.477,4.144,16.22,16.22,0,0,1-7.148.588,13.8,13.8,0,0,1-7.483-3.4A14.261,14.261,0,0,1,.856,20.6a13.445,13.445,0,0,1-.839-5.053" transform="translate(0 -0.133)" fill="#000"></path>
+							<path d="M173.443,18.847c-.192-.38-.551-.4-.827-.525-3.763-1.646-7.535-3.269-11.3-4.906q-4.816-2.092-9.625-4.2c-.616-.269-1.226-.556-1.856-.788a.676.676,0,0,1-.5-.758c.023-.746.008-1.492.012-2.238,0-.546.079-.613.582-.4,1.057.449,2.1.923,3.155,1.385Q159.541,9.262,166,12.106c3.511,1.551,6.985,3.19,10.541,4.63a1.91,1.91,0,0,1,1.434,2.287c-.11,1.2-.028,1.2-1.119,1.68q-7.208,3.183-14.412,6.373-6.214,2.746-12.431,5.486c-.644.284-.664.269-.667-.437,0-.8,0-1.6,0-2.4a.527.527,0,0,1,.349-.576q5.534-2.377,11.054-4.786c2.871-1.25,5.736-2.516,8.607-3.768,1.356-.591,2.719-1.164,4.09-1.75" transform="translate(-116.158 -3.828)" fill="#000"></path>
+							<path d="M580.5,16.716V30.677c0,.7-.02.723-.708.73-.711.006-1.421,0-2.132,0-.423,0-.613-.158-.612-.639q.022-13.988.012-27.976c0-.668.05-.712.736-.714.711,0,1.423.023,2.132-.01.453-.021.576.149.575.582q-.018,6.847-.007,13.695v.373Z" transform="translate(-448.862 -1.606)" fill="#000"></path>
+							<path d="M179.9,45.55q0-2.822,0-5.644c0-.57.058-.61.566-.394.744.316,1.489.629,2.223.968a.538.538,0,0,1,.345.622c-.072.739-.036,1.488-.037,2.233,0,2.183-.02,4.367.015,6.549a.85.85,0,0,1-.6.926c-.727.262-1.42.6-2.131.9-.407.17-.379-.155-.379-.406q0-2.13,0-4.26,0-.745,0-1.491" transform="translate(-139.935 -30.64)" fill="#000"></path>
+							<path d="M606.464,175.013c0,1.226.005,2.451-.006,3.677,0,.211.114.513-.188.6a.727.727,0,0,1-.858-.236c-.78-1.01-1.582-2-2.371-3.006-.724-.919-1.441-1.844-2.166-2.763-.1-.133-.207-.35-.411-.268s-.147.305-.148.478q-.007,2.611-.005,5.222c0,.317.061.634-.464.622-.5-.011-.591-.232-.59-.659.009-2.416,0-4.832,0-7.247,0-.252-.1-.591.249-.682a.846.846,0,0,1,.964.26q.941,1.223,1.892,2.438,1.267,1.609,2.547,3.208c.092.115.151.337.347.248.14-.063.078-.255.078-.392,0-1.723.014-3.446,0-5.169,0-.457.14-.619.609-.639.524-.022.526.261.524.631-.008,1.226,0,2.451,0,3.677" transform="translate(-466.13 -132.783)" fill="#000"></path>
+							<path d="M889.649,175.081c0-1.19-.007-2.379.005-3.568,0-.262-.129-.634.247-.728a.892.892,0,0,1,1,.315c.8,1.041,1.612,2.067,2.423,3.1q1.035,1.316,2.076,2.627c.083.1.146.287.315.228s.1-.246.1-.375q.01-2.636.007-5.273c0-.358-.022-.664.509-.654.5.01.525.277.524.655-.006,2.4,0,4.793-.008,7.19,0,.254.161.617-.223.739a.755.755,0,0,1-.866-.349c-1.477-1.881-2.97-3.749-4.458-5.622a1.66,1.66,0,0,0-.129-.169c-.1-.093-.164-.271-.335-.2-.136.054-.088.212-.1.331-.129.9.028,1.8-.035,2.707-.065.937-.034,1.881-.012,2.822.009.414-.168.5-.542.511-.39.01-.494-.151-.492-.5.008-1.26,0-2.52,0-3.781Z" transform="translate(-692.01 -132.816)" fill="#000"></path>
+							<path d="M686.121,175.028c0-1.225.016-2.45-.007-3.674-.009-.464.153-.623.618-.617q2.529.031,5.059,0c.439-.006.558.175.559.561s-.124.568-.562.559c-1.331-.026-2.663,0-3.995-.016-.418-.006-.572.134-.551.552.026.531.018,1.065,0,1.6-.012.366.126.5.5.5,1.154-.017,2.308-.007,3.462,0,.34,0,.633.026.632.5,0,.385-.118.547-.517.542-1.171-.015-2.344.014-3.515-.017-.456-.012-.591.149-.566.581a14.176,14.176,0,0,1,0,1.6c-.025.449.148.583.586.576,1.347-.023,2.7,0,4.043-.016.386-.005.547.105.528.512-.017.359-.037.605-.513.6-1.757-.02-3.515-.012-5.273,0-.373,0-.5-.136-.5-.5.013-1.278,0-2.556.005-3.834" transform="translate(-533.7 -132.809)" fill="#000"></path>
+							<path d="M850.708,175.1c0-1.243.015-2.486-.008-3.728-.009-.468.161-.621.622-.615,1.669.021,3.338.019,5.007,0,.407,0,.571.124.569.55s-.169.557-.573.553c-1.314-.014-2.628.008-3.942-.011-.412-.006-.579.122-.556.547a11.158,11.158,0,0,1-.006,1.49c-.041.517.182.63.654.618,1.118-.028,2.237,0,3.355-.01.42,0,.619.149.584.6-.031.406-.277.437-.586.436-1.154,0-2.309.012-3.462-.011-.416-.008-.572.119-.546.545a14.2,14.2,0,0,1,0,1.65c-.026.468.183.567.6.56,1.314-.02,2.628,0,3.942-.015.408-.006.62.068.615.547,0,.461-.185.564-.607.559q-2.556-.027-5.113,0c-.416,0-.567-.129-.561-.548.018-1.242.007-2.485.007-3.728Z" transform="translate(-661.724 -132.824)" fill="#000"></path>
+							<path d="M975.21,176.144a9.622,9.622,0,0,0,.008,1.065.982.982,0,0,1-.558,1.039,5.023,5.023,0,0,1-4.869.413,4.528,4.528,0,0,1,.054-7.972,4.9,4.9,0,0,1,4.778.476c.189.16.4.314.145.55-.225.211-.355.718-.829.364a3.669,3.669,0,0,0-2.324-.762,3.235,3.235,0,0,0-2.93,2.611,4.214,4.214,0,0,0,.232,2.282,3.1,3.1,0,0,0,3.476,1.813,5.932,5.932,0,0,0,.771-.2,1.682,1.682,0,0,0,1-2.222c-.073-.225-.237-.232-.419-.233-.551,0-1.1-.021-1.652,0-.418.016-.459-.222-.453-.542s.008-.563.44-.553c.888.02,1.777.013,2.665,0,.35-.005.475.144.464.48-.015.461,0,.924,0,1.386Z" transform="translate(-752.531 -132.453)" fill="#000"></path>
+							<path d="M1060.721,170.414a4.221,4.221,0,0,1,4.342,4.409,4.319,4.319,0,0,1-4.5,4.368,4.39,4.39,0,0,1,.154-8.777m3.2,4.4a3.228,3.228,0,1,0-3.123,3.371,3.26,3.26,0,0,0,3.123-3.371" transform="translate(-821.687 -132.55)" fill="#000"></path>
+							<path d="M798.123,174.235v.734a1.222,1.222,0,0,0,0,.651q-.009,1.917-.017,3.833a.589.589,0,0,1-.721.156c-.287-.094-.232-.365-.232-.59q0-3.594,0-7.188c0-.2-.08-.48.179-.558a.844.844,0,0,1,.856.127,2.275,2.275,0,0,1,.315.426q1.157,1.751,2.31,3.5c.2.3.363.4.6.008.356-.59.761-1.15,1.144-1.724.462-.692.929-1.382,1.381-2.08.259-.4.655-.339,1.005-.273s.2.409.2.631c.01,2.378,0,4.756.008,7.134,0,.341.015.641-.476.63-.444-.01-.516-.237-.513-.616.012-1.792.007-3.585,0-5.377,0-.148.089-.364-.1-.425s-.247.149-.334.279c-.763,1.131-1.532,2.257-2.289,3.392-.227.341-.4.408-.645.008-.3-.482-.633-.938-.953-1.405l-1.672-2.44a2.533,2.533,0,0,0-.058,1.162" transform="translate(-620.067 -133.18)" fill="#000"></path>
+							<path d="M726.721,170.578a3.955,3.955,0,0,1,2.608.719c.262.178.465.342.185.668-.227.265-.381.586-.828.244a3.23,3.23,0,0,0-2.236-.674,1.355,1.355,0,0,0-1.365,1.751c.261.646.922.769,1.512.938a11.911,11.911,0,0,1,2.175.667,2.067,2.067,0,0,1,1.17,2.342,2.358,2.358,0,0,1-1.581,1.832,4.637,4.637,0,0,1-4.527-.914c-.24-.192-.327-.352-.086-.6.221-.228.407-.554.772-.211a3.968,3.968,0,0,0,2.263.952c.8.11,2.01-.307,2.031-1.245a1.113,1.113,0,0,0-.747-1.213,17.625,17.625,0,0,0-2.285-.667,2.307,2.307,0,0,1,.3-4.581,3.819,3.819,0,0,1,.635-.005" transform="translate(-562.862 -132.676)" fill="#000"></path>
+							<path d="M1106.756,173.839c0-.87.009-1.739,0-2.609-.005-.36.093-.511.493-.463.338.04.643.01.64.487q-.013,2.262,0,4.526a2.632,2.632,0,0,0,.544,1.788,2.592,2.592,0,0,0,2.864.684,2.282,2.282,0,0,0,1.456-2.26c.019-1.491.007-2.982,0-4.472,0-.383-.055-.73.543-.733.571,0,.574.292.572.7-.011,1.562.021,3.124-.013,4.685a3.336,3.336,0,0,1-.9,2.261,3.585,3.585,0,0,1-3.011,1.013,3.292,3.292,0,0,1-3.186-3.534c.024-.691,0-1.384,0-2.076Z" transform="translate(-860.896 -132.826)" fill="#000"></path>
+							<path d="M1152.959,174.979c0-1.224.007-2.448,0-3.671,0-.386.017-.562.538-.566.956-.008,1.91-.032,2.864.04a3.315,3.315,0,0,1,2.191.79,2.585,2.585,0,0,1,.78,2.463,2.7,2.7,0,0,1-2.152,2.165,9.135,9.135,0,0,1-2.588.178c-.419,0-.568.156-.553.567.022.62-.006,1.242.008,1.862.009.416-.177.551-.58.561-.43.011-.506-.21-.505-.558,0-1.277,0-2.554,0-3.831m1.02-1.444h0c0,.462,0,.924,0,1.385,0,.279.1.445.4.436a13.988,13.988,0,0,0,2.337-.091,1.719,1.719,0,0,0-.163-3.43c-.708-.041-1.42-.018-2.131-.031-.316-.006-.451.137-.443.451.01.426,0,.852,0,1.279" transform="translate(-896.836 -132.805)" fill="#000"></path>
+							<path d="M641.491,170.66c.4-.108.6.173.749.527q1.179,2.861,2.356,5.724a3.05,3.05,0,0,0,.133.29c.048.089.053.225.179.242.165.022.2-.136.243-.237.342-.8.672-1.6,1.007-2.4.531-1.272,1.06-2.545,1.6-3.814a.9.9,0,0,1,1.052-.293c.2.147.13.349.051.532q-1.013,2.364-2.032,4.726c-.434,1.007-.882,2.008-1.3,3.022a.517.517,0,0,1-.581.346c-.267-.01-.488-.009-.629-.346-.891-2.135-1.815-4.256-2.727-6.382-.188-.437-.373-.876-.56-1.313-.223-.52-.158-.618.461-.623" transform="translate(-498.539 -132.722)" fill="#000"></path>
+							<path d="M1020.769,177.563l-.078-.106a1,1,0,0,0-1.073-.751c-.443.028-.888.014-1.332,0-.424-.01-.605.159-.589.6.027.763.006,1.528.007,2.292,0,.218-.054.4-.315.4a.408.408,0,0,1-.413-.346,1.064,1.064,0,0,1-.013-.265c0-2.345.006-4.69-.008-7.035,0-.421.146-.561.561-.554q1.705.03,3.411,0a2.992,2.992,0,0,1,1.633.55c.118.073.2.2.361.2l0,0a5.055,5.055,0,0,1,.412.9,2.263,2.263,0,0,1-1.429,2.858c-.11.053-.212.128-.325.172-.27.1-.311.261-.142.489.294.4.6.789.874,1.2a12.971,12.971,0,0,1,1.228,1.757,1.434,1.434,0,0,1-1.52-.828,6.193,6.193,0,0,0-1.253-1.549m-2.938-3.3h0c0,.408.01.815,0,1.223-.01.316.133.466.439.458a22.47,22.47,0,0,0,2.654-.074,1.715,1.715,0,0,0,1.6-1.62c.009-.877-.563-1.424-1.585-1.6a19.111,19.111,0,0,0-2.6-.083c-.363-.013-.509.178-.5.526.007.39,0,.78,0,1.17" transform="translate(-791.047 -133.639)" fill="#000"></path>
+							<path d="M934.766,175.6c0,1.066-.031,2.132.012,3.2.024.592-.354.558-.717.582-.43.027-.42-.3-.421-.587-.006-2.113-.021-4.227.007-6.34.007-.511-.169-.65-.643-.624-.567.031-1.138-.017-1.7.016-.472.028-.462-.258-.46-.577,0-.3-.009-.549.435-.544q2.9.033,5.808,0c.476-.005.455.261.455.578s0,.56-.443.538c-.62-.031-1.243.005-1.865-.011-.344-.009-.469.117-.464.465.016,1.1.006,2.2.006,3.3h-.006" transform="translate(-724.062 -132.801)" fill="#000"></path>
+							<path d="M761.039,175.666c0,1.065-.011,2.131.006,3.2.006.385-.112.539-.518.525-.39-.013-.638-.057-.634-.545.018-2.095-.008-4.19.019-6.285.007-.525-.121-.745-.678-.7s-1.1,0-1.651.011c-.4.009-.469-.215-.468-.545s.053-.552.458-.55q2.93.011,5.86,0c.375,0,.438.229.448.52.01.313-.05.577-.447.578-.568,0-1.138.031-1.7-.009-.516-.036-.728.1-.7.667.047,1.045.014,2.094.014,3.142Z" transform="translate(-588.929 -132.834)" fill="#000"></path>
+							<path d="M577.115,175.007c0-1.242.009-2.484-.005-3.725,0-.384.073-.588.527-.575.421.012.618.125.616.576q-.016,3.725,0,7.45c0,.491-.267.528-.644.548-.426.023-.5-.188-.5-.549.011-1.242,0-2.483,0-3.725" transform="translate(-448.91 -132.786)" fill="#000"></path>
+							<path d="M1022.339,171.61c-.158,0-.243-.131-.361-.2a2.991,2.991,0,0,0-1.633-.55q-1.705.025-3.411,0c-.414-.007-.563.134-.561.554.014,2.345.007,4.69.008,7.035a1.063,1.063,0,0,0,.013.265.407.407,0,0,0,.412.346c.262,0,.315-.181.315-.4,0-.764.021-1.529-.007-2.292-.016-.446.165-.614.589-.6.444.011.89.024,1.332,0a1,1,0,0,1,1.073.751c-.671-.752-1.561-.435-2.375-.486-.335-.021-.352.217-.352.464,0,.727-.015,1.454,0,2.181.011.433-.147.592-.591.591s-.59-.124-.587-.574c.016-2.518.01-5.036,0-7.554,0-.377.1-.543.508-.536,1.152.022,2.309-.051,3.457.026a2.577,2.577,0,0,1,2.167.991" transform="translate(-790.466 -132.689)" fill="#000"></path>
+							<path d="M1034.129,180.227a6.192,6.192,0,0,1,1.252,1.549,1.433,1.433,0,0,0,1.52.828,12.943,12.943,0,0,0-1.227-1.756c-.278-.408-.58-.8-.874-1.2-.169-.228-.128-.385.142-.488.114-.044.215-.119.325-.172a2.263,2.263,0,0,0,1.429-2.858,5.087,5.087,0,0,0-.412-.9,1.914,1.914,0,0,1,.65,2.04,2.163,2.163,0,0,1-1.545,1.905c-.554.177-.447.411-.185.751q.889,1.153,1.755,2.322c.109.147.312.3.2.511-.1.189-.321.077-.487.1a1.017,1.017,0,0,1-1.115-.5,17.594,17.594,0,0,1-1.429-2.128" transform="translate(-804.407 -136.303)" fill="#000"></path>
+						</g>
+					</svg>
+				</div>
+				<div class="hero-copy">
+					<h1 class="hero-headline">Real World<br />Climate Impact<br />At Scale</h1>
+					<p class="hero-subtitle">
+						Explore how climate technologies across the TIF and TGIF portfolios are forecast to alter the landscape over the next 15 years.
+					</p>
+				</div>
+			</div>
+		</section>
+
+		<section id="intro-anchor" aria-hidden="true">
+		</section>
+        <header>
+            logo
+            <nav>
+                <ul>
+                    <li>Introduction</li>
+                    <li>Global Emissions Landscape</li>
+                    <li>TIF/TGIF Portfolio</li>
+                    <li>2040 Scenarios</li>
+                    <li>Climate Impacts</li>
+                    <li>System-Level Themes</li>
+                    <li>Acknowledgements and Methodology</li>
+                </ul>
+            </nav>
+        </header>
+		<main id="app">
+
+            <section id="intro">
+                <h1>Explore how climate technologies across the TIF and TGIF portfolios are forecast to alter the architecture of the global emissions landscapesystem over the next 15 years.</h1>
+                <p>In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscapeworld as it is today and howas it could evolve through the scaling of climate technologies across the global economy.</p>
+
+				<p data-animation="word-reveal" data-reveal-start="top 86%" data-reveal-end="bottom 36%">Centered on the portfolios of the Technology Impact Fund (TIF) and Technology Growth Impact Fund (TGIF), the experience builds upon the pioneering systems modeling work of Professor Bojana Bajželj* and incorporates updated 2025 data to visualize the relationships between economic activitiesy and greenhouse gas emissions at planetary scale.</p>
+
+                <p>From there, users can explore possible 2040 futures and examine how technologies across the TIF and TGIF portfolios are transforming critical systems and accelerating the transition to a lower-carbon economy.</p>
+            </section>
+
+            <section id="emissions-landscape">
+				<div class="landscape-layout">
+					<div class="landscape-visual" aria-hidden="true">
+						<div class="bars-canvas" id="bars-canvas">
+							<div class="vector-bar" data-bar="0"></div>
+							<div class="vector-bar" data-bar="1"></div>
+							<div class="vector-bar" data-bar="2"></div>
+							<div class="vector-bar" data-bar="3"></div>
+							<div class="vector-bar" data-bar="4"></div>
+							<div class="vector-bar" data-bar="5"></div>
+							<div class="vector-bar" data-bar="6"></div>
+						</div>
+					</div>
+
+					<div class="landscape-copy">
+						<p class="landscape-snippet" id="snippet-1">
+							Global emissions are concentrated in a handful of tightly linked production systems, from industry and transport to food and buildings.
+						</p>
+						<p class="landscape-snippet" id="snippet-2" data-animation="word-reveal" data-reveal-start="top 84%" data-reveal-end="bottom 34%" data-reveal-stagger="0.06">
+							As pressure shifts across those systems, one central flow fragments into multiple pathways that each demand a distinct decarbonization strategy.
+						</p>
+						<p class="landscape-snippet" id="snippet-3">
+							The result is a more distributed emissions architecture, where intervention points multiply and portfolio-level coordination becomes essential.
+						</p>
+					</div>
+				</div>
+            </section>
+
+            <section id="full-sankey">
+				<div class="sankey-shell">
+					<div class="sankey-meta">
+						<p class="sankey-title">Global Emissions Flow (Click Any Node)</p>
+						<div id="sankey-status">Loading data...</div>
+					</div>
+					<svg id="sankey-chart" role="img" aria-label="Interactive multi-stage emissions sankey chart"></svg>
+				</div>
+            </section>
+
+
+        </main>
+
+		<script>
+			document.documentElement.classList.remove("no-js");
+		</script>
+
+		<!-- GSAP core + common plugin -->
+		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+		<script>
+			gsap.registerPlugin(ScrollTrigger);
+
+			const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			const heroIntro = document.querySelector("#hero-intro");
+			const heroStage = document.querySelector(".hero-stage");
+			const heroGlobe = document.querySelector(".hero-globe");
+			const heroLogo = document.querySelector(".hero-logo");
+			const heroHeadline = document.querySelector(".hero-headline");
+			const heroSubtitle = document.querySelector(".hero-subtitle");
+
+			if (heroIntro && heroStage && heroGlobe && heroLogo && heroHeadline && heroSubtitle) {
+				if (prefersReducedMotion) {
+					gsap.set([heroGlobe, heroLogo, heroHeadline, heroSubtitle], { opacity: 1, clearProps: "transform" });
+				} else {
+					const heroLoadTimeline = gsap.timeline({ defaults: { ease: "power2.out" } });
+					heroLoadTimeline
+						.fromTo(heroGlobe, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.72 })
+						.fromTo(heroLogo, { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.52 }, "-=0.28")
+						.fromTo(heroHeadline, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.74 }, "-=0.24");
+
+					const heroScrollTimeline = gsap.timeline({
+						scrollTrigger: {
+							trigger: heroIntro,
+							start: "top top",
+							end: "+=120%",
+							scrub: true,
+							pin: heroStage,
+							invalidateOnRefresh: true
+						}
+					});
+
+					heroScrollTimeline
+						.to(heroGlobe, { scale: 1.1, duration: 0.28, ease: "none" }, 0)
+						.to(heroGlobe, { yPercent: -158, scale: 1.32, opacity: 0, duration: 0.72, ease: "none" }, 0.28)
+						.to(heroLogo, { opacity: 0, duration: 0.44, ease: "none" }, 0.22)
+						.to(heroHeadline, { yPercent: -118, duration: 1, ease: "none" }, 0)
+						.to(heroSubtitle, { opacity: 1, yPercent: -42, duration: 0.58, ease: "none" }, 0.38)
+						.to(heroSubtitle, { yPercent: -96, duration: 0.42, ease: "none" }, 0.66);
+				}
+			}
+
+			const bars = gsap.utils.toArray(".vector-bar");
+			const centerIndex = Math.floor(bars.length / 2);
+			const gap = 50;
+			const barWidth = 30;
+			const stride = barWidth + gap;
+
+			gsap.set(bars, {
+				xPercent: -50,
+				yPercent: -50,
+				x: 0,
+				opacity: (index) => (index === centerIndex ? 1 : 0)
+			});
+
+			gsap.to(bars, {
+				x: (index) => (index - centerIndex) * stride,
+				opacity: 1,
+				ease: "none",
+				stagger: {
+					each: 0.03,
+					from: "center"
+				},
+				scrollTrigger: {
+					trigger: "#snippet-2",
+					start: "top 75%",
+					end: "bottom 25%",
+					scrub: true
+				}
+			});
+
+			// Add data-animation="word-reveal" to any paragraph to opt it into this scroll-scrub reveal.
+			const revealTargets = gsap.utils.toArray('[data-animation="word-reveal"]');
+
+			const revealNumber = (value, fallback) => {
+				const parsed = Number(value);
+				return Number.isFinite(parsed) ? parsed : fallback;
+			};
+
+			const splitRevealWords = (element) => {
+				if (element.dataset.revealPrepared === "true") {
+					return;
+				}
+
+				const words = element.textContent.trim().split(/\s+/);
+				element.innerHTML = words.map((word) => `<span class="reveal-word">${word}</span>`).join(" ");
+				element.dataset.revealPrepared = "true";
+			};
+
+			revealTargets.forEach((element) => {
+				splitRevealWords(element);
+
+				const words = element.querySelectorAll(".reveal-word");
+				if (!words.length) {
+					return;
+				}
+
+				if (prefersReducedMotion) {
+					gsap.set(words, { clearProps: "all" });
+					return;
+				}
+
+				const wordTimeline = gsap.timeline({ paused: true });
+				const staggerAmount = revealNumber(element.dataset.revealStagger, 0.05);
+				const start = element.dataset.revealStart || "top 84%";
+				const end = element.dataset.revealEnd || "bottom 34%";
+
+				gsap.set(words, {
+					opacity: 0.12,
+					yPercent: 55,
+					scale: 0.95,
+					filter: "blur(7px)"
+				});
+
+				wordTimeline.to(words, {
+					opacity: 1,
+					yPercent: 0,
+					scale: 1,
+					filter: "blur(0px)",
+					duration: 0.8,
+					ease: "power3.out",
+					stagger: {
+						each: staggerAmount,
+						from: "start"
+					}
+				});
+
+				ScrollTrigger.create({
+					trigger: element,
+					start,
+					end,
+					scrub: true,
+					animation: wordTimeline,
+					invalidateOnRefresh: true
+				});
+			});
+		</script>
+
+		<!-- Your app script(s) go below -->
+		<script src="main.js"></script>
+	</body>
+</html>
