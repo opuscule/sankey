@@ -1,0 +1,1843 @@
+{
+  "_comment": "Metadata required for initial Sankey render. Two top-level keys: nodes (node metadata) and intervention (company placements).",
+  "nodes": {
+    "nodes": [
+      {
+        "id": "1_Travel",
+        "layer": 1,
+        "order": 1,
+        "group": 1,
+        "description": "Passenger transport for holiday, visiting family, shopping, sport; associated material production (steel, aluminum, plastics) and manufacturing of cars.",
+        "keywords": [
+          "passenger transport",
+          "holiday transport",
+          "cars",
+          "holiday visiting",
+          "car manufacturing",
+          "shopping",
+          "sport",
+          "material production",
+          "steel",
+          "aluminum",
+          "plastics",
+          "vehicle manufacturing"
+        ]
+      },
+      {
+        "id": "1_Commuting",
+        "layer": 1,
+        "order": 2,
+        "group": 2,
+        "description": "Passenger transport for work, business and education; associated material production (steel, aluminum, plastics) and manufacturing of cars.",
+        "keywords": [
+          "passenger transport",
+          "transport work",
+          "manufacturing cars",
+          "plastics manufacturing",
+          "material production",
+          "steel",
+          "aluminum",
+          "plastics",
+          "vehicle manufacturing",
+          "car manufacturing"
+        ]
+      },
+      {
+        "id": "1_Freight",
+        "layer": 1,
+        "order": 3,
+        "group": 3,
+        "description": "Freight transport fuel use; material production (steel, aluminum, plastics) and manufacturing of trucks and ships.",
+        "keywords": [
+          "freight transport fuel",
+          "manufacturing trucks ships",
+          "fuel material",
+          "plastics manufacturing trucks",
+          "material production"
+        ]
+      },
+      {
+        "id": "1_Washing",
+        "layer": 1,
+        "order": 4,
+        "group": 4,
+        "description": "Hot water detergents, cosmetics and pharmaceuticals, incl. some packaging; energy use in washing machines and dishwashers; manufacturing of washing machines and dishwashers.",
+        "keywords": [
+          "hot water",
+          "detergents",
+          "washing",
+          "water detergents",
+          "cosmetics",
+          "machines",
+          "dishwashers",
+          "dishwashers",
+          "manufacturing",
+          "dish washer",
+          "laundering",
+          "laundry",
+          "drying"
+        ]
+      },
+      {
+        "id": "1_Thermal comfort",
+        "layer": 1,
+        "order": 5,
+        "group": 5,
+        "description": "Heated and cooled space.",
+        "keywords": [
+          "cooled space",
+          "heated cooled",
+          "climate control",
+          "air conditioning",
+          "heating"
+        ]
+      },
+      {
+        "id": "1_Light",
+        "layer": 1,
+        "order": 6,
+        "group": 6,
+        "description": "Energy used by light devices.",
+        "keywords": [
+          "light devices",
+          "LEDs",
+          "lamps",
+          "incandescent light bulbs"
+        ]
+      },
+      {
+        "id": "1_Communication",
+        "layer": 1,
+        "order": 7,
+        "group": 7,
+        "description": "Energy in use and manufacturing of electronics; writing and printing paper; energy use in computing infrastructure.",
+        "keywords": [
+          "manufacturing",
+          "computing",
+          "paper",
+          "infrastructure",
+          "electronics",
+          "computer",
+          "digital"
+        ]
+      },
+      {
+        "id": "1_Textiles",
+        "layer": 1,
+        "order": 8,
+        "group": 8,
+        "description": "Textile industry energy use; production of polymer fibres; fertilizer for cotton (energy and N2O emissions)",
+        "keywords": [
+          "textile industry",
+          "cotton",
+          "polymers",
+          "fibers",
+          "textiles",
+          "polyesther",
+          "clothing",
+          "fast fashion"
+        ]
+      },
+      {
+        "id": "1_Industrial equipment",
+        "layer": 1,
+        "order": 9,
+        "group": 9,
+        "description": "Production of some steel and aluminum; energy use by the industrial machines production sector.",
+        "keywords": [
+          "industrial machines production",
+          "steel",
+          "aluminum",
+          "heavy industry"
+        ]
+      },
+      {
+        "id": "1_Buildings and infrastructure in construction",
+        "layer": 1,
+        "order": 10,
+        "group": 10,
+        "description": "Production of steel, aluminum and chemicals for construction and furniture uses; cement production; energy use in construction and quarrying industries; energy use in the wood industry incl. land-use change emissions; emissions from vegetation clearing for settlements.",
+        "keywords": [
+          "steel",
+          "aluminum",
+          "furniture",
+          "wood industry",
+          "construction",
+          "cement",
+          "quarrying",
+          "refurbish",
+          "building"
+        ]
+      },
+      {
+        "id": "1_Food",
+        "layer": 1,
+        "order": 11,
+        "group": 11,
+        "description": "Energy use for cooking; energy cost of fertilizer production (part of the chemical industry); energy use in the food\nprocessing industry; energy use in chemical, aluminum and paper industries associated with food and drink\npackaging; energy use on farms (tractors, irrigation systems); N2O emissions from fertilizer use; CH4 from rice,\nlivestock and manure management; land-use change for agriculture.",
+        "keywords": [
+          "farms",
+          "food",
+          "cooking",
+          "chemical",
+          "fertilizer"
+        ]
+      },
+      {
+        "id": "1_Waste",
+        "layer": 1,
+        "order": 12,
+        "group": 12,
+        "description": "methane emissions from waste and wastewater.",
+        "keywords": [
+          "ch4 waste",
+          "waste wastewater"
+        ]
+      },
+      {
+        "id": "2_Passenger transport",
+        "layer": 2,
+        "order": 1,
+        "group": 1,
+        "description": "Transport by cars, 2- and 3- wheeled motorised vehicles and buses. Transport by trucks, vans, and ships. Remainder of transport by planes and trains.",
+        "keywords": [
+          "aviation transport",
+          "travel transport",
+          "transport planes trains",
+          "transport cars",
+          "ships remainder transport",
+          "transport trucks",
+          "motorised vehicles"
+        ]
+      },
+      {
+        "id": "2_Freight",
+        "layer": 2,
+        "order": 2,
+        "group": 1,
+        "description": "Transport by trucks, vans, and ships. Remainder of transport by planes and trains.",
+        "keywords": [
+          "transport trucks",
+          "transport planes trains",
+          "ships remainder transport",
+          "vans ships remainder",
+          "trucks vans ships",
+          "remainder transport planes"
+        ]
+      },
+      {
+        "id": "2_Residential",
+        "layer": 2,
+        "order": 3,
+        "group": 2,
+        "description": "As defined by IEA34: emissions from fuels, electricity and heat consumed by households, excluding transport and including households with employed persons.",
+        "keywords": [
+          "defined iea34",
+          "iea34 fuels",
+          "fuels electricity",
+          "heat consumed",
+          "excluding transport",
+          "consumed excluding",
+          "transport including"
+        ]
+      },
+      {
+        "id": "2_Commerce, Public",
+        "layer": 2,
+        "order": 4,
+        "group": 2,
+        "description": "As defined by IEA34: emissions from fuels, electricity and heat consumed by the following sectors: Wholesale and retail trade; Warehousing and support activities for transportation; Postal and courier activities; Accommodation and food service activities; Information and communication; Financial and insurance activities; Real estate activities; Professional, scientific and technical activities; Administrative and support service activities; Public administration (excluding military); Education; Human health and social work activities; Arts, entertainment and recreation; Repair and installation of machinery, equipment and transport vehicles; Water supply; sewerage, waste management and remediation activities. After UN ISIC Rev.435",
+        "keywords": [
+          "remediation activities isic",
+          "activities isic rev",
+          "defined iea34",
+          "isic rev 435",
+          "iea34 fuels",
+          "technical activities",
+          "consumed following",
+          "service activities",
+          "management remediation activities"
+        ]
+      },
+      {
+        "id": "2_Industrial facilities",
+        "layer": 2,
+        "order": 5,
+        "group": 2,
+        "description": "Includes emissions from energy use in Facilities from all industries defined below.",
+        "keywords": [
+          "includes",
+          "facilities",
+          "industries defined"
+        ]
+      },
+      {
+        "id": "2_Iron and steel",
+        "layer": 2,
+        "order": 6,
+        "group": 3,
+        "description": "Emissions from Manufacture of basic iron and steel and Casting of iron and steel (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture",
+          "steel casting iron",
+          "iron steel casting",
+          "casting iron steel",
+          "basic iron steel",
+          "iron steel defined",
+          "steel defined isic"
+        ]
+      },
+      {
+        "id": "2_Chemical",
+        "layer": 2,
+        "order": 7,
+        "group": 3,
+        "description": "Emissions from Manufacture of chemicals and chemical products (incl. fertilizer) and Manufacture of basic pharmaceutical products and pharmaceutical preparations (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture chemicals",
+          "products incl fertilizer",
+          "incl fertilizer manufacture",
+          "chemicals chemical products",
+          "chemical products incl",
+          "fertilizer manufacture basic"
+        ]
+      },
+      {
+        "id": "2_Cement",
+        "layer": 2,
+        "order": 8,
+        "group": 3,
+        "description": "Emissions from Manufacture of other non-metallic mineral products (cement, lime, glass) (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture non",
+          "mineral products cement",
+          "products cement lime",
+          "non metallic mineral",
+          "metallic mineral products",
+          "cement lime glass"
+        ]
+      },
+      {
+        "id": "2_Non-ferrous",
+        "layer": 2,
+        "order": 9,
+        "group": 3,
+        "description": "Emissions from Manufacture of basic precious and other non-ferrous metals and Casting of non-ferrous metals (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "metals casting non",
+          "non ferrous metals",
+          "manufacture",
+          "ferrous metals casting",
+          "casting non ferrous",
+          "precious non ferrous",
+          "ferrous metals defined",
+          "metals defined isic"
+        ]
+      },
+      {
+        "id": "2_Food processing",
+        "layer": 2,
+        "order": 10,
+        "group": 3,
+        "description": "Emissions from Manufacture of food products, beverages, and tobacco products (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture food",
+          "tobacco products",
+          "excluding facilities",
+          "products beverages tobacco",
+          "food products",
+          "products defined isic"
+        ]
+      },
+      {
+        "id": "2_Paper",
+        "layer": 2,
+        "order": 11,
+        "group": 3,
+        "description": "Emissions from Manufacture of paper and paper products and Printing and reproduction of recorded media (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture paper",
+          "paper products",
+          "products printing reproduction",
+          "printing reproduction recorded",
+          "reproduction recorded media",
+          "recorded media defined"
+        ]
+      },
+      {
+        "id": "2_Textiles",
+        "layer": 2,
+        "order": 12,
+        "group": 3,
+        "description": "Emissions from Manufacture of textiles, wearing apparel and leather and related products (as defined in UN ISIC Rev.435), excluding facilities.",
+        "keywords": [
+          "manufacture textiles",
+          "textiles wearing apparel",
+          "apparel leather related",
+          "wearing apparel leather",
+          "excluding facilities",
+          "leather related products"
+        ]
+      },
+      {
+        "id": "2_Other industry",
+        "layer": 2,
+        "order": 13,
+        "group": 3,
+        "description": "Manufacturing industry not included above, in the order of significance: Machinery, Mining and quarrying, Transport equipment, Construction and Wood industry.",
+        "keywords": [
+          "manufacturing industry included",
+          "industry included order",
+          "construction wood industry",
+          "machinery mining",
+          "equipment construction",
+          "quarrying transport equipment",
+          "mining quarrying transport"
+        ]
+      },
+      {
+        "id": "2_Settlements",
+        "layer": 2,
+        "order": 14,
+        "group": 4,
+        "description": "Emissions from land-use change, soil disturbance, fertilizer use and on-farm energy use (including tractors) associated with production of livestock feeds and livestock rearing itself. Does not include food processing, transport, cooking or emissions from fertilizer production.",
+        "keywords": [
+          "farm",
+          "land",
+          "fertilizer production",
+          "cooking fertilizer",
+          "tractors associated production",
+          "disturbance fertilizer",
+          "associated production livestock",
+          "including tractors",
+          "production livestock feeds"
+        ]
+      },
+      {
+        "id": "2_Agriculture: vegetal",
+        "layer": 2,
+        "order": 15,
+        "group": 5,
+        "description": "Emissions from land-use change, fertilizer use and on-farm energy use (including tractors) associated with production of vegetal agricultural products. Does not include food processing, transport, cooking or emissions from fertilizer production.",
+        "keywords": [
+          "production vegetal agricultural",
+          "farm",
+          "fertilizer production",
+          "cooking fertilizer",
+          "land",
+          "vegetal agricultural products",
+          "tractors associated production",
+          "associated production vegetal",
+          "including tractors"
+        ]
+      },
+      {
+        "id": "2_Agriculture: animal",
+        "layer": 2,
+        "order": 16,
+        "group": 5,
+        "description": "Emissions from land-use change, fertilizer use and on-farm energy use (including tractors) associated with production of vegetal agricultural products intended for human consumption directly. Does not include food processing, transport, cooking or emissions from fertilizer production.",
+        "keywords": [
+          "production vegetal agricultural",
+          "farm",
+          "fertilizer production",
+          "vegetal agricultural products",
+          "cooking fertilizer",
+          "land",
+          "tractors associated production",
+          "associated production vegetal",
+          "including tractors"
+        ]
+      },
+      {
+        "id": "2_Waste",
+        "layer": 2,
+        "order": 17,
+        "group": 6,
+        "description": "Emissions form land-fills and (not treated or inappropriately treated) waste water.",
+        "keywords": [
+          "form land",
+          "waste water",
+          "land fills treated",
+          "treated waste"
+        ]
+      },
+      {
+        "id": "3_Car",
+        "layer": 3,
+        "order": 1,
+        "group": 1,
+        "description": "Cars and 2- and 3- wheeled motorised vehicle use.",
+        "keywords": [
+          "cars wheeled motorised",
+          "wheeled motorised vehicle"
+        ]
+      },
+      {
+        "id": "3_Bus",
+        "layer": 3,
+        "order": 2,
+        "group": 1,
+        "description": "Bus and Minibus use.",
+        "keywords": [
+          "bus minibus"
+        ]
+      },
+      {
+        "id": "3_Truck",
+        "layer": 3,
+        "order": 3,
+        "group": 1,
+        "description": "Truck and Van use.",
+        "keywords": [
+          "truck van"
+        ]
+      },
+      {
+        "id": "3_Ship",
+        "layer": 3,
+        "order": 4,
+        "group": 1,
+        "description": "Ship use (domestic and international navigation)",
+        "keywords": [
+          "domestic international navigation",
+          "ship domestic"
+        ]
+      },
+      {
+        "id": "3_Plane",
+        "layer": 3,
+        "order": 5,
+        "group": 1,
+        "description": "Aviation (domestic and international aviation)",
+        "keywords": [
+          "domestic international aviation",
+          "aviation domestic"
+        ]
+      },
+      {
+        "id": "3_Train",
+        "layer": 3,
+        "order": 6,
+        "group": 1,
+        "description": "Rail.",
+        "keywords": [
+          "rail"
+        ]
+      },
+      {
+        "id": "3_Digital infrastructure",
+        "layer": 3,
+        "order": 7,
+        "group": 2,
+        "description": "Computing infrastructure energy usage for data centers, cryptocurrency and AI",
+        "keywords": [
+          "computing infrastructure",
+          "data centers cryptocurrency",
+          "infrastructure usage",
+          "centers cryptocurrency ai",
+          "usage data centers"
+        ]
+      },
+      {
+        "id": "3_Driven system",
+        "layer": 3,
+        "order": 8,
+        "group": 3,
+        "description": "Conveyor belts, Pumps, Refrigerator (industrial use), air compressor and other motorised systems used in Industry.",
+        "keywords": [
+          "conveyor belts pumps",
+          "compressor motorised systems",
+          "systems industry",
+          "belts pumps refrigerator",
+          "pumps refrigerator industrial",
+          "air compressor",
+          "industrial air"
+        ]
+      },
+      {
+        "id": "3_Appliances",
+        "layer": 3,
+        "order": 9,
+        "group": 3,
+        "description": "Refrigerator (used in households and commercial), cooker, washer, dryer, dishwasher, electronic devices",
+        "keywords": [
+          "refrigerator",
+          "commercial cooker",
+          "dishwasher electronic",
+          "cooker washer"
+        ]
+      },
+      {
+        "id": "3_Cooled space",
+        "layer": 3,
+        "order": 10,
+        "group": 3,
+        "description": "Cooling (air conditioning) of residential, commercial, public and industrial buildings.",
+        "keywords": [
+          "cooling air conditioning",
+          "air conditioning residential",
+          "conditioning residential commercial",
+          "industrial buildings",
+          "residential commercial public",
+          "commercial public industrial"
+        ]
+      },
+      {
+        "id": "3_Illuminated space",
+        "layer": 3,
+        "order": 11,
+        "group": 3,
+        "description": "Illumination of residential, commercial, public and industrial buildings. Excludes illumination by transport devices.",
+        "keywords": [
+          "buildings excludes illumination",
+          "illumination residential",
+          "illumination transport",
+          "industrial buildings excludes",
+          "public industrial buildings",
+          "residential commercial public"
+        ]
+      },
+      {
+        "id": "3_Hot water system",
+        "layer": 3,
+        "order": 12,
+        "group": 3,
+        "description": "Water heating for washing.",
+        "keywords": [
+          "water heating washing"
+        ]
+      },
+      {
+        "id": "3_Heated space",
+        "layer": 3,
+        "order": 13,
+        "group": 3,
+        "description": "Heating of residential, commercial, public and industrial buildings.",
+        "keywords": [
+          "heating residential",
+          "public industrial buildings",
+          "residential commercial public",
+          "commercial public industrial"
+        ]
+      },
+      {
+        "id": "3_Furnace",
+        "layer": 3,
+        "order": 14,
+        "group": 3,
+        "description": "High, medium and low temperature application: blast furnace, arc furnace, smelter, oven.",
+        "keywords": [
+          "furnace smelter oven",
+          "arc furnace smelter",
+          "application blast furnace",
+          "low temperature application",
+          "blast furnace arc",
+          "furnace arc furnace",
+          "medium low temperature",
+          "temperature application blast"
+        ]
+      },
+      {
+        "id": "3_Steam system",
+        "layer": 3,
+        "order": 15,
+        "group": 3,
+        "description": "Medium and low temperature application involving steam: petrochemical cracker, reaction vessel, cleaning facility (after 9).",
+        "keywords": [
+          "steam petrochemical cracker",
+          "involving steam petrochemical",
+          "petrochemical cracker reaction",
+          "cracker reaction vessel",
+          "application involving steam",
+          "low temperature application",
+          "reaction vessel cleaning",
+          "temperature application involving"
+        ]
+      },
+      {
+        "id": "3_Tractor",
+        "layer": 3,
+        "order": 16,
+        "group": 4,
+        "description": "Diesel use in agriculture sector, assumed to be mostly associated with Tractor use on farm.",
+        "keywords": [
+          "diesel agriculture",
+          "associated tractor",
+          "tractor farm"
+        ]
+      },
+      {
+        "id": "3_(Non-energy use)",
+        "layer": 3,
+        "order": 17,
+        "group": 5,
+        "description": "Emissions from non-energy uses of fossil fuels, primarily as feedstocks for petrochemicals and chemical production.",
+        "keywords": [
+          "fossil fuels",
+          "non",
+          "fuels primarily feedstocks",
+          "primarily feedstocks petrochemicals",
+          "feedstocks petrochemicals chemical",
+          "petrochemicals chemical production"
+        ]
+      },
+      {
+        "id": "3_(Chemical use)",
+        "layer": 3,
+        "order": 18,
+        "group": 5,
+        "description": "Emissions from industrial gases used in refrigeration, air-conditioning, and other chemical processes.",
+        "keywords": [
+          "industrial gases",
+          "gases refrigeration",
+          "refrigeration air",
+          "air conditioning chemical"
+        ]
+      },
+      {
+        "id": "3_(Cement kiln)",
+        "layer": 3,
+        "order": 19,
+        "group": 5,
+        "description": "Emissions generated during the production of cement.",
+        "keywords": [
+          "production cement"
+        ]
+      },
+      {
+        "id": "3_Forestry",
+        "layer": 3,
+        "order": 20,
+        "group": 6,
+        "description": "Land-use change emissions associated with timber and pulp production.",
+        "keywords": [
+          "associated timber",
+          "timber pulp production",
+          "change associated",
+          "land change"
+        ]
+      },
+      {
+        "id": "3_Settlements",
+        "layer": 3,
+        "order": 21,
+        "group": 6,
+        "description": "Land-use change emissions associated with creating space for settlements and infrastructure.",
+        "keywords": [
+          "land change",
+          "change associated",
+          "space settlements infrastructure",
+          "associated creating",
+          "creating space settlements"
+        ]
+      },
+      {
+        "id": "3_Food crops",
+        "layer": 3,
+        "order": 22,
+        "group": 6,
+        "description": "Non-energy emissions from land-use change, soil disturbance and fertilizer use associated with production of vegetal agricultural products for human consumption. Includes methane emissions from Rice paddies.",
+        "keywords": [
+          "methane rice",
+          "non",
+          "rice paddies",
+          "production vegetal agricultural",
+          "vegetal agricultural products",
+          "land",
+          "includes methane"
+        ]
+      },
+      {
+        "id": "3_Fibre crops",
+        "layer": 3,
+        "order": 23,
+        "group": 6,
+        "description": "Non-energy emissions from land-use change, soil disturbance, and fertiliser use during the cultivation of crops grown for fibre (e.g. cotton, jute, flax).",
+        "keywords": [
+          "crops grown fibre",
+          "cultivation crops",
+          "fertiliser cultivation",
+          "grown fibre cotton",
+          "non",
+          "soil disturbance fertiliser"
+        ]
+      },
+      {
+        "id": "3_Feedlots",
+        "layer": 3,
+        "order": 24,
+        "group": 6,
+        "description": "Non-energy emissions from land-use change, soil disturbance and fertilizer use associated with production of grains and other feedlots fed to livestock.",
+        "keywords": [
+          "non",
+          "disturbance fertilizer",
+          "land",
+          "fed livestock",
+          "fertilizer associated",
+          "production grains feedlots",
+          "grains feedlots fed",
+          "soil disturbance"
+        ]
+      },
+      {
+        "id": "3_Pasture",
+        "layer": 3,
+        "order": 25,
+        "group": 6,
+        "description": "Non-energy emissions from land-use change, soil disturbance and manure use associated with pasture land-use.",
+        "keywords": [
+          "pasture land",
+          "soil disturbance manure",
+          "associated pasture",
+          "non",
+          "land change",
+          "manure associated",
+          "change soil disturbance"
+        ]
+      },
+      {
+        "id": "3_Livestock",
+        "layer": 3,
+        "order": 26,
+        "group": 6,
+        "description": "Emissions resulting from enteric fermentation in livestock digestive systems and manure not applied to any land.",
+        "keywords": [
+          "enteric fermentation livestock",
+          "fermentation livestock digestive",
+          "livestock digestive systems",
+          "resulting enteric",
+          "digestive systems manure",
+          "systems manure applied",
+          "manure applied land"
+        ]
+      },
+      {
+        "id": "3_Landfills",
+        "layer": 3,
+        "order": 27,
+        "group": 7,
+        "description": "Emissions from decomposing waste material buried in land disposal sites.",
+        "keywords": [
+          "decomposing waste",
+          "waste material buried",
+          "land disposal sites",
+          "buried land disposal",
+          "material buried land"
+        ]
+      },
+      {
+        "id": "3_Wastewater",
+        "layer": 3,
+        "order": 28,
+        "group": 7,
+        "description": "Emissions from sewage and industrial water when it is untreated or inadequately treated.",
+        "keywords": [
+          "sewage",
+          "industrial water untreated",
+          "water untreated inadequately",
+          "inadequately treated"
+        ]
+      },
+      {
+        "id": "4_Petrol engine",
+        "layer": 4,
+        "order": 1,
+        "group": 1,
+        "description": "Spark ignition Otto engine: car, bus, truck, generator, garden machinery (incl. two-stroke)",
+        "keywords": [
+          "spark ignition otto",
+          "ignition otto engine",
+          "otto engine car",
+          "engine car bus",
+          "bus truck generator",
+          "generator garden machinery",
+          "truck generator garden"
+        ]
+      },
+      {
+        "id": "4_Diesel engine",
+        "layer": 4,
+        "order": 2,
+        "group": 1,
+        "description": "Compression ignition diesel engine in trucks, cars, buses, ships, trains, generators",
+        "keywords": [
+          "compression ignition diesel",
+          "diesel engine trucks",
+          "ignition diesel engine",
+          "engine trucks cars",
+          "trains generators"
+        ]
+      },
+      {
+        "id": "4_Aircraft engine",
+        "layer": 4,
+        "order": 3,
+        "group": 1,
+        "description": "Turbofan and turbo propeller engines.",
+        "keywords": [
+          "turbo propeller engines",
+          "turbofan"
+        ]
+      },
+      {
+        "id": "4_Other Engine (LPG, gas, coal)",
+        "layer": 4,
+        "order": 4,
+        "group": 1,
+        "description": "Steam (coal/biomass) or natural gas powered engine.",
+        "keywords": [
+          "steam coal biomass",
+          "natural gas powered",
+          "gas powered engine",
+          "coal biomass natural",
+          "biomass natural gas"
+        ]
+      },
+      {
+        "id": "4_Electric motor",
+        "layer": 4,
+        "order": 5,
+        "group": 1,
+        "description": "Aviation (domestic and international aviation)",
+        "keywords": [
+          "electric motors transport",
+          "motors transport cars",
+          "trucks trains industrial",
+          "trains industrial driven",
+          "industrial driven systems",
+          "cars trucks",
+          "driven systems appliances",
+          "EVs",
+          "electric vehicles",
+          "batteries",
+          "battery"
+        ]
+      },
+      {
+        "id": "4_Computing Infrastructure",
+        "layer": 4,
+        "order": 25,
+        "group": 2,
+        "description": "Data centers, crytocurrencies, and AI.",
+        "keywords": [
+          "data centers",
+          "crytocurrencies",
+          "ai"
+        ]
+      },
+      {
+        "id": "4_Electronics",
+        "layer": 4,
+        "order": 7,
+        "group": 3,
+        "description": "Computers, televisions, portable devices",
+        "keywords": [
+          "televisions portable",
+          "computers televisions"
+        ]
+      },
+      {
+        "id": "4_Cooler",
+        "layer": 4,
+        "order": 6,
+        "group": 3,
+        "description": "AC/DC induction motor (excl. Refrigeration)",
+        "keywords": [
+          "motor excl refrigeration",
+          "induction motor excl",
+          "dc induction motor",
+          "ac dc induction"
+        ]
+      },
+      {
+        "id": "4_Light device",
+        "layer": 4,
+        "order": 7,
+        "group": 3,
+        "description": "Light devices excluding light devices in vehicles.",
+        "keywords": [
+          "light devices"
+        ]
+      },
+      {
+        "id": "4_Electric heater",
+        "layer": 4,
+        "order": 8,
+        "group": 4,
+        "description": "Electric resistance heater, electric arc furnace.",
+        "keywords": [
+          "electric arc furnace",
+          "resistance heater",
+          "heater electric arc",
+          "electric resistance"
+        ]
+      },
+      {
+        "id": "4_Heat exchanger",
+        "layer": 4,
+        "order": 9,
+        "group": 4,
+        "description": "Direct heat application, heat from CHP, district heat, heat pumps.",
+        "keywords": [
+          "application heat chp",
+          "heat pumps",
+          "chp district heat",
+          "heat chp district",
+          "direct heat application",
+          "district heat heat",
+          "heat application heat"
+        ]
+      },
+      {
+        "id": "4_Oil burner",
+        "layer": 4,
+        "order": 10,
+        "group": 4,
+        "description": "Oil combustion device: boiler, petrochemical cracker, chemical reactor",
+        "keywords": [
+          "oil combustion",
+          "boiler petrochemical cracker",
+          "combustion boiler",
+          "cracker chemical reactor",
+          "petrochemical cracker chemical"
+        ]
+      },
+      {
+        "id": "4_Gas burner",
+        "layer": 4,
+        "order": 11,
+        "group": 4,
+        "description": "Gas combustion device: open fire, stove, boiler, chemical reactor",
+        "keywords": [
+          "gas combustion",
+          "combustion open",
+          "stove boiler",
+          "boiler chemical reactor",
+          "open stove"
+        ]
+      },
+      {
+        "id": "4_Coal burner",
+        "layer": 4,
+        "order": 12,
+        "group": 4,
+        "description": "Coal combustion device: open-fire, stove, boiler, blast furnace, chemical reactor",
+        "keywords": [
+          "coal combustion",
+          "boiler blast furnace",
+          "stove boiler",
+          "furnace chemical reactor",
+          "combustion open",
+          "blast furnace chemical"
+        ]
+      },
+      {
+        "id": "4_Biomass burner",
+        "layer": 4,
+        "order": 13,
+        "group": 4,
+        "description": "Wood/biomass combustion device: open fire, stove, boiler.",
+        "keywords": [
+          "biomass combustion",
+          "stove boiler",
+          "combustion open",
+          "open stove",
+          "wood biomass"
+        ]
+      },
+      {
+        "id": "4_Non-energy use",
+        "layer": 4,
+        "order": 14,
+        "group": 5,
+        "description": "Emissions from non-energy uses of fossil fuels, primarily as feedstocks for petrochemicals and chemical production.",
+        "keywords": [
+          "fossil fuels",
+          "non",
+          "fuels primarily feedstocks",
+          "primarily feedstocks petrochemicals",
+          "feedstocks petrochemicals chemical",
+          "petrochemicals chemical production"
+        ]
+      },
+      {
+        "id": "4_Chemical use",
+        "layer": 4,
+        "order": 15,
+        "group": 5,
+        "description": "Emissions from industrial gases used in refrigeration, air-conditioning, and other chemical processes.",
+        "keywords": [
+          "industrial gases",
+          "gases refrigeration",
+          "refrigeration air",
+          "air conditioning chemical"
+        ]
+      },
+      {
+        "id": "4_Cement kiln",
+        "layer": 4,
+        "order": 16,
+        "group": 5,
+        "description": "Emissions generated during the production of cement.",
+        "keywords": [
+          "production cement"
+        ]
+      },
+      {
+        "id": "4_Logging",
+        "layer": 4,
+        "order": 17,
+        "group": 6,
+        "description": "Land-use change emissions associated with timber and pulp production.",
+        "keywords": [
+          "associated timber",
+          "timber pulp production",
+          "change associated",
+          "land change"
+        ]
+      },
+      {
+        "id": "4_Clearing for settlements",
+        "layer": 4,
+        "order": 18,
+        "group": 6,
+        "description": "Land-use change emissions associated with creating space for settlements and infrastructure.",
+        "keywords": [
+          "land change",
+          "change associated",
+          "space settlements infrastructure",
+          "associated creating",
+          "creating space settlements"
+        ]
+      },
+      {
+        "id": "4_Clearing for agriculture",
+        "layer": 4,
+        "order": 19,
+        "group": 6,
+        "description": "Land-use change associated with making space for annual and permanent crops (incl. shifting agriculture, but deducing re-growth effects from it; excluding crops used for biofuels)",
+        "keywords": [
+          "crops biofuels",
+          "shifting agriculture",
+          "permanent crops",
+          "agriculture deducing growth",
+          "land change",
+          "crops incl shifting",
+          "excluding crops"
+        ]
+      },
+      {
+        "id": "4_Fertilizer use",
+        "layer": 4,
+        "order": 20,
+        "group": 6,
+        "description": "N2O emissions from fertilizer use from soil and indirect (leached nitrogen)",
+        "keywords": [
+          "nitrous oxide",
+          "nox",
+          "fertilizer",
+          "indirect leached nitrogen",
+          "fertilizer soil",
+          "soil indirect leached"
+        ]
+      },
+      {
+        "id": "4_Rice paddies",
+        "layer": 4,
+        "order": 21,
+        "group": 6,
+        "description": "Methane emissions from anaerobic conditions characteristic for paddy rice agriculture.",
+        "keywords": [
+          "methane anaerobic",
+          "anaerobic conditions",
+          "paddy rice agriculture",
+          "characteristic paddy rice",
+          "conditions characteristic paddy"
+        ]
+      },
+      {
+        "id": "4_Manure",
+        "layer": 4,
+        "order": 22,
+        "group": 6,
+        "description": "Emissions from manure (applied or not-applied).",
+        "keywords": [
+          "manure applied",
+          "applied applied"
+        ]
+      },
+      {
+        "id": "4_Tilling and erosion",
+        "layer": 4,
+        "order": 23,
+        "group": 6,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "4_Enteric fermentation",
+        "layer": 4,
+        "order": 24,
+        "group": 6,
+        "description": "Non-energy emissions enteric fermentation of ruminants (cattle, sheep, goats).",
+        "keywords": [
+          "enteric fermentation ruminants",
+          "fermentation ruminants cattle",
+          "ruminants cattle sheep",
+          "non",
+          "cattle sheep goats"
+        ]
+      },
+      {
+        "id": "4_(Waste)",
+        "layer": 4,
+        "order": 25,
+        "group": 7,
+        "description": "Emissions form land-fills and (not treated or inappropriately treated) waste water.",
+        "keywords": [
+          "form land",
+          "waste water",
+          "land fills treated",
+          "treated waste"
+        ]
+      },
+      {
+        "id": "5_Direct oil use",
+        "layer": 5,
+        "order": 1,
+        "group": 1,
+        "description": "Direct oil use - correspond to direct emissions in other GHG data-sets.",
+        "keywords": [
+          "direct ghg",
+          "direct oil",
+          "oil correspond",
+          "correspond direct",
+          "ghg data"
+        ]
+      },
+      {
+        "id": "5_Refineries, extraction",
+        "layer": 5,
+        "order": 2,
+        "group": 2,
+        "description": "Energy use and transformation losses in non-electricity energy industries: refineries, mines, oil and gas platforms, coke ovens, blast furnaces gas works, liquefactions plants, BKB plants.",
+        "keywords": [
+          "transformation",
+          "industries refineries",
+          "losses non electricity",
+          "electricity industries"
+        ]
+      },
+      {
+        "id": "5_Fugitive emissions",
+        "layer": 5,
+        "order": 3,
+        "group": 2,
+        "description": "Fugitive natural gas from oil extraction (flared or vented), oil and gas transportation and coal mines. Includes fossil fuels fires.",
+        "keywords": [
+          "fuels fires",
+          "fugitive natural gas",
+          "includes fossil fuels",
+          "gas transportation coal",
+          "oil gas",
+          "natural gas oil"
+        ]
+      },
+      {
+        "id": "5_Electricity and heat",
+        "layer": 5,
+        "order": 4,
+        "group": 3,
+        "description": "Electricity and heat production, including auto producers and including own use of electricity.",
+        "keywords": [
+          "electricity heat production",
+          "heat production including",
+          "including electricity",
+          "auto producers including",
+          "including auto producers",
+          "production including auto"
+        ]
+      },
+      {
+        "id": "5_Direct gas use",
+        "layer": 5,
+        "order": 5,
+        "group": 4,
+        "description": "Direct natural gas use - correspond to direct emissions in other GHG data-sets.",
+        "keywords": [
+          "direct ghg",
+          "ghg data",
+          "direct natural gas",
+          "correspond direct",
+          "gas correspond"
+        ]
+      },
+      {
+        "id": "5_Direct coal use",
+        "layer": 5,
+        "order": 6,
+        "group": 5,
+        "description": "Direct coal and peat use - correspond to direct emissions in other GHG data-sets.",
+        "keywords": [
+          "direct coal peat",
+          "direct ghg",
+          "peat correspond",
+          "ghg data",
+          "correspond direct"
+        ]
+      },
+      {
+        "id": "5_Biofuels",
+        "layer": 5,
+        "order": 7,
+        "group": 6,
+        "description": "Land-use change associated with making space for crops grown for production into liquid fuels (includes bioethanol and biodiesel). Includes emissions from fertilizer application.",
+        "keywords": [
+          "making space crops",
+          "land change",
+          "includes fertilizer",
+          "crops grown production",
+          "fertilizer application",
+          "space crops grown",
+          "fuels includes bioethanol",
+          "includes bioethanol biodiesel",
+          "grown production liquid"
+        ]
+      },
+      {
+        "id": "5_Dry biomass",
+        "layer": 5,
+        "order": 8,
+        "group": 7,
+        "description": "Land-use change emissions associated with de-forestation and forest degradation from dry biomass collection.",
+        "keywords": [
+          "associated forestation",
+          "degradation dry biomass",
+          "dry biomass collection",
+          "forest degradation dry",
+          "land change",
+          "change associated",
+          "forestation forest degradation"
+        ]
+      },
+      {
+        "id": "5_Chemical use",
+        "layer": 5,
+        "order": 9,
+        "group": 8,
+        "description": "Emissions from industrial gases used in refrigeration, air-conditioning, and other chemical processes.",
+        "keywords": [
+          "industrial gases",
+          "gases refrigeration",
+          "refrigeration air",
+          "air conditioning chemical"
+        ]
+      },
+      {
+        "id": "5_Cement Kiln",
+        "layer": 5,
+        "order": 10,
+        "group": 8,
+        "description": "Emissions generated during the production of cement.",
+        "keywords": [
+          "production cement"
+        ]
+      },
+      {
+        "id": "5_(Logging)",
+        "layer": 5,
+        "order": 11,
+        "group": 9,
+        "description": "Emissions from cutting down and removing forests for timber or land use.",
+        "keywords": [
+          "cutting",
+          "forests timber",
+          "removing forests",
+          "timber land"
+        ]
+      },
+      {
+        "id": "5_(Clearing for settlements)",
+        "layer": 5,
+        "order": 12,
+        "group": 9,
+        "description": "Emissions from land cleared to build cities, towns, or infrastructure.",
+        "keywords": [
+          "land cleared",
+          "cleared build cities",
+          "towns infrastructure",
+          "build cities towns"
+        ]
+      },
+      {
+        "id": "5_(Clearing for agriculture)",
+        "layer": 5,
+        "order": 13,
+        "group": 9,
+        "description": "Emissions released when land is cleared for farming activities.",
+        "keywords": [
+          "released land",
+          "land cleared farming",
+          "cleared farming activities"
+        ]
+      },
+      {
+        "id": "5_Fertilizer use",
+        "layer": 5,
+        "order": 14,
+        "group": 9,
+        "description": "Emissions that arise when fertilisers are applied to fields.",
+        "keywords": [
+          "arise fertilisers",
+          "fertilisers applied fields"
+        ]
+      },
+      {
+        "id": "5_(Rice paddies)",
+        "layer": 5,
+        "order": 15,
+        "group": 9,
+        "description": "Emissions produced during flooded rice cultivation.",
+        "keywords": [
+          "flooded rice cultivation",
+          "produced flooded rice"
+        ]
+      },
+      {
+        "id": "5_(Manure)",
+        "layer": 5,
+        "order": 16,
+        "group": 9,
+        "description": "Emissions from storing and managing animal waste.",
+        "keywords": [
+          "managing animal waste",
+          "storing"
+        ]
+      },
+      {
+        "id": "5_Tilling and erosion",
+        "layer": 5,
+        "order": 17,
+        "group": 9,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "5_(Enteric fermentation)",
+        "layer": 5,
+        "order": 18,
+        "group": 9,
+        "description": "Emissions released during digestion by ruminant animals.",
+        "keywords": [
+          "digestion ruminant animals",
+          "released digestion"
+        ]
+      },
+      {
+        "id": "5_Waste incineration",
+        "layer": 5,
+        "order": 19,
+        "group": 11,
+        "description": "Emissions from burning solid waste in incineration facilities.",
+        "keywords": [
+          "waste incineration facilities",
+          "solid waste incineration",
+          "burning solid waste"
+        ]
+      },
+      {
+        "id": "5_Waste",
+        "layer": 5,
+        "order": 29,
+        "group": 11,
+        "description": "Emissions form land-fills and (not treated or inappropriately treated) waste water.",
+        "keywords": [
+          "form land",
+          "waste water",
+          "land fills treated",
+          "treated waste"
+        ]
+      },
+      {
+        "id": "6_Oil",
+        "layer": 6,
+        "order": 1,
+        "group": 1,
+        "description": "Emissions from using oil and refined petroleum fuels for energy.",
+        "keywords": [
+          "using oil",
+          "petroleum fuels",
+          "refined petroleum",
+          "oil refined"
+        ]
+      },
+      {
+        "id": "6_Natural gas",
+        "layer": 6,
+        "order": 2,
+        "group": 2,
+        "description": "Emissions from burning natural gas for energy.",
+        "keywords": [
+          "burning natural",
+          "natural gas"
+        ]
+      },
+      {
+        "id": "6_Coal",
+        "layer": 6,
+        "order": 3,
+        "group": 3,
+        "description": "Emissions from combusting coal for energy.",
+        "keywords": [
+          "combusting coal"
+        ]
+      },
+      {
+        "id": "6_(Biomass)",
+        "layer": 6,
+        "order": 4,
+        "group": 4,
+        "description": "Biomass processing emissions.",
+        "keywords": [
+          "biomass processing"
+        ]
+      },
+      {
+        "id": "6_Chemical use",
+        "layer": 6,
+        "order": 5,
+        "group": 5,
+        "description": "Emissions from industrial gases used in refrigeration, air-conditioning, and other chemical processes.",
+        "keywords": [
+          "industrial gases",
+          "gases refrigeration",
+          "refrigeration air",
+          "air conditioning chemical"
+        ]
+      },
+      {
+        "id": "6_Calcination",
+        "layer": 6,
+        "order": 6,
+        "group": 6,
+        "description": "Process emissions released when limestone (calcium carbonate) is heated in cement production, breaking down into lime and releasing CO\u2082",
+        "keywords": [
+          "released limestone",
+          "carbonate heated cement",
+          "limestone calcium carbonate",
+          "lime releasing co\u2082",
+          "cement production",
+          "process released",
+          "calcium carbonate heated"
+        ]
+      },
+      {
+        "id": "6_Land use change",
+        "layer": 6,
+        "order": 7,
+        "group": 7,
+        "description": "Emissions from converting forests, grasslands, or other ecosystems to new land uses.",
+        "keywords": [
+          "converting forests",
+          "ecosystems new land",
+          "forests grasslands ecosystems",
+          "grasslands ecosystems new"
+        ]
+      },
+      {
+        "id": "6_Nitrification",
+        "layer": 6,
+        "order": 8,
+        "group": 8,
+        "description": "Emissions released when soil microbes process nitrogen from fertilisers and organic matter.",
+        "keywords": [
+          "microbes process nitrogen",
+          "released soil microbes",
+          "soil microbes process",
+          "nitrogen fertilisers organic",
+          "process nitrogen fertilisers",
+          "fertilisers organic matter"
+        ]
+      },
+      {
+        "id": "6_Methanogenesis",
+        "layer": 6,
+        "order": 9,
+        "group": 9,
+        "description": "Emissions formed by microbes breaking down organic material in low-oxygen environments.",
+        "keywords": [
+          "formed microbes",
+          "microbes breaking organic",
+          "low oxygen environments",
+          "material low oxygen",
+          "organic material low"
+        ]
+      },
+      {
+        "id": "6_Waste",
+        "layer": 6,
+        "order": 10,
+        "group": 10,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "7_CO2",
+        "layer": 7,
+        "order": 1,
+        "group": 1,
+        "description": "Carbon dioxide emissions",
+        "keywords": [
+          "carbon dioxide"
+        ]
+      },
+      {
+        "id": "7_CH4",
+        "layer": 7,
+        "order": 2,
+        "group": 2,
+        "description": "Methane emissions",
+        "keywords": [
+          "methane"
+        ]
+      },
+      {
+        "id": "7_N2O",
+        "layer": 7,
+        "order": 3,
+        "group": 3,
+        "description": "Nitrous oxide emissions",
+        "keywords": [
+          "nitrous oxide"
+        ]
+      },
+      {
+        "id": "7_F-gas",
+        "layer": 7,
+        "order": 4,
+        "group": 4,
+        "description": "Fluorinated gas emissions",
+        "keywords": [
+          "fluorinated gas"
+        ]
+      },
+      {
+        "id": "4_Other Engine (LPG, gas, coal)",
+        "layer": 4,
+        "order": 999,
+        "group": 0,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "5_(Cement kiln)",
+        "layer": 5,
+        "order": 999,
+        "group": 0,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "5_(Chemical use)",
+        "layer": 5,
+        "order": 999,
+        "group": 0,
+        "description": "",
+        "keywords": []
+      },
+      {
+        "id": "5_(Waste)",
+        "layer": 5,
+        "order": 999,
+        "group": 0,
+        "description": "",
+        "keywords": []
+      }
+    ]
+  },
+  "intervention": {
+    "companies": [
+      {
+        "company": "FervoEnergy",
+        "company_label": "Fervo Energy",
+        "technology": "geothermal power",
+        "node": "5_Electricity and heat",
+        "view": "Full",
+        "par1": "Fervo Energy is helping expand access to next-generation geothermal power systems.",
+        "par2": "Within the emissions model, Fervo's technology is most active in the electricity and heat pathway, where lower-carbon baseload energy can help reduce dependence on fossil fuel generation across multiple sectors of the economy."
+      },
+      {
+        "company": "CompanyB",
+        "company_label": "Company B",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyC",
+        "company_label": "Company C",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyD",
+        "company_label": "Company D",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyE",
+        "company_label": "Company E",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyF",
+        "company_label": "Company F",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyG",
+        "company_label": "Company G",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyH",
+        "company_label": "Company H",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyI",
+        "company_label": "Company I",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyJ",
+        "company_label": "Company J",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyK",
+        "company_label": "Company K",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyL",
+        "company_label": "Company L",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyM",
+        "company_label": "Company M",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyN",
+        "company_label": "Company N",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyO",
+        "company_label": "Company O",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyP",
+        "company_label": "Company P",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyQ",
+        "company_label": "Company Q",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyR",
+        "company_label": "Company R",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyS",
+        "company_label": "Company S",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      },
+      {
+        "company": "CompanyT",
+        "company_label": "Company T",
+        "technology": null,
+        "node": null,
+        "view": null,
+        "par1": null,
+        "par2": null
+      }
+    ]
+  }
+}

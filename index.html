@@ -22,20 +22,8 @@
 		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
-		 <header style="display:none;">
-            logo
-            <nav>
-                <ul>
-                    <li>Introduction</li>
-                    <li>Global Emissions Landscape</li>
-                    <li>TIF/TGIF Portfolio</li>
-                    <li>2040 Scenarios</li>
-                    <li>Climate Impacts</li>
-                    <li>System-Level Themes</li>
-                    <li>Acknowledgements and Methodology</li>
-                </ul>
-            </nav>
-        </header>
+		<div id="introduction" class="section-anchor" aria-hidden="true"></div>
+		 
 		<section id="hero-intro" aria-label="Opening hero scene">
 			<div class="hero-stage">
 				<img class="hero-globe" src="globe.png" alt="Earth globe visual" />
@@ -104,14 +92,8 @@
 					</p>
 				</div>
 		</section>
-
-		<section id="intro-anchor" aria-hidden="true">
-		</section>
-       
 		<main id="app">
-
-
-
+			<div id="global-emissions-picture" class="section-anchor" aria-hidden="true"></div>
 
 			<section id="sankey-narrative" aria-label="Global emissions narrative and Sankey chart">
 				<div class="sankey-layout">
@@ -128,6 +110,27 @@
 						<p id="snippet-4" class="sankey-snippet">
 							<span>These lenses include the <strong>final services</strong> provided to us, such as travel and food.</span>
 						</p>
+						<p id="snippet-5" class="sankey-snippet">
+							<span>
+								They also include the economic sectors that provide those final services, the equipment that composes each sector, the devices that make up equipment, the final energy that powers devices, the fuels we use, and the types of greenhouse gas emissions.
+							</span>
+						</p>
+						<p id="snippet-6" class="sankey-snippet">
+							<span>
+								Each lens is inclusive of all the world's emissions. Emissions can be traced between domains as they flow through the global economy.
+							</span>
+						</p>
+						<p id="snippet-7" class="sankey-snippet">
+							<span>
+								Each lens can be broken down into nodes, such as travel and food when looking through the lens of final services. Together, all the nodes for one lens sum to global emissions.
+							</span>
+						</p>
+						<p id="snippet-8" class="sankey-snippet">
+							<span>
+								Flows between neighboring nodes show how emissions are connected across lenses, with flow width reflecting the magnitude of those connections. For example, of the 6 Gt CO2e due to Passenger Transport, 4.4 Gt are due to cars.
+							</span>
+						</p>
+
 					</div>
 
 					<section id="full-sankey">
@@ -140,6 +143,109 @@
 					</section>
 				</div>
 			</section>
+
+
+			<section id="tif-tgif-portfolio" aria-label="TIF and TGIF Portfolio">
+				<header class="portfolio-top-nav" data-portfolio-nav>
+					<div class="portfolio-top-nav__inner">
+						<a class="portfolio-top-nav__brand" href="#introduction">Real World Climate Impact At Scale</a>
+						<button
+							class="portfolio-top-nav__toggle"
+							type="button"
+							aria-expanded="false"
+							aria-controls="portfolio-nav-list"
+						>
+							Menu
+						</button>
+						<nav class="portfolio-top-nav__menu" aria-label="Primary">
+							<ul id="portfolio-nav-list" class="portfolio-top-nav__list">
+								<li><a href="#introduction" data-nav-target="introduction">Introduction</a></li>
+								<li><a href="#global-emissions-picture" data-nav-target="global-emissions-picture">Global Emissions Picture</a></li>
+								<li><a href="#tif-tgif-portfolio" data-nav-target="tif-tgif-portfolio">TIF &amp; TGIF Portfolio</a></li>
+								<li><a href="#2040-scenarios" data-nav-target="2040-scenarios">2040 Scenarios</a></li>
+								<li><a href="#climate-impacts" data-nav-target="climate-impacts">Climate Impacts</a></li>
+								<li><a href="#system-level-themes" data-nav-target="system-level-themes">System-Level Themes</a></li>
+								<li><a href="#acknowledgements-citations" data-nav-target="acknowledgements-citations">Acknowledgements &amp; Citations</a></li>
+							</ul>
+						</nav>
+					</div>
+				</header>
+
+				<div class="portfolio-intro" data-nav-theme="dark">
+					<h2 class="portfolio-intro__headline">
+						This is the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.
+					</h2>
+				</div>
+
+				<div class="portfolio-layout" data-nav-theme="highlight">
+					<div class="portfolio-layout__copy">
+						<p class="portfolio-layout__lead">
+							The technologies in the TIF and TGIF portfolios have each been assigned to a node and, together, touch many parts of the global economy.
+						</p>
+
+						<p class="portfolio-layout__lead">
+							Select a company from TIF and TGIF's portfolio to see where its specific technology makes an impact.
+						</p>
+
+						<section class="portfolio-businesses" aria-label="Portfolio businesses">
+							<div class="portfolio-businesses__sticky" data-business-accordion>
+								<nav class="portfolio-businesses__nav" aria-label="Business anchors">
+									<a class="portfolio-businesses__link is-active" href="#fervo" data-business-link="fervo" aria-expanded="true" aria-controls="business-panel-fervo" aria-current="true">
+										<span>Fervo</span>
+										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
+										<div id="business-panel-fervo" class="portfolio-businesses__panel" data-business-panel="fervo">
+											<p>Fervo Energy is scaling next-generation geothermal power.</p>
+											<p>Geothermal power has a direct impact on electricity and heat emissions, where low-carbon baseload energy can help reduce dependence on fossil fuel generation across the economy.</p>
+										</div>
+									</a>
+									<a class="portfolio-businesses__link" href="#propel-aero" data-business-link="propel-aero" aria-expanded="false" aria-controls="business-panel-propel-aero" aria-current="false">
+										<span>Propel Aero</span>
+										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
+										<div id="business-panel-propel-aero" class="portfolio-businesses__panel" data-business-panel="propel-aero" hidden>
+											<p>Propel Aero is advancing hybrid electric air travel for regional transport.</p>
+											<p>Electric air travel technology has a direct impact on plane emissions, resulting in lower emissions for direct oil use and passenger transport when viewed through different lenses.</p>
+										</div>
+									</a>
+									<a class="portfolio-businesses__link" href="#electric-hydrogen" data-business-link="electric-hydrogen" aria-expanded="false" aria-controls="business-panel-electric-hydrogen" aria-current="false">
+										<span>Electric Hydrogen</span>
+										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
+										<div id="business-panel-electric-hydrogen" class="portfolio-businesses__panel" data-business-panel="electric-hydrogen" hidden>
+											<p>Electric Hydrogen is scaling cost-competitive green hydrogen production.</p>
+											<p>Green hydrogen has a direct impact on chemical emissions, although future applications of the technology may impact emissions from passenger transport, freight, and industrial activities like iron and steel.</p>
+										</div>
+									</a>
+									<a class="portfolio-businesses__link" href="#redwood-materials" data-business-link="redwood-materials" aria-expanded="false" aria-controls="business-panel-redwood-materials" aria-current="false">
+										<span>Redwood Materials</span>
+										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
+										<div id="business-panel-redwood-materials" class="portfolio-businesses__panel" data-business-panel="redwood-materials" hidden>
+											<p>Redwood Materials is advancing the circular economy through technologies for battery repurposing and recycling.</p>
+											<p>Battery repurposing has a direct impact on emissions from other industries, which includes battery manufacturing.</p>
+										</div>
+									</a>
+								</nav>
+							</div>
+
+							<div class="portfolio-businesses__steps" aria-hidden="true">
+								<div id="fervo" class="portfolio-businesses__step" data-business-step="fervo"></div>
+								<div id="propel-aero" class="portfolio-businesses__step" data-business-step="propel-aero"></div>
+								<div id="electric-hydrogen" class="portfolio-businesses__step" data-business-step="electric-hydrogen"></div>
+								<div id="redwood-materials" class="portfolio-businesses__step" data-business-step="redwood-materials"></div>
+							</div>
+						</section>
+
+
+					</div>
+					<div class="portfolio-layout__visual" aria-hidden="true">
+						<svg id="portfolio-sankey-chart" role="img" aria-label="Portfolio full sankey context"></svg>
+					</div>
+				</div>
+			</section>
+
+			<section id="2040-scenarios" class="section-placeholder" aria-label="2040 Scenarios" data-nav-theme="energy"></section>
+			<section id="climate-impacts" class="section-placeholder" aria-label="Climate Impacts"></section>
+			<section id="system-level-themes" class="section-placeholder" aria-label="System-Level Themes"></section>
+			<section id="acknowledgements-citations" class="section-placeholder" aria-label="Acknowledgements and Citations"></section>
+
 
         </main>
 
@@ -302,6 +408,202 @@
 					invalidateOnRefresh: true
 				});
 			});
+
+			const portfolioNavRoot = document.querySelector("[data-portfolio-nav]");
+			if (portfolioNavRoot) {
+				const navToggle = portfolioNavRoot.querySelector(".portfolio-top-nav__toggle");
+				const navLinks = Array.from(portfolioNavRoot.querySelectorAll("a[data-nav-target]"));
+				const businessLinks = Array.from(document.querySelectorAll("[data-business-link]"));
+				const businessPanels = Array.from(document.querySelectorAll("[data-business-panel]"));
+				const businessSteps = Array.from(document.querySelectorAll("[data-business-step]"));
+				const portfolioSection = document.getElementById("tif-tgif-portfolio");
+				const themeMarkers = Array.from(document.querySelectorAll("[data-nav-theme]"));
+				const mobileMq = window.matchMedia("(max-width: 900px)");
+				const themeClassNames = ["nav-theme-dark", "nav-theme-highlight", "nav-theme-energy"];
+				let activeBusinessId = businessLinks[0]?.dataset.businessLink || "";
+
+				const closeMobileNav = () => {
+					portfolioNavRoot.classList.remove("is-open");
+					if (navToggle) {
+						navToggle.setAttribute("aria-expanded", "false");
+					}
+				};
+
+				const openMobileNav = () => {
+					portfolioNavRoot.classList.add("is-open");
+					if (navToggle) {
+						navToggle.setAttribute("aria-expanded", "true");
+					}
+				};
+
+				if (navToggle) {
+					navToggle.addEventListener("click", () => {
+						if (portfolioNavRoot.classList.contains("is-open")) {
+							closeMobileNav();
+							return;
+						}
+						openMobileNav();
+					});
+				}
+
+				navLinks.forEach((link) => {
+					link.addEventListener("click", () => {
+						if (mobileMq.matches) {
+							closeMobileNav();
+						}
+					});
+				});
+
+				const setActiveBusiness = (businessId, options = {}) => {
+					if (!businessId) {
+						return;
+					}
+
+					const { syncHash = false } = options;
+
+					activeBusinessId = businessId;
+					window.currentPortfolioBusinessId = businessId;
+					document.dispatchEvent(
+						new CustomEvent("portfolio-business-change", {
+							detail: { businessId }
+						})
+					);
+
+					businessLinks.forEach((link) => {
+						const isActive = link.dataset.businessLink === businessId;
+						link.classList.toggle("is-active", isActive);
+						link.setAttribute("aria-expanded", isActive ? "true" : "false");
+						link.setAttribute("aria-current", isActive ? "true" : "false");
+					});
+
+					businessPanels.forEach((panel) => {
+						panel.hidden = panel.dataset.businessPanel !== businessId;
+					});
+
+					if (syncHash && window.history?.replaceState) {
+						window.history.replaceState(null, "", `#${businessId}`);
+					}
+				};
+
+				const updateActiveBusinessByScroll = () => {
+					if (!businessSteps.length || mobileMq.matches) {
+						return;
+					}
+
+					const threshold = window.innerHeight * 0.4;
+					let nextBusinessId = businessSteps[0]?.dataset.businessStep || "";
+
+					businessSteps.forEach((step) => {
+						if (step.getBoundingClientRect().top <= threshold) {
+							nextBusinessId = step.dataset.businessStep || nextBusinessId;
+						}
+					});
+
+					if (nextBusinessId && nextBusinessId !== activeBusinessId) {
+						setActiveBusiness(nextBusinessId, { syncHash: true });
+					}
+				};
+
+				businessLinks.forEach((link) => {
+					link.addEventListener("click", (event) => {
+						event.preventDefault();
+
+						const businessId = link.dataset.businessLink;
+						const targetStep = businessId ? document.getElementById(businessId) : null;
+
+						if (!businessId || !targetStep) {
+							return;
+						}
+
+						setActiveBusiness(businessId, { syncHash: true });
+						targetStep.scrollIntoView({
+							behavior: prefersReducedMotion ? "auto" : "smooth",
+							block: "start"
+						});
+					});
+				});
+
+				const updateActiveNav = () => {
+					const threshold = window.innerHeight * 0.4;
+					let activeSectionId = navLinks[0]?.dataset.navTarget || "";
+
+					navLinks.forEach((link) => {
+						const sectionId = link.dataset.navTarget;
+						const sectionEl = sectionId ? document.getElementById(sectionId) : null;
+						if (!sectionEl) {
+							return;
+						}
+
+						const top = sectionEl.getBoundingClientRect().top;
+						if (top <= threshold) {
+							activeSectionId = sectionId;
+						}
+					});
+
+					navLinks.forEach((link) => {
+						const isActive = link.dataset.navTarget === activeSectionId;
+						link.classList.toggle("is-active", isActive);
+						link.setAttribute("aria-current", isActive ? "page" : "false");
+					});
+				};
+
+				const updateNavVisibilityAndTheme = () => {
+					const portfolioTop = portfolioSection?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+					const shouldShow = portfolioTop <= 0;
+					portfolioNavRoot.classList.toggle("is-visible", shouldShow);
+
+					if (!shouldShow) {
+						portfolioNavRoot.classList.remove(...themeClassNames);
+						portfolioNavRoot.classList.add("nav-theme-dark");
+						closeMobileNav();
+						return;
+					}
+
+					const navHeight = portfolioNavRoot.offsetHeight || 0;
+					let activeTheme = "dark";
+
+					themeMarkers.forEach((marker) => {
+						const markerTop = marker.getBoundingClientRect().top;
+						if (markerTop <= navHeight) {
+							activeTheme = marker.dataset.navTheme || activeTheme;
+						}
+					});
+
+					portfolioNavRoot.classList.remove(...themeClassNames);
+					portfolioNavRoot.classList.add(`nav-theme-${activeTheme}`);
+				};
+
+				let navRaf = null;
+				const onNavScroll = () => {
+					if (navRaf !== null) {
+						return;
+					}
+					navRaf = requestAnimationFrame(() => {
+						updateNavVisibilityAndTheme();
+						updateActiveNav();
+						updateActiveBusinessByScroll();
+						navRaf = null;
+					});
+				};
+
+				window.addEventListener("scroll", onNavScroll, { passive: true });
+				window.addEventListener("resize", () => {
+					if (!mobileMq.matches) {
+						closeMobileNav();
+					}
+					onNavScroll();
+				});
+
+				const hashBusinessId = window.location.hash.replace("#", "");
+				if (hashBusinessId && businessLinks.some((link) => link.dataset.businessLink === hashBusinessId)) {
+					setActiveBusiness(hashBusinessId, { syncHash: false });
+				} else {
+					setActiveBusiness(activeBusinessId, { syncHash: false });
+				}
+
+				updateActiveNav();
+				onNavScroll();
+			}
 		</script>
 
 		<!-- Your app script(s) go below -->

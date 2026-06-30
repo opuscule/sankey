@@ -1,6 +1,9 @@
 (function () {
-	const csvPath = "exchange-matrix-2025-06172026.csv";
+	const initPath = "init.json";
+	const baselinesPath = "baselines.json";
+	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
+	const portfolioChart = document.getElementById("portfolio-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 
 	if (!chart || !statusEl || !window.d3 || !d3.sankey) {
@@ -17,23 +20,103 @@
 		7: "--color-emissions"
 	};
 
+	const nodeIdAliases = {
+		"5_Cement Kiln": "5_(Cement kiln)",
+		"5_Chemical use": "5_(Chemical use)",
+		"5_Waste": "5_(Waste)"
+	};
+
 	const state = {
 		nodes: [],
 		links: [],
 		selectedNodeId: null,
 		rendered: null,
 		layoutProgress: 0,
-		sankeyInteractive: false
+		sankeyInteractive: false,
+		portfolioRendered: null,
+		portfolioBusinessNodeMap: new Map()
 	};
 
 	const fmtMt = d3.format(",.2f");
 	const fmtPct = d3.format(".2f");
 	const linkGradientId = (sourceStage, targetStage) => `link-gradient-${sourceStage}-${targetStage}`;
+	const portfolioLinkGradientId = (sourceStage, targetStage) =>
+		`portfolio-link-gradient-${sourceStage}-${targetStage}`;
 	const classSlug = (value) =>
 		String(value || "")
 			.toLowerCase()
 			.replace(/[^a-z0-9]+/g, "-")
 			.replace(/^-+|-+$/g, "") || "unknown";
+
+	const supportedPortfolioBusinesses = new Set([
+		"fervo",
+		"propel-aero",
+		"electric-hydrogen",
+		"redwood-materials"
+	]);
+
+	const toFiniteNumber = (value, fallback = 0) => {
+		const parsed = Number.parseFloat(String(value ?? "").trim());
+		return Number.isFinite(parsed) ? parsed : fallback;
+	};
+
+	const deriveLabelFromId = (rawId) => {
+		const id = String(rawId || "").trim();
+		const firstUnderscore = id.indexOf("_");
+		if (firstUnderscore === -1) {
+			return id;
+		}
+		return id.slice(firstUnderscore + 1);
+	};
+
+	const deriveStageFromId = (rawId) => {
+		const id = String(rawId || "").trim();
+		const firstUnderscore = id.indexOf("_");
+		if (firstUnderscore === -1) {
+			return 0;
+		}
+
+		const stage = Number.parseInt(id.slice(0, firstUnderscore), 10);
+		return Number.isFinite(stage) ? stage : 0;
+	};
+
+	const nodeQualityScore = (node) => {
+		let score = 0;
+		if ((node.description || "").trim()) {
+			score += 4;
+		}
+		if (Number.isFinite(node.group) && node.group !== 0) {
+			score += 3;
+		}
+		if (Number.isFinite(node.order) && node.order < 900) {
+			score += 2;
+		}
+		if (Number.isFinite(node.layer) && node.layer > 0) {
+			score += 1;
+		}
+		if (Array.isArray(node.keywords) && node.keywords.length > 0) {
+			score += 1;
+		}
+		return score;
+	};
+
+	const normalizeNodeId = (rawId, nodeById) => {
+		const id = String(rawId || "").trim();
+		if (!id) {
+			return "";
+		}
+
+		if (nodeById.has(id)) {
+			return id;
+		}
+
+		const aliased = nodeIdAliases[id];
+		if (aliased && nodeById.has(aliased)) {
+			return aliased;
+		}
+
+		return id;
+	};
 
 	loadAndRender().catch((err) => {
 		console.error(err);
@@ -41,88 +124,413 @@
 	});
 
 	async function loadAndRender() {
-		const response = await fetch(csvPath);
-		if (!response.ok) {
-			throw new Error(`Failed to fetch ${csvPath}: ${response.status}`);
+		const [initResponse, baselinesResponse] = await Promise.all([
+			fetch(initPath),
+			fetch(baselinesPath)
+		]);
+
+		if (!initResponse.ok) {
+			throw new Error(`Failed to fetch ${initPath}: ${initResponse.status}`);
+		}
+		if (!baselinesResponse.ok) {
+			throw new Error(`Failed to fetch ${baselinesPath}: ${baselinesResponse.status}`);
 		}
 
-		const csvText = await response.text();
-		const rows = d3.csvParse(csvText);
+		const [initData, baselinesData] = await Promise.all([
+			initResponse.json(),
+			baselinesResponse.json()
+		]);
 
-		const graph = buildGraph(rows);
+		const graph = buildGraph(initData, baselinesData, defaultScenario);
 		state.nodes = graph.nodes;
 		state.links = graph.links;
+		state.portfolioBusinessNodeMap = buildPortfolioBusinessNodeMap(initData);
 
 		if (!state.nodes.length || !state.links.length) {
-			statusEl.textContent = "No positive flows found in CSV";
+			statusEl.textContent = `No positive flows found for scenario ${graph.scenario}`;
 			return;
 		}
 
 		render();
+		renderPortfolioSankey();
+		setupPortfolioBusinessSync();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
 
-	function buildGraph(rows) {
-		const nodeMap = new Map();
-		const links = [];
+	function normalizeBusinessSlug(rawValue) {
+		const slug = String(rawValue || "")
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "");
 
-		for (const row of rows) {
-			const rawSource = (row.source || "").trim();
-			const rawTarget = (row.target || "").trim();
-			const value = Number.parseFloat(row.value || "0");
-			if (!rawSource || !rawTarget || !Number.isFinite(value) || value <= 0) {
+		if (!slug) {
+			return "";
+		}
+		if (slug.includes("fervo")) {
+			return "fervo";
+		}
+		if (slug.includes("propel")) {
+			return "propel-aero";
+		}
+		if (slug.includes("electric") && slug.includes("hydrogen")) {
+			return "electric-hydrogen";
+		}
+		if (slug.includes("redwood")) {
+			return "redwood-materials";
+		}
+
+		return slug;
+	}
+
+	function buildPortfolioBusinessNodeMap(initData) {
+		const map = new Map();
+		for (const businessId of supportedPortfolioBusinesses) {
+			map.set(businessId, null);
+		}
+
+		const companies = initData?.intervention?.companies;
+		if (!Array.isArray(companies)) {
+			return map;
+		}
+
+		for (const company of companies) {
+			const candidates = [company?.company, company?.company_label];
+			let businessId = "";
+			for (const candidate of candidates) {
+				const normalized = normalizeBusinessSlug(candidate);
+				if (supportedPortfolioBusinesses.has(normalized)) {
+					businessId = normalized;
+					break;
+				}
+			}
+
+			if (!businessId) {
 				continue;
 			}
 
-			const sourceMeta = parseNode(rawSource);
-			const targetMeta = parseNode(rawTarget);
+			const nodeId = String(company?.node || "").trim();
+			map.set(businessId, nodeId || null);
+		}
 
-			if (!nodeMap.has(sourceMeta.id)) {
-				nodeMap.set(sourceMeta.id, sourceMeta);
-			}
-			if (!nodeMap.has(targetMeta.id)) {
-				nodeMap.set(targetMeta.id, targetMeta);
+		return map;
+	}
+
+	function renderPortfolioSankey() {
+		if (!portfolioChart || !state.nodes.length || !state.links.length) {
+			return;
+		}
+
+		const bounds = portfolioChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(560, Math.floor(bounds.height));
+
+		d3.select(portfolioChart).selectAll("*").remove();
+
+		const svg = d3
+			.select(portfolioChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+
+		const graph = {
+			nodes: state.nodes.map((node) => ({ ...node })),
+			links: state.links.map((link) => ({ ...link }))
+		};
+
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(20)
+			.nodePadding(9)
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[28, 44],
+				[width - 28, height - 34]
+			])
+			.iterations(64)(graph);
+
+		const defs = svg.append("defs");
+		const stagePairs = Array.from(
+			new Set(
+				graph.links.map(
+					(link) => `${link.source?.stage ?? "unknown"}-${link.target?.stage ?? "unknown"}`
+				)
+			)
+		);
+
+		stagePairs.forEach((pair) => {
+			const [sourceStageRaw, targetStageRaw] = pair.split("-");
+			const sourceStage = Number.parseInt(sourceStageRaw, 10);
+			const targetStage = Number.parseInt(targetStageRaw, 10);
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+
+			if (!sourceColorVar || !targetColorVar) {
+				return;
 			}
 
-			const energy = Number.parseFloat(row.Energy || "0") || 0;
-			const process = Number.parseFloat(row.Process || "0") || 0;
-			const afolu = Number.parseFloat(row.AFOLU || "0") || 0;
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", portfolioLinkGradientId(sourceStage, targetStage))
+				.attr("x1", "0%")
+				.attr("y1", "0%")
+				.attr("x2", "100%")
+				.attr("y2", "0%");
+
+			gradient
+				.append("stop")
+				.attr("offset", "0%")
+				.style("stop-color", `var(${sourceColorVar})`)
+				.attr("stop-opacity", 0.35);
+			gradient
+				.append("stop")
+				.attr("offset", "100%")
+				.style("stop-color", `var(${targetColorVar})`)
+				.attr("stop-opacity", 0.35);
+		});
+
+		const linksGroup = svg
+			.append("g")
+			.attr("fill", "none")
+			.attr("stroke-opacity", 1)
+			.attr("class", "sankey-links");
+
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(graph.links, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", (link) => {
+				const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+				const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+				if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+					return `url(#${portfolioLinkGradientId(sourceStage, targetStage)})`;
+				}
+				return "rgba(208, 222, 235, 0.38)";
+			})
+			.attr("d", d3.sankeyLinkHorizontal())
+			.attr("stroke-width", (d) => Math.max(1, d.width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => (d.x0 < width / 2 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
+			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+			.text((d) => d.label);
+
+		state.portfolioRendered = {
+			nodeSelection,
+			linkSelection,
+			graph
+		};
+
+		applyPortfolioBusinessHighlight(window.currentPortfolioBusinessId || "fervo");
+	}
+
+	function setupPortfolioBusinessSync() {
+		document.addEventListener("portfolio-business-change", (event) => {
+			applyPortfolioBusinessHighlight(event?.detail?.businessId);
+		});
+	}
+
+	function applyPortfolioBusinessHighlight(rawBusinessId) {
+		if (!state.portfolioRendered) {
+			return;
+		}
+
+		const businessId = normalizeBusinessSlug(rawBusinessId);
+		if (!supportedPortfolioBusinesses.has(businessId)) {
+			return;
+		}
+
+		const nodeId = state.portfolioBusinessNodeMap.get(businessId);
+		const { nodeSelection, linkSelection, graph } = state.portfolioRendered;
+
+		if (!nodeId) {
+			linkSelection
+				.classed("portfolio-is-highlight", false)
+				.classed("portfolio-is-muted", false);
+			nodeSelection
+				.classed("portfolio-is-highlight", false)
+				.classed("portfolio-is-muted", false);
+			return;
+		}
+
+		const connectedLinks = graph.links.filter(
+			(link) => link.source.id === nodeId || link.target.id === nodeId
+		);
+		const connectedNodeIds = new Set([nodeId]);
+		for (const link of connectedLinks) {
+			connectedNodeIds.add(link.source.id);
+			connectedNodeIds.add(link.target.id);
+		}
+
+		linkSelection
+			.classed("portfolio-is-highlight", (link) =>
+				link.source.id === nodeId || link.target.id === nodeId
+			)
+			.classed("portfolio-is-muted", (link) =>
+				!(link.source.id === nodeId || link.target.id === nodeId)
+			);
+
+		nodeSelection
+			.classed("portfolio-is-highlight", (node) => connectedNodeIds.has(node.id))
+			.classed("portfolio-is-muted", (node) => !connectedNodeIds.has(node.id));
+	}
+
+	function buildGraph(initData, baselinesData, requestedScenario) {
+		const initNodes = initData?.nodes?.nodes;
+		const baselineLinks = baselinesData?.links;
+		const scenarios = baselinesData?.scenarios;
+
+		if (!Array.isArray(initNodes)) {
+			throw new Error("Invalid init.json: expected nodes.nodes[] array");
+		}
+		if (!Array.isArray(baselineLinks)) {
+			throw new Error("Invalid baselines.json: expected links[] array");
+		}
+		if (!Array.isArray(scenarios) || !scenarios.length) {
+			throw new Error("Invalid baselines.json: expected scenarios[]");
+		}
+
+		const scenario = scenarios.includes(requestedScenario) ? requestedScenario : scenarios[0];
+		if (scenario !== requestedScenario) {
+			console.warn(
+				`[Sankey] Scenario \"${requestedScenario}\" not found in baselines; using \"${scenario}\" instead.`
+			);
+		}
+
+		const nodeById = new Map();
+		let dedupeCount = 0;
+		let dedupeReplacedCount = 0;
+		for (const rawNode of initNodes) {
+			const nodeId = String(rawNode?.id || "").trim();
+			if (!nodeId) {
+				continue;
+			}
+
+			const normalizedNode = {
+				id: nodeId,
+				label: deriveLabelFromId(nodeId),
+				stage: Number.isFinite(rawNode?.layer) ? rawNode.layer : deriveStageFromId(nodeId),
+				order: Number.isFinite(rawNode?.order) ? rawNode.order : Number.MAX_SAFE_INTEGER,
+				group: Number.isFinite(rawNode?.group) ? rawNode.group : 0,
+				description: String(rawNode?.description || "")
+			};
+
+			if (!nodeById.has(nodeId)) {
+				nodeById.set(nodeId, normalizedNode);
+				continue;
+			}
+
+			dedupeCount += 1;
+			const existing = nodeById.get(nodeId);
+			if (nodeQualityScore(normalizedNode) > nodeQualityScore(existing)) {
+				nodeById.set(nodeId, normalizedNode);
+				dedupeReplacedCount += 1;
+			}
+		}
+
+		if (dedupeCount > 0) {
+			console.warn(
+				`[Sankey] Deduplicated ${dedupeCount} init node entries (${dedupeReplacedCount} replaced with higher-quality metadata).`
+			);
+		}
+
+		const links = [];
+		const linkedNodeIds = new Set();
+		let remappedIds = 0;
+		let droppedLinks = 0;
+		let nullScenarioPayloads = 0;
+
+		for (const link of baselineLinks) {
+			const sourceId = normalizeNodeId(link?.source, nodeById);
+			const targetId = normalizeNodeId(link?.target, nodeById);
+			if (sourceId !== String(link?.source || "").trim()) {
+				remappedIds += 1;
+			}
+			if (targetId !== String(link?.target || "").trim()) {
+				remappedIds += 1;
+			}
+
+			if (!sourceId || !targetId || !nodeById.has(sourceId) || !nodeById.has(targetId)) {
+				droppedLinks += 1;
+				continue;
+			}
+
+			const scenarioValues = link?.[scenario];
+			if (!scenarioValues || typeof scenarioValues !== "object") {
+				nullScenarioPayloads += 1;
+				continue;
+			}
+
+			const value = toFiniteNumber(scenarioValues.value, 0);
+			if (value <= 0) {
+				continue;
+			}
+
+			const energy = toFiniteNumber(scenarioValues.energy, 0);
+			const process = toFiniteNumber(scenarioValues.process, 0);
+			const afolu = toFiniteNumber(scenarioValues.afolu, 0);
 
 			links.push({
 				id: `link-${links.length}`,
-				source: sourceMeta.id,
-				target: targetMeta.id,
+				source: sourceId,
+				target: targetId,
 				value,
 				energy,
 				process,
 				afolu
 			});
+
+			linkedNodeIds.add(sourceId);
+			linkedNodeIds.add(targetId);
 		}
 
-		const nodes = Array.from(nodeMap.values()).sort((a, b) => {
+		if (remappedIds > 0) {
+			console.warn(`[Sankey] Normalized ${remappedIds} link endpoint IDs using alias mappings.`);
+		}
+		if (droppedLinks > 0) {
+			console.warn(`[Sankey] Dropped ${droppedLinks} links with missing or unknown nodes.`);
+		}
+		if (nullScenarioPayloads > 0) {
+			console.warn(`[Sankey] Skipped ${nullScenarioPayloads} links with null or missing ${scenario} payloads.`);
+		}
+
+		const nodes = Array.from(linkedNodeIds)
+			.map((id) => nodeById.get(id))
+			.filter(Boolean)
+			.sort((a, b) => {
 			if (a.stage !== b.stage) {
 				return a.stage - b.stage;
+			}
+			if (a.order !== b.order) {
+				return a.order - b.order;
 			}
 			return a.label.localeCompare(b.label);
 		});
 
-		return { nodes, links };
-	}
-
-	function parseNode(rawId) {
-		const firstUnderscore = rawId.indexOf("_");
-		if (firstUnderscore === -1) {
-			return { id: rawId, label: rawId, stage: 0 };
-		}
-
-		const stage = Number.parseInt(rawId.slice(0, firstUnderscore), 10);
-		const label = rawId.slice(firstUnderscore + 1);
-		return {
-			id: rawId,
-			label,
-			stage: Number.isFinite(stage) ? stage : 0
-		};
+		return { nodes, links, scenario };
 	}
 
 	function render() {
@@ -237,6 +645,98 @@
 		const expandedGraph = computeLayout(9);
 		const collapsedGraph = derivePackedLayout(expandedGraph);
 
+		const buildColumnStackedLayouts = (baseLayout, targetLayout) => {
+			const columnKey = (node) => {
+				if (Number.isFinite(node.depth)) {
+					return `depth-${node.depth}`;
+				}
+				if (Number.isFinite(node.stage)) {
+					return `stage-${node.stage}`;
+				}
+				return "col-unknown";
+			};
+
+			const targetColumns = d3.rollup(
+				targetLayout.nodes,
+				(nodes) => ({
+					x0: d3.min(nodes, (node) => node.x0) ?? sankeyExtentLeft,
+					x1: d3.max(nodes, (node) => node.x1) ?? sankeyExtentLeft + 20
+				}),
+				(node) => columnKey(node)
+			);
+
+			const orderedColumns = Array.from(targetColumns.entries())
+				.sort((a, b) => a[1].x0 - b[1].x0)
+				.map(([column]) => column);
+
+			const anchorX0 = d3.min(targetLayout.nodes, (node) => node.x0) ?? sankeyExtentLeft;
+			const typicalColumnWidth =
+				d3.median(Array.from(targetColumns.values()), (column) => Math.max(1, column.x1 - column.x0)) ??
+				20;
+			const anchorX1 = anchorX0 + typicalColumnWidth;
+			const sharedY0 = d3.min(baseLayout.nodes, (node) => node.y0) ?? sankeyExtentTop;
+			const sharedY1 = d3.max(baseLayout.nodes, (node) => node.y1) ?? sankeyExtentBottom;
+
+			const remapLayout = (mode) => {
+				const remappedNodes = baseLayout.nodes.map((node) => {
+					const column = columnKey(node);
+					const targetColumn = targetColumns.get(column) || { x0: anchorX0, x1: anchorX1 };
+
+					if (mode === "start") {
+						return {
+							...node,
+							x0: anchorX0,
+							x1: anchorX1,
+							y0: sharedY0,
+							y1: sharedY1
+						};
+					}
+
+					return {
+						...node,
+						x0: targetColumn.x0,
+						x1: targetColumn.x1,
+						y0: sharedY0,
+						y1: sharedY1
+					};
+				});
+
+				const remappedNodeById = new Map(remappedNodes.map((node) => [node.id, node]));
+				const remappedLinks = baseLayout.links.map((link) => {
+					const source = remappedNodeById.get(link.source.id);
+					const target = remappedNodeById.get(link.target.id);
+					if (!source || !target) {
+						return {
+							...link
+						};
+					}
+					const sourceOffset = link.y0 - link.source.y0;
+					const targetOffset = link.y1 - link.target.y0;
+
+					return {
+						...link,
+						source,
+						target,
+						y0: source.y0 + sourceOffset,
+						y1: target.y0 + targetOffset
+					};
+				});
+
+				return {
+					nodes: remappedNodes,
+					links: remappedLinks
+				};
+			};
+
+			return {
+				stacked: remapLayout("start"),
+				horizontal: remapLayout("end"),
+				columnOrder: orderedColumns
+			};
+		};
+
+		const introLayouts = buildColumnStackedLayouts(collapsedGraph, expandedGraph);
+
 		const defs = svg.append("defs");
 		const stagePairs = Array.from(
 			new Set(
@@ -268,9 +768,11 @@
 			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`).attr("stop-opacity", 0.3);
 		});
 
-		const nodeStartMap = new Map(collapsedGraph.nodes.map((node) => [node.id, node]));
+		const nodeIntroStartMap = new Map(introLayouts.stacked.nodes.map((node) => [node.id, node]));
+		const nodeIntroEndMap = new Map(introLayouts.horizontal.nodes.map((node) => [node.id, node]));
 		const nodeEndMap = new Map(expandedGraph.nodes.map((node) => [node.id, node]));
-		const linkStartMap = new Map(collapsedGraph.links.map((link) => [link.id, link]));
+		const linkIntroStartMap = new Map(introLayouts.stacked.links.map((link) => [link.id, link]));
+		const linkIntroEndMap = new Map(introLayouts.horizontal.links.map((link) => [link.id, link]));
 		const linkEndMap = new Map(expandedGraph.links.map((link) => [link.id, link]));
 
 		const linksGroup = svg
@@ -349,7 +851,7 @@
 
 		nodeSelection
 			.append("title")
-			.text((d) => `${d.label}`);
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
 
 		nodeSelection
 			.append("text")
@@ -395,17 +897,26 @@
 			state.layoutProgress = clamped;
 			setSankeyInteraction(clamped >= 0.999);
 
+			const introPhase = clamped < 0.5;
+			const introRawProgress = clamped / 0.5;
+			const introEasedProgress = Math.max(0, Math.min(1, Math.pow(introRawProgress, 3)));
+			const phaseProgress = introPhase ? introEasedProgress : (clamped - 0.5) / 0.5;
+			const activeNodeStartMap = introPhase ? nodeIntroStartMap : nodeIntroEndMap;
+			const activeNodeEndMap = introPhase ? nodeIntroEndMap : nodeEndMap;
+			const activeLinkStartMap = introPhase ? linkIntroStartMap : linkIntroEndMap;
+			const activeLinkEndMap = introPhase ? linkIntroEndMap : linkEndMap;
+
 			nodeSelection.each(function (nodeDatum) {
-				const startNode = nodeStartMap.get(nodeDatum.id);
-				const endNode = nodeEndMap.get(nodeDatum.id);
+				const startNode = activeNodeStartMap.get(nodeDatum.id);
+				const endNode = activeNodeEndMap.get(nodeDatum.id);
 				if (!startNode || !endNode) {
 					return;
 				}
 
-				const x0 = lerp(startNode.x0, endNode.x0, clamped);
-				const x1 = lerp(startNode.x1, endNode.x1, clamped);
-				const y0 = lerp(startNode.y0, endNode.y0, clamped);
-				const y1 = lerp(startNode.y1, endNode.y1, clamped);
+				const x0 = lerp(startNode.x0, endNode.x0, phaseProgress);
+				const x1 = lerp(startNode.x1, endNode.x1, phaseProgress);
+				const y0 = introPhase ? startNode.y0 : lerp(startNode.y0, endNode.y0, phaseProgress);
+				const y1 = introPhase ? startNode.y1 : lerp(startNode.y1, endNode.y1, phaseProgress);
 				const nodeWidth = Math.max(1, x1 - x0);
 				const nodeHeight = Math.max(3, y1 - y0);
 
@@ -419,47 +930,47 @@
 					.attr("text-anchor", x0 < width / 2 ? "start" : "end");
 			});
 
-			const linkOpacity = fadeIn(clamped, 0.06, 0.3);
-			const labelOpacity = fadeIn(clamped, 0.16, 0.28);
+			const linkOpacity = introPhase ? 0 : fadeIn(phaseProgress, 0.06, 0.3);
+			const labelOpacity = introPhase ? 0 : fadeIn(phaseProgress, 0.16, 0.28);
 
 			linkPaths.style("opacity", linkOpacity);
 			nodeSelection.select("text").style("opacity", labelOpacity);
 
 			linkPaths.each(function (linkDatum) {
-				const startLink = linkStartMap.get(linkDatum.id);
-				const endLink = linkEndMap.get(linkDatum.id);
+				const startLink = activeLinkStartMap.get(linkDatum.id);
+				const endLink = activeLinkEndMap.get(linkDatum.id);
 				if (!startLink || !endLink) {
 					return;
 				}
 
-				const startSource = nodeStartMap.get(startLink.source.id);
-				const endSource = nodeEndMap.get(endLink.source.id);
-				const startTarget = nodeStartMap.get(startLink.target.id);
-				const endTarget = nodeEndMap.get(endLink.target.id);
+				const startSource = activeNodeStartMap.get(startLink.source.id);
+				const endSource = activeNodeEndMap.get(endLink.source.id);
+				const startTarget = activeNodeStartMap.get(startLink.target.id);
+				const endTarget = activeNodeEndMap.get(endLink.target.id);
 				if (!startSource || !endSource || !startTarget || !endTarget) {
 					return;
 				}
 
 				const pathDatum = {
 					source: {
-						x0: lerp(startSource.x0, endSource.x0, clamped),
-						x1: lerp(startSource.x1, endSource.x1, clamped),
-						y0: lerp(startSource.y0, endSource.y0, clamped),
-						y1: lerp(startSource.y1, endSource.y1, clamped)
+						x0: lerp(startSource.x0, endSource.x0, phaseProgress),
+						x1: lerp(startSource.x1, endSource.x1, phaseProgress),
+						y0: lerp(startSource.y0, endSource.y0, phaseProgress),
+						y1: lerp(startSource.y1, endSource.y1, phaseProgress)
 					},
 					target: {
-						x0: lerp(startTarget.x0, endTarget.x0, clamped),
-						x1: lerp(startTarget.x1, endTarget.x1, clamped),
-						y0: lerp(startTarget.y0, endTarget.y0, clamped),
-						y1: lerp(startTarget.y1, endTarget.y1, clamped)
+							x0: lerp(startTarget.x0, endTarget.x0, phaseProgress),
+							x1: lerp(startTarget.x1, endTarget.x1, phaseProgress),
+							y0: lerp(startTarget.y0, endTarget.y0, phaseProgress),
+							y1: lerp(startTarget.y1, endTarget.y1, phaseProgress)
 					},
-					y0: lerp(startLink.y0, endLink.y0, clamped),
-					y1: lerp(startLink.y1, endLink.y1, clamped)
+					y0: lerp(startLink.y0, endLink.y0, phaseProgress),
+					y1: lerp(startLink.y1, endLink.y1, phaseProgress)
 				};
 
 				d3.select(this)
 					.attr("d", d3.sankeyLinkHorizontal()(pathDatum))
-					.attr("stroke-width", Math.max(1, lerp(startLink.width, endLink.width, clamped)));
+					.attr("stroke-width", Math.max(1, lerp(startLink.width, endLink.width, phaseProgress)));
 			});
 		};
 
@@ -585,6 +1096,7 @@
 			}
 			frameId = requestAnimationFrame(() => {
 				render();
+				renderPortfolioSankey();
 				frameId = null;
 			});
 		};

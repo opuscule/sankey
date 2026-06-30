@@ -1,0 +1,7518 @@
+{
+  "_comment": "Sankey flow data. Each link contains scenario keys (2025, 2040A, 2040B). Values in MtCO2e.",
+  "scenarios": [
+    "2025",
+    "2040A",
+    "2040B"
+  ],
+  "value_fields": [
+    "value",
+    "energy",
+    "process",
+    "afolu"
+  ],
+  "links": [
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Cement",
+      "2025": {
+        "value": 2889.9,
+        "energy": 1198.3,
+        "process": 1680.8,
+        "afolu": 10.9
+      },
+      "2040A": {
+        "value": 3101.1309,
+        "energy": 1295.1929,
+        "process": 1794.9942,
+        "afolu": 10.9439
+      },
+      "2040B": {
+        "value": 2739.115,
+        "energy": 1126.9568,
+        "process": 1603.348,
+        "afolu": 8.8103
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 645.3,
+        "energy": 313.8,
+        "process": 329.0,
+        "afolu": 2.5
+      },
+      "2040A": {
+        "value": 681.7298,
+        "energy": 327.8674,
+        "process": 351.3524,
+        "afolu": 2.5101
+      },
+      "2040B": {
+        "value": 587.6014,
+        "energy": 271.7412,
+        "process": 313.8395,
+        "afolu": 2.0207
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 2128.7,
+        "energy": 1855.9,
+        "process": 266.7,
+        "afolu": 6.1
+      },
+      "2040A": {
+        "value": 1865.8868,
+        "energy": 1574.9426,
+        "process": 284.8197,
+        "afolu": 6.1245
+      },
+      "2040B": {
+        "value": 1629.5061,
+        "energy": 1370.1652,
+        "process": 254.4103,
+        "afolu": 4.9305
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 231.7,
+        "energy": 207.1,
+        "process": 21.8,
+        "afolu": 2.8
+      },
+      "2040A": {
+        "value": 222.2383,
+        "energy": 196.146,
+        "process": 23.2811,
+        "afolu": 2.8113
+      },
+      "2040B": {
+        "value": 221.1162,
+        "energy": 198.0576,
+        "process": 20.7954,
+        "afolu": 2.2632
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 1735.3,
+        "energy": 1562.6,
+        "process": 97.1,
+        "afolu": 75.7
+      },
+      "2040A": {
+        "value": 2192.7001,
+        "energy": 2012.9985,
+        "process": 103.697,
+        "afolu": 76.0046
+      },
+      "2040B": {
+        "value": 1792.7587,
+        "energy": 1638.9462,
+        "process": 92.6256,
+        "afolu": 61.187
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Paper",
+      "2025": {
+        "value": 102.0,
+        "energy": 80.7,
+        "process": 1.1,
+        "afolu": 20.2
+      },
+      "2040A": {
+        "value": 125.4167,
+        "energy": 103.9607,
+        "process": 1.1747,
+        "afolu": 20.2813
+      },
+      "2040B": {
+        "value": 102.0195,
+        "energy": 84.6429,
+        "process": 1.0493,
+        "afolu": 16.3273
+      }
+    },
+    {
+      "source": "1_Buildings and infrastructure in construction",
+      "target": "2_Settlements",
+      "2025": {
+        "value": 298.5,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 298.5
+      },
+      "2040A": {
+        "value": 299.7011,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 299.7011
+      },
+      "2040B": {
+        "value": 241.2722,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 241.2722
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 258.1,
+        "energy": 125.5,
+        "process": 131.6,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 272.671,
+        "energy": 131.1261,
+        "process": 140.541,
+        "afolu": 1.004
+      },
+      "2040B": {
+        "value": 235.0232,
+        "energy": 108.6792,
+        "process": 125.5358,
+        "afolu": 0.8083
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Commerce, Public",
+      "2025": {
+        "value": 790.9,
+        "energy": 727.6,
+        "process": 51.7,
+        "afolu": 11.5
+      },
+      "2040A": {
+        "value": 836.9548,
+        "energy": 770.196,
+        "process": 55.2125,
+        "afolu": 11.5463
+      },
+      "2040B": {
+        "value": 654.3049,
+        "energy": 595.692,
+        "process": 49.3176,
+        "afolu": 9.2952
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Industrial facilities",
+      "2025": {
+        "value": 52.7,
+        "energy": 40.4,
+        "process": 10.2,
+        "afolu": 2.1
+      },
+      "2040A": {
+        "value": 56.1046,
+        "energy": 43.1031,
+        "process": 10.893,
+        "afolu": 2.1084
+      },
+      "2040B": {
+        "value": 46.424,
+        "energy": 34.9966,
+        "process": 9.73,
+        "afolu": 1.6974
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 120.5,
+        "energy": 105.1,
+        "process": 15.1,
+        "afolu": 0.3
+      },
+      "2040A": {
+        "value": 105.6164,
+        "energy": 89.1893,
+        "process": 16.1259,
+        "afolu": 0.3012
+      },
+      "2040B": {
+        "value": 92.2394,
+        "energy": 77.5927,
+        "process": 14.4042,
+        "afolu": 0.2425
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 51.9,
+        "energy": 46.4,
+        "process": 4.9,
+        "afolu": 0.6
+      },
+      "2040A": {
+        "value": 49.7811,
+        "energy": 43.9458,
+        "process": 5.2329,
+        "afolu": 0.6024
+      },
+      "2040B": {
+        "value": 49.5333,
+        "energy": 44.3741,
+        "process": 4.6742,
+        "afolu": 0.485
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 743.7,
+        "energy": 669.7,
+        "process": 41.6,
+        "afolu": 32.4
+      },
+      "2040A": {
+        "value": 939.6887,
+        "energy": 862.732,
+        "process": 44.4263,
+        "afolu": 32.5304
+      },
+      "2040B": {
+        "value": 768.2919,
+        "energy": 702.4205,
+        "process": 39.6831,
+        "afolu": 26.1883
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Paper",
+      "2025": {
+        "value": 240.3,
+        "energy": 190.2,
+        "process": 2.5,
+        "afolu": 47.6
+      },
+      "2040A": {
+        "value": 295.484,
+        "energy": 245.0226,
+        "process": 2.6699,
+        "afolu": 47.7915
+      },
+      "2040B": {
+        "value": 240.3519,
+        "energy": 199.4929,
+        "process": 2.3848,
+        "afolu": 38.4742
+      }
+    },
+    {
+      "source": "1_Communication",
+      "target": "2_Residential",
+      "2025": {
+        "value": 906.2,
+        "energy": 881.7,
+        "process": 15.3,
+        "afolu": 9.2
+      },
+      "2040A": {
+        "value": 958.8941,
+        "energy": 933.3175,
+        "process": 16.3395,
+        "afolu": 9.237
+      },
+      "2040B": {
+        "value": 743.886,
+        "energy": 721.8549,
+        "process": 14.595,
+        "afolu": 7.4362
+      }
+    },
+    {
+      "source": "1_Commuting",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 64.5,
+        "energy": 31.4,
+        "process": 32.9,
+        "afolu": 0.3
+      },
+      "2040A": {
+        "value": 68.2441,
+        "energy": 32.8076,
+        "process": 35.1352,
+        "afolu": 0.3012
+      },
+      "2040B": {
+        "value": 58.8179,
+        "energy": 27.1914,
+        "process": 31.384,
+        "afolu": 0.2425
+      }
+    },
+    {
+      "source": "1_Commuting",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 120.5,
+        "energy": 105.1,
+        "process": 15.1,
+        "afolu": 0.3
+      },
+      "2040A": {
+        "value": 105.6164,
+        "energy": 89.1893,
+        "process": 16.1259,
+        "afolu": 0.3012
+      },
+      "2040B": {
+        "value": 92.2394,
+        "energy": 77.5927,
+        "process": 14.4042,
+        "afolu": 0.2425
+      }
+    },
+    {
+      "source": "1_Commuting",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 85.1,
+        "energy": 76.1,
+        "process": 8.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 81.6224,
+        "energy": 72.0749,
+        "process": 8.5435,
+        "afolu": 1.004
+      },
+      "2040B": {
+        "value": 81.2169,
+        "energy": 72.7773,
+        "process": 7.6314,
+        "afolu": 0.8083
+      }
+    },
+    {
+      "source": "1_Commuting",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 99.2,
+        "energy": 89.3,
+        "process": 5.5,
+        "afolu": 4.3
+      },
+      "2040A": {
+        "value": 125.2305,
+        "energy": 115.0395,
+        "process": 5.8737,
+        "afolu": 4.3173
+      },
+      "2040B": {
+        "value": 102.3852,
+        "energy": 93.6631,
+        "process": 5.2466,
+        "afolu": 3.4756
+      }
+    },
+    {
+      "source": "1_Commuting",
+      "target": "2_Passenger transport",
+      "2025": {
+        "value": 1700.9,
+        "energy": 1638.4,
+        "process": 0.5,
+        "afolu": 62.0
+      },
+      "2040A": {
+        "value": 1334.7348,
+        "energy": 1271.9514,
+        "process": 0.534,
+        "afolu": 62.2495
+      },
+      "2040B": {
+        "value": 1078.3533,
+        "energy": 1027.7629,
+        "process": 0.477,
+        "afolu": 50.1135
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Agriculture: animal",
+      "2025": {
+        "value": 6205.0,
+        "energy": 561.5,
+        "process": 9.9,
+        "afolu": 5633.6
+      },
+      "2040A": {
+        "value": 6228.3408,
+        "energy": 561.5,
+        "process": 10.5726,
+        "afolu": 5656.2682
+      },
+      "2040B": {
+        "value": 5124.4816,
+        "energy": 561.5,
+        "process": 9.4438,
+        "afolu": 4553.5378
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Agriculture: vegetal",
+      "2025": {
+        "value": 3295.5,
+        "energy": 533.5,
+        "process": 9.9,
+        "afolu": 2752.1
+      },
+      "2040A": {
+        "value": 3307.2464,
+        "energy": 533.5,
+        "process": 10.5726,
+        "afolu": 2763.1738
+      },
+      "2040B": {
+        "value": 2767.4169,
+        "energy": 533.5,
+        "process": 9.4438,
+        "afolu": 2224.4731
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 1161.6,
+        "energy": 564.9,
+        "process": 592.2,
+        "afolu": 4.5
+      },
+      "2040A": {
+        "value": 1227.1764,
+        "energy": 590.224,
+        "process": 632.4343,
+        "afolu": 4.5181
+      },
+      "2040B": {
+        "value": 1057.7345,
+        "energy": 489.1861,
+        "process": 564.9111,
+        "afolu": 3.6373
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Commerce, Public",
+      "2025": {
+        "value": 790.9,
+        "energy": 727.6,
+        "process": 51.7,
+        "afolu": 11.5
+      },
+      "2040A": {
+        "value": 836.9548,
+        "energy": 770.196,
+        "process": 55.2125,
+        "afolu": 11.5463
+      },
+      "2040B": {
+        "value": 654.3049,
+        "energy": 595.692,
+        "process": 49.3176,
+        "afolu": 9.2952
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Food processing",
+      "2025": {
+        "value": 611.3,
+        "energy": 590.8,
+        "process": 6.8,
+        "afolu": 13.8
+      },
+      "2040A": {
+        "value": 782.2077,
+        "energy": 761.0902,
+        "process": 7.262,
+        "afolu": 13.8555
+      },
+      "2040B": {
+        "value": 637.3065,
+        "energy": 619.6656,
+        "process": 6.4867,
+        "afolu": 11.1543
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 200.8,
+        "energy": 175.1,
+        "process": 25.2,
+        "afolu": 0.6
+      },
+      "2040A": {
+        "value": 176.1068,
+        "energy": 148.5923,
+        "process": 26.9121,
+        "afolu": 0.6024
+      },
+      "2040B": {
+        "value": 153.7958,
+        "energy": 129.272,
+        "process": 24.0388,
+        "afolu": 0.485
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 238.4,
+        "energy": 213.1,
+        "process": 22.4,
+        "afolu": 2.9
+      },
+      "2040A": {
+        "value": 228.6622,
+        "energy": 201.8286,
+        "process": 23.9219,
+        "afolu": 2.9117
+      },
+      "2040B": {
+        "value": 227.5074,
+        "energy": 203.7956,
+        "process": 21.3678,
+        "afolu": 2.344
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 545.4,
+        "energy": 491.1,
+        "process": 30.5,
+        "afolu": 23.8
+      },
+      "2040A": {
+        "value": 689.1209,
+        "energy": 632.653,
+        "process": 32.5722,
+        "afolu": 23.8958
+      },
+      "2040B": {
+        "value": 563.426,
+        "energy": 515.0944,
+        "process": 29.0945,
+        "afolu": 19.2371
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Paper",
+      "2025": {
+        "value": 214.1,
+        "energy": 169.4,
+        "process": 2.3,
+        "afolu": 42.4
+      },
+      "2040A": {
+        "value": 263.2541,
+        "energy": 218.2273,
+        "process": 2.4563,
+        "afolu": 42.5706
+      },
+      "2040B": {
+        "value": 214.1418,
+        "energy": 177.6766,
+        "process": 2.194,
+        "afolu": 34.2712
+      }
+    },
+    {
+      "source": "1_Food",
+      "target": "2_Residential",
+      "2025": {
+        "value": 1745.7,
+        "energy": 1698.6,
+        "process": 29.4,
+        "afolu": 17.8
+      },
+      "2040A": {
+        "value": 1847.3106,
+        "energy": 1798.0415,
+        "process": 31.3974,
+        "afolu": 17.8716
+      },
+      "2040B": {
+        "value": 1433.0901,
+        "energy": 1390.6575,
+        "process": 28.0452,
+        "afolu": 14.3874
+      }
+    },
+    {
+      "source": "1_Freight",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 64.5,
+        "energy": 31.4,
+        "process": 32.9,
+        "afolu": 0.3
+      },
+      "2040A": {
+        "value": 68.2441,
+        "energy": 32.8076,
+        "process": 35.1352,
+        "afolu": 0.3012
+      },
+      "2040B": {
+        "value": 58.8179,
+        "energy": 27.1914,
+        "process": 31.384,
+        "afolu": 0.2425
+      }
+    },
+    {
+      "source": "1_Freight",
+      "target": "2_Freight",
+      "2025": {
+        "value": 4462.4,
+        "energy": 4325.4,
+        "process": 2.7,
+        "afolu": 134.3
+      },
+      "2040A": {
+        "value": 5495.3037,
+        "energy": 5357.5799,
+        "process": 2.8834,
+        "afolu": 134.8404
+      },
+      "2040B": {
+        "value": 4394.6917,
+        "energy": 4283.5639,
+        "process": 2.5756,
+        "afolu": 108.5523
+      }
+    },
+    {
+      "source": "1_Freight",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 200.8,
+        "energy": 175.1,
+        "process": 25.2,
+        "afolu": 0.6
+      },
+      "2040A": {
+        "value": 176.1068,
+        "energy": 148.5923,
+        "process": 26.9121,
+        "afolu": 0.6024
+      },
+      "2040B": {
+        "value": 153.7958,
+        "energy": 129.272,
+        "process": 24.0388,
+        "afolu": 0.485
+      }
+    },
+    {
+      "source": "1_Freight",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 62.3,
+        "energy": 55.7,
+        "process": 5.9,
+        "afolu": 0.7
+      },
+      "2040A": {
+        "value": 59.7576,
+        "energy": 52.7539,
+        "process": 6.3008,
+        "afolu": 0.7028
+      },
+      "2040B": {
+        "value": 59.4619,
+        "energy": 53.268,
+        "process": 5.6281,
+        "afolu": 0.5658
+      }
+    },
+    {
+      "source": "1_Freight",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 148.7,
+        "energy": 133.9,
+        "process": 8.3,
+        "afolu": 6.5
+      },
+      "2040A": {
+        "value": 187.8849,
+        "energy": 172.4949,
+        "process": 8.8639,
+        "afolu": 6.5262
+      },
+      "2040B": {
+        "value": 153.6135,
+        "energy": 140.4421,
+        "process": 7.9175,
+        "afolu": 5.2538
+      }
+    },
+    {
+      "source": "1_Industrial equipment",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 843.4,
+        "energy": 735.4,
+        "process": 105.7,
+        "afolu": 2.4
+      },
+      "2040A": {
+        "value": 739.3616,
+        "energy": 624.0707,
+        "process": 112.8813,
+        "afolu": 2.4097
+      },
+      "2040B": {
+        "value": 645.6969,
+        "energy": 542.9277,
+        "process": 100.8293,
+        "afolu": 1.9399
+      }
+    },
+    {
+      "source": "1_Industrial equipment",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 80.6,
+        "energy": 72.0,
+        "process": 7.6,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 77.3121,
+        "energy": 68.1917,
+        "process": 8.1163,
+        "afolu": 1.004
+      },
+      "2040B": {
+        "value": 76.9144,
+        "energy": 68.8563,
+        "process": 7.2498,
+        "afolu": 0.8083
+      }
+    },
+    {
+      "source": "1_Industrial equipment",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 694.1,
+        "energy": 625.0,
+        "process": 38.8,
+        "afolu": 30.3
+      },
+      "2040A": {
+        "value": 877.0059,
+        "energy": 805.1479,
+        "process": 41.4361,
+        "afolu": 30.4219
+      },
+      "2040B": {
+        "value": 717.0395,
+        "energy": 655.5365,
+        "process": 37.0121,
+        "afolu": 24.4909
+      }
+    },
+    {
+      "source": "1_Light",
+      "target": "2_Commerce, Public",
+      "2025": {
+        "value": 688.2,
+        "energy": 633.2,
+        "process": 45.0,
+        "afolu": 10.0
+      },
+      "2040A": {
+        "value": 728.3671,
+        "energy": 670.2696,
+        "process": 48.0573,
+        "afolu": 10.0402
+      },
+      "2040B": {
+        "value": 569.4151,
+        "energy": 518.4059,
+        "process": 42.9264,
+        "afolu": 8.0828
+      }
+    },
+    {
+      "source": "1_Light",
+      "target": "2_Industrial facilities",
+      "2025": {
+        "value": 230.6,
+        "energy": 176.7,
+        "process": 44.7,
+        "afolu": 9.3
+      },
+      "2040A": {
+        "value": 245.5972,
+        "energy": 188.5229,
+        "process": 47.7369,
+        "afolu": 9.3374
+      },
+      "2040B": {
+        "value": 203.2242,
+        "energy": 153.067,
+        "process": 42.6402,
+        "afolu": 7.517
+      }
+    },
+    {
+      "source": "1_Light",
+      "target": "2_Residential",
+      "2025": {
+        "value": 879.5,
+        "energy": 855.8,
+        "process": 14.8,
+        "afolu": 8.9
+      },
+      "2040A": {
+        "value": 930.6426,
+        "energy": 905.9013,
+        "process": 15.8055,
+        "afolu": 8.9358
+      },
+      "2040B": {
+        "value": 721.9621,
+        "energy": 700.6503,
+        "process": 14.118,
+        "afolu": 7.1937
+      }
+    },
+    {
+      "source": "1_Textiles",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 354.9,
+        "energy": 172.6,
+        "process": 180.9,
+        "afolu": 1.4
+      },
+      "2040A": {
+        "value": 374.9336,
+        "energy": 180.3375,
+        "process": 193.1904,
+        "afolu": 1.4056
+      },
+      "2040B": {
+        "value": 323.1619,
+        "energy": 149.4663,
+        "process": 172.564,
+        "afolu": 1.1316
+      }
+    },
+    {
+      "source": "1_Textiles",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 148.7,
+        "energy": 133.9,
+        "process": 8.3,
+        "afolu": 6.5
+      },
+      "2040A": {
+        "value": 187.8849,
+        "energy": 172.4949,
+        "process": 8.8639,
+        "afolu": 6.5262
+      },
+      "2040B": {
+        "value": 153.6135,
+        "energy": 140.4421,
+        "process": 7.9175,
+        "afolu": 5.2538
+      }
+    },
+    {
+      "source": "1_Textiles",
+      "target": "2_Textiles",
+      "2025": {
+        "value": 281.1,
+        "energy": 217.3,
+        "process": 11.2,
+        "afolu": 52.6
+      },
+      "2040A": {
+        "value": 344.7064,
+        "energy": 279.9338,
+        "process": 11.9609,
+        "afolu": 52.8116
+      },
+      "2040B": {
+        "value": 281.1165,
+        "energy": 227.9169,
+        "process": 10.6839,
+        "afolu": 42.5156
+      }
+    },
+    {
+      "source": "1_Thermal comfort",
+      "target": "2_Commerce, Public",
+      "2025": {
+        "value": 1751.8,
+        "energy": 1611.7,
+        "process": 114.6,
+        "afolu": 25.5
+      },
+      "2040A": {
+        "value": 1854.0427,
+        "energy": 1706.0541,
+        "process": 122.386,
+        "afolu": 25.6026
+      },
+      "2040B": {
+        "value": 1449.4421,
+        "energy": 1319.5118,
+        "process": 109.3192,
+        "afolu": 20.6112
+      }
+    },
+    {
+      "source": "1_Thermal comfort",
+      "target": "2_Industrial facilities",
+      "2025": {
+        "value": 865.1,
+        "energy": 662.7,
+        "process": 167.6,
+        "afolu": 34.8
+      },
+      "2040A": {
+        "value": 920.9676,
+        "energy": 707.0408,
+        "process": 178.9868,
+        "afolu": 34.94
+      },
+      "2040B": {
+        "value": 762.0714,
+        "energy": 574.0663,
+        "process": 159.8769,
+        "afolu": 28.1282
+      }
+    },
+    {
+      "source": "1_Thermal comfort",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 40.2,
+        "energy": 35.0,
+        "process": 5.0,
+        "afolu": 0.1
+      },
+      "2040A": {
+        "value": 35.1416,
+        "energy": 29.7015,
+        "process": 5.3397,
+        "afolu": 0.1004
+      },
+      "2040B": {
+        "value": 30.6901,
+        "energy": 25.8396,
+        "process": 4.7696,
+        "afolu": 0.0808
+      }
+    },
+    {
+      "source": "1_Thermal comfort",
+      "target": "2_Residential",
+      "2025": {
+        "value": 2718.5,
+        "energy": 2645.1,
+        "process": 45.8,
+        "afolu": 27.6
+      },
+      "2040A": {
+        "value": 2876.5754,
+        "energy": 2799.9526,
+        "process": 48.9117,
+        "afolu": 27.7111
+      },
+      "2040B": {
+        "value": 2231.5628,
+        "energy": 2165.5647,
+        "process": 43.6895,
+        "afolu": 22.3086
+      }
+    },
+    {
+      "source": "1_Travel",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 129.1,
+        "energy": 62.8,
+        "process": 65.8,
+        "afolu": 0.5
+      },
+      "2040A": {
+        "value": 136.3878,
+        "energy": 65.6153,
+        "process": 70.2705,
+        "afolu": 0.502
+      },
+      "2040B": {
+        "value": 117.5549,
+        "energy": 54.3829,
+        "process": 62.7679,
+        "afolu": 0.4041
+      }
+    },
+    {
+      "source": "1_Travel",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 281.1,
+        "energy": 245.1,
+        "process": 35.2,
+        "afolu": 0.8
+      },
+      "2040A": {
+        "value": 246.39,
+        "energy": 207.9953,
+        "process": 37.5915,
+        "afolu": 0.8032
+      },
+      "2040B": {
+        "value": 215.1759,
+        "energy": 180.9513,
+        "process": 33.578,
+        "afolu": 0.6466
+      }
+    },
+    {
+      "source": "1_Travel",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 218.9,
+        "energy": 195.7,
+        "process": 20.6,
+        "afolu": 2.6
+      },
+      "2040A": {
+        "value": 209.959,
+        "energy": 185.349,
+        "process": 21.9996,
+        "afolu": 2.6105
+      },
+      "2040B": {
+        "value": 208.9076,
+        "energy": 187.1553,
+        "process": 19.6507,
+        "afolu": 2.1015
+      }
+    },
+    {
+      "source": "1_Travel",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 297.5,
+        "energy": 267.9,
+        "process": 16.6,
+        "afolu": 13.0
+      },
+      "2040A": {
+        "value": 375.8987,
+        "energy": 345.1186,
+        "process": 17.7278,
+        "afolu": 13.0523
+      },
+      "2040B": {
+        "value": 307.3319,
+        "energy": 280.9892,
+        "process": 15.8351,
+        "afolu": 10.5077
+      }
+    },
+    {
+      "source": "1_Travel",
+      "target": "2_Passenger transport",
+      "2025": {
+        "value": 4288.2,
+        "energy": 4130.7,
+        "process": 1.2,
+        "afolu": 156.2
+      },
+      "2040A": {
+        "value": 3364.9274,
+        "energy": 3206.8174,
+        "process": 1.2815,
+        "afolu": 156.8285
+      },
+      "2040B": {
+        "value": 2718.5727,
+        "energy": 2591.1743,
+        "process": 1.1447,
+        "afolu": 126.2537
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Chemical",
+      "2025": {
+        "value": 548.5,
+        "energy": 266.8,
+        "process": 279.6,
+        "afolu": 2.1
+      },
+      "2040A": {
+        "value": 579.465,
+        "energy": 278.7604,
+        "process": 298.5961,
+        "afolu": 2.1084
+      },
+      "2040B": {
+        "value": 499.4539,
+        "energy": 231.0406,
+        "process": 266.7159,
+        "afolu": 1.6974
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Commerce, Public",
+      "2025": {
+        "value": 790.9,
+        "energy": 727.6,
+        "process": 51.7,
+        "afolu": 11.5
+      },
+      "2040A": {
+        "value": 836.9548,
+        "energy": 770.196,
+        "process": 55.2125,
+        "afolu": 11.5463
+      },
+      "2040B": {
+        "value": 654.3049,
+        "energy": 595.692,
+        "process": 49.3176,
+        "afolu": 9.2952
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Industrial facilities",
+      "2025": {
+        "value": 358.7,
+        "energy": 274.8,
+        "process": 69.5,
+        "afolu": 14.4
+      },
+      "2040A": {
+        "value": 381.8665,
+        "energy": 293.1867,
+        "process": 74.2219,
+        "afolu": 14.4579
+      },
+      "2040B": {
+        "value": 315.9832,
+        "energy": 238.0465,
+        "process": 66.2974,
+        "afolu": 11.6393
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Iron and steel",
+      "2025": {
+        "value": 80.3,
+        "energy": 70.0,
+        "process": 10.1,
+        "afolu": 0.2
+      },
+      "2040A": {
+        "value": 70.39,
+        "energy": 59.403,
+        "process": 10.7862,
+        "afolu": 0.2008
+      },
+      "2040B": {
+        "value": 61.4755,
+        "energy": 51.6793,
+        "process": 9.6346,
+        "afolu": 0.1617
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Non-ferrous",
+      "2025": {
+        "value": 51.9,
+        "energy": 46.4,
+        "process": 4.9,
+        "afolu": 0.6
+      },
+      "2040A": {
+        "value": 49.7811,
+        "energy": 43.9458,
+        "process": 5.2329,
+        "afolu": 0.6024
+      },
+      "2040B": {
+        "value": 49.5333,
+        "energy": 44.3741,
+        "process": 4.6742,
+        "afolu": 0.485
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Other industry",
+      "2025": {
+        "value": 545.4,
+        "energy": 491.1,
+        "process": 30.5,
+        "afolu": 23.8
+      },
+      "2040A": {
+        "value": 689.1209,
+        "energy": 632.653,
+        "process": 32.5722,
+        "afolu": 23.8958
+      },
+      "2040B": {
+        "value": 563.426,
+        "energy": 515.0944,
+        "process": 29.0945,
+        "afolu": 19.2371
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Paper",
+      "2025": {
+        "value": 102.0,
+        "energy": 80.7,
+        "process": 1.1,
+        "afolu": 20.2
+      },
+      "2040A": {
+        "value": 125.4167,
+        "energy": 103.9607,
+        "process": 1.1747,
+        "afolu": 20.2813
+      },
+      "2040B": {
+        "value": 102.0195,
+        "energy": 84.6429,
+        "process": 1.0493,
+        "afolu": 16.3273
+      }
+    },
+    {
+      "source": "1_Washing",
+      "target": "2_Residential",
+      "2025": {
+        "value": 1745.7,
+        "energy": 1698.6,
+        "process": 29.4,
+        "afolu": 17.8
+      },
+      "2040A": {
+        "value": 1847.3106,
+        "energy": 1798.0415,
+        "process": 31.3974,
+        "afolu": 17.8716
+      },
+      "2040B": {
+        "value": 1433.0901,
+        "energy": 1390.6575,
+        "process": 28.0452,
+        "afolu": 14.3874
+      }
+    },
+    {
+      "source": "1_Waste",
+      "target": "2_Waste",
+      "2025": {
+        "value": 2019.7,
+        "energy": 0.0,
+        "process": 40.7,
+        "afolu": 1978.9
+      },
+      "2040A": {
+        "value": 2178.7912,
+        "energy": 0.0,
+        "process": 43.4652,
+        "afolu": 2135.326
+      },
+      "2040B": {
+        "value": 1638.3339,
+        "energy": 0.0,
+        "process": 38.8245,
+        "afolu": 1599.5094
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 241.0,
+        "energy": 230.0,
+        "process": 10.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 241.7817,
+        "energy": 230.205,
+        "process": 10.5726,
+        "afolu": 1.0041
+      },
+      "2040B": {
+        "value": 240.4572,
+        "energy": 230.205,
+        "process": 9.4438,
+        "afolu": 0.8084
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Feedlots",
+      "2025": {
+        "value": 862.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 862.0
+      },
+      "2040A": {
+        "value": 865.5607,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 865.5607
+      },
+      "2040B": {
+        "value": 696.8134,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 696.8134
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Heated space",
+      "2025": {
+        "value": 61.0,
+        "energy": 56.0,
+        "process": 0.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 60.0664,
+        "energy": 56.0499,
+        "process": 0.0,
+        "afolu": 4.0165
+      },
+      "2040B": {
+        "value": 59.2834,
+        "energy": 56.0499,
+        "process": 0.0,
+        "afolu": 3.2335
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Livestock",
+      "2025": {
+        "value": 3601.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3601.0
+      },
+      "2040A": {
+        "value": 3615.8746,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3615.8746
+      },
+      "2040B": {
+        "value": 2910.9337,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2910.9337
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Pasture",
+      "2025": {
+        "value": 1165.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1165.0
+      },
+      "2040A": {
+        "value": 1169.8123,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1169.8123
+      },
+      "2040B": {
+        "value": 941.7489,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 941.7489
+      }
+    },
+    {
+      "source": "2_Agriculture: animal",
+      "target": "3_Tractor",
+      "2025": {
+        "value": 275.0,
+        "energy": 275.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 275.2451,
+        "energy": 275.2451,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 275.2451,
+        "energy": 275.2451,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Agriculture: vegetal",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 229.0,
+        "energy": 219.0,
+        "process": 10.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 230.7821,
+        "energy": 219.2054,
+        "process": 10.5726,
+        "afolu": 1.0041
+      },
+      "2040B": {
+        "value": 229.4576,
+        "energy": 219.2054,
+        "process": 9.4438,
+        "afolu": 0.8083
+      }
+    },
+    {
+      "source": "2_Agriculture: vegetal",
+      "target": "3_Food crops",
+      "2025": {
+        "value": 2747.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2747.0
+      },
+      "2040A": {
+        "value": 2758.1535,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2758.1535
+      },
+      "2040B": {
+        "value": 2220.4315,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2220.4315
+      }
+    },
+    {
+      "source": "2_Agriculture: vegetal",
+      "target": "3_Heated space",
+      "2025": {
+        "value": 58.0,
+        "energy": 53.0,
+        "process": 0.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 57.066,
+        "energy": 53.0497,
+        "process": 0.0,
+        "afolu": 4.0162
+      },
+      "2040B": {
+        "value": 56.283,
+        "energy": 53.0497,
+        "process": 0.0,
+        "afolu": 3.2332
+      }
+    },
+    {
+      "source": "2_Agriculture: vegetal",
+      "target": "3_Tractor",
+      "2025": {
+        "value": 261.0,
+        "energy": 261.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 261.2448,
+        "energy": 261.2448,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 261.2448,
+        "energy": 261.2448,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Cement",
+      "target": "3_(Cement kiln)",
+      "2025": {
+        "value": 1675.0,
+        "energy": 0.0,
+        "process": 1675.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1789.6519,
+        "energy": 0.0,
+        "process": 1789.6519,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1598.5761,
+        "energy": 0.0,
+        "process": 1598.5761,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Cement",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 233.0,
+        "energy": 228.0,
+        "process": 4.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 251.5606,
+        "energy": 246.2919,
+        "process": 4.2738,
+        "afolu": 0.9949
+      },
+      "2040B": {
+        "value": 218.9188,
+        "energy": 214.3004,
+        "process": 3.8175,
+        "afolu": 0.8009
+      }
+    },
+    {
+      "source": "2_Cement",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 970.0,
+        "energy": 959.0,
+        "process": 1.0,
+        "afolu": 10.0
+      },
+      "2040A": {
+        "value": 1046.9556,
+        "energy": 1035.9382,
+        "process": 1.0684,
+        "afolu": 9.949
+      },
+      "2040B": {
+        "value": 910.3412,
+        "energy": 901.3775,
+        "process": 0.9544,
+        "afolu": 8.0093
+      }
+    },
+    {
+      "source": "2_Cement",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 12.0,
+        "energy": 12.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 12.9627,
+        "energy": 12.9627,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 11.279,
+        "energy": 11.279,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Chemical",
+      "target": "3_(Chemical use)",
+      "2025": {
+        "value": 1037.0,
+        "energy": 0.0,
+        "process": 1037.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1108.0604,
+        "energy": 0.0,
+        "process": 1108.0604,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 989.7561,
+        "energy": 0.0,
+        "process": 989.7561,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Chemical",
+      "target": "3_(Non-energy use)",
+      "2025": {
+        "value": 600.0,
+        "energy": 0.0,
+        "process": 600.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 641.115,
+        "energy": 0.0,
+        "process": 641.115,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 572.6651,
+        "energy": 0.0,
+        "process": 572.6651,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Chemical",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 452.0,
+        "energy": 445.0,
+        "process": 7.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 473.4611,
+        "energy": 465.0083,
+        "process": 7.4797,
+        "afolu": 0.9731
+      },
+      "2040B": {
+        "value": 392.87,
+        "energy": 385.4055,
+        "process": 6.6811,
+        "afolu": 0.7834
+      }
+    },
+    {
+      "source": "2_Chemical",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 575.0,
+        "energy": 570.0,
+        "process": 0.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 600.4942,
+        "energy": 595.6285,
+        "process": 0.0,
+        "afolu": 4.8657
+      },
+      "2040B": {
+        "value": 497.5825,
+        "energy": 493.6654,
+        "process": 0.0,
+        "afolu": 3.9171
+      }
+    },
+    {
+      "source": "2_Chemical",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 562.0,
+        "energy": 554.0,
+        "process": 0.0,
+        "afolu": 7.0
+      },
+      "2040A": {
+        "value": 585.7211,
+        "energy": 578.9091,
+        "process": 0.0,
+        "afolu": 6.8119
+      },
+      "2040B": {
+        "value": 485.2921,
+        "energy": 479.8082,
+        "process": 0.0,
+        "afolu": 5.4839
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Appliances",
+      "2025": {
+        "value": 1476.0,
+        "energy": 1386.0,
+        "process": 57.0,
+        "afolu": 33.0
+      },
+      "2040A": {
+        "value": 1561.3203,
+        "energy": 1467.3729,
+        "process": 60.8146,
+        "afolu": 33.1328
+      },
+      "2040B": {
+        "value": 1215.9037,
+        "energy": 1134.9088,
+        "process": 54.3216,
+        "afolu": 26.6733
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Cooled space",
+      "2025": {
+        "value": 745.0,
+        "energy": 491.0,
+        "process": 251.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 789.6327,
+        "energy": 519.8269,
+        "process": 267.7977,
+        "afolu": 2.008
+      },
+      "2040B": {
+        "value": 642.8715,
+        "energy": 402.0492,
+        "process": 239.2058,
+        "afolu": 1.6166
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Digital infrastructure",
+      "2025": {
+        "value": 274.0,
+        "energy": 266.0,
+        "process": 3.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 289.8379,
+        "energy": 281.617,
+        "process": 3.2008,
+        "afolu": 5.0201
+      },
+      "2040B": {
+        "value": 224.7112,
+        "energy": 217.8108,
+        "process": 2.859,
+        "afolu": 4.0414
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Heated space",
+      "2025": {
+        "value": 1132.0,
+        "energy": 1120.0,
+        "process": 1.0,
+        "afolu": 11.0
+      },
+      "2040A": {
+        "value": 1197.867,
+        "energy": 1185.7559,
+        "process": 1.0669,
+        "afolu": 11.0443
+      },
+      "2040B": {
+        "value": 926.9421,
+        "energy": 917.098,
+        "process": 0.953,
+        "afolu": 8.8911
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Hot water system",
+      "2025": {
+        "value": 550.0,
+        "energy": 531.0,
+        "process": 2.0,
+        "afolu": 17.0
+      },
+      "2040A": {
+        "value": 581.3776,
+        "energy": 562.1753,
+        "process": 2.1338,
+        "afolu": 17.0684
+      },
+      "2040B": {
+        "value": 450.4495,
+        "energy": 434.8027,
+        "process": 1.906,
+        "afolu": 13.7408
+      }
+    },
+    {
+      "source": "2_Commerce, Public",
+      "target": "3_Illuminated space",
+      "2025": {
+        "value": 637.0,
+        "energy": 633.0,
+        "process": 1.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 673.2388,
+        "energy": 670.1638,
+        "process": 1.0669,
+        "afolu": 2.008
+      },
+      "2040B": {
+        "value": 520.8937,
+        "energy": 518.3241,
+        "process": 0.953,
+        "afolu": 1.6166
+      }
+    },
+    {
+      "source": "2_Food processing",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 160.0,
+        "energy": 154.0,
+        "process": 6.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 206.573,
+        "energy": 198.3213,
+        "process": 7.262,
+        "afolu": 0.9897
+      },
+      "2040B": {
+        "value": 168.7529,
+        "energy": 161.4695,
+        "process": 6.4867,
+        "afolu": 0.7967
+      }
+    },
+    {
+      "source": "2_Food processing",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 151.0,
+        "energy": 148.0,
+        "process": 0.0,
+        "afolu": 3.0
+      },
+      "2040A": {
+        "value": 193.5635,
+        "energy": 190.5945,
+        "process": 0.0,
+        "afolu": 2.969
+      },
+      "2040B": {
+        "value": 157.5687,
+        "energy": 155.1785,
+        "process": 0.0,
+        "afolu": 2.3902
+      }
+    },
+    {
+      "source": "2_Food processing",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 300.0,
+        "energy": 289.0,
+        "process": 0.0,
+        "afolu": 10.0
+      },
+      "2040A": {
+        "value": 382.0712,
+        "energy": 372.1744,
+        "process": 0.0,
+        "afolu": 9.8968
+      },
+      "2040B": {
+        "value": 310.9849,
+        "energy": 303.0175,
+        "process": 0.0,
+        "afolu": 7.9674
+      }
+    },
+    {
+      "source": "2_Freight",
+      "target": "3_Plane",
+      "2025": {
+        "value": 147.0,
+        "energy": 147.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 182.0537,
+        "energy": 182.0537,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 145.558,
+        "energy": 145.558,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Freight",
+      "target": "3_Ship",
+      "2025": {
+        "value": 969.0,
+        "energy": 969.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1200.0682,
+        "energy": 1200.0682,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 959.4945,
+        "energy": 959.4945,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Freight",
+      "target": "3_Train",
+      "2025": {
+        "value": 93.0,
+        "energy": 87.0,
+        "process": 3.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 114.6248,
+        "energy": 107.7461,
+        "process": 2.8834,
+        "afolu": 3.9953
+      },
+      "2040B": {
+        "value": 91.9385,
+        "energy": 86.1466,
+        "process": 2.5756,
+        "afolu": 3.2164
+      }
+    },
+    {
+      "source": "2_Freight",
+      "target": "3_Truck",
+      "2025": {
+        "value": 3254.0,
+        "energy": 3123.0,
+        "process": 0.0,
+        "afolu": 131.0
+      },
+      "2040A": {
+        "value": 3998.5571,
+        "energy": 3867.712,
+        "process": 0.0,
+        "afolu": 130.8451
+      },
+      "2040B": {
+        "value": 3197.7007,
+        "energy": 3092.3648,
+        "process": 0.0,
+        "afolu": 105.3359
+      }
+    },
+    {
+      "source": "2_Industrial facilities",
+      "target": "3_Appliances",
+      "2025": {
+        "value": 101.0,
+        "energy": 81.0,
+        "process": 13.0,
+        "afolu": 7.0
+      },
+      "2040A": {
+        "value": 107.324,
+        "energy": 86.3897,
+        "process": 13.8358,
+        "afolu": 7.0984
+      },
+      "2040B": {
+        "value": 88.2154,
+        "energy": 70.1422,
+        "process": 12.3586,
+        "afolu": 5.7146
+      }
+    },
+    {
+      "source": "2_Industrial facilities",
+      "target": "3_Cooled space",
+      "2025": {
+        "value": 416.0,
+        "energy": 140.0,
+        "process": 273.0,
+        "afolu": 3.0
+      },
+      "2040A": {
+        "value": 442.9104,
+        "energy": 149.3156,
+        "process": 290.5527,
+        "afolu": 3.0422
+      },
+      "2040B": {
+        "value": 383.2138,
+        "energy": 121.2335,
+        "process": 259.5312,
+        "afolu": 2.4491
+      }
+    },
+    {
+      "source": "2_Industrial facilities",
+      "target": "3_Heated space",
+      "2025": {
+        "value": 544.0,
+        "energy": 523.0,
+        "process": 2.0,
+        "afolu": 19.0
+      },
+      "2040A": {
+        "value": 579.1961,
+        "energy": 557.8003,
+        "process": 2.1286,
+        "afolu": 19.2672
+      },
+      "2040B": {
+        "value": 470.306,
+        "energy": 452.8937,
+        "process": 1.9013,
+        "afolu": 15.5109
+      }
+    },
+    {
+      "source": "2_Industrial facilities",
+      "target": "3_Hot water system",
+      "2025": {
+        "value": 267.0,
+        "energy": 234.0,
+        "process": 3.0,
+        "afolu": 29.0
+      },
+      "2040A": {
+        "value": 282.1711,
+        "energy": 249.5703,
+        "process": 3.1929,
+        "afolu": 29.4079
+      },
+      "2040B": {
+        "value": 229.1597,
+        "energy": 202.6331,
+        "process": 2.852,
+        "afolu": 23.6746
+      }
+    },
+    {
+      "source": "2_Industrial facilities",
+      "target": "3_Illuminated space",
+      "2025": {
+        "value": 180.0,
+        "energy": 177.0,
+        "process": 2.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 192.9343,
+        "energy": 188.7776,
+        "process": 2.1286,
+        "afolu": 2.0281
+      },
+      "2040B": {
+        "value": 156.8078,
+        "energy": 153.2738,
+        "process": 1.9013,
+        "afolu": 1.6327
+      }
+    },
+    {
+      "source": "2_Iron and steel",
+      "target": "3_(Non-energy use)",
+      "2025": {
+        "value": 499.0,
+        "energy": 0.0,
+        "process": 499.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 532.7048,
+        "energy": 0.0,
+        "process": 532.7048,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 475.8295,
+        "energy": 0.0,
+        "process": 475.8295,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Iron and steel",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 529.0,
+        "energy": 525.0,
+        "process": 3.4865,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 449.3461,
+        "energy": 445.6241,
+        "process": 3.722,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 391.0077,
+        "energy": 387.6831,
+        "process": 3.3246,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Iron and steel",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 2812.0,
+        "energy": 2801.0,
+        "process": 1.0,
+        "afolu": 10.0
+      },
+      "2040A": {
+        "value": 2388.9836,
+        "energy": 2377.5107,
+        "process": 1.0675,
+        "afolu": 10.4053
+      },
+      "2040B": {
+        "value": 2077.7121,
+        "energy": 2068.3818,
+        "process": 0.9536,
+        "afolu": 8.3767
+      }
+    },
+    {
+      "source": "2_Iron and steel",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 176.0,
+        "energy": 175.0,
+        "process": 0.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 149.5819,
+        "energy": 148.5414,
+        "process": 0.0,
+        "afolu": 1.0405
+      },
+      "2040B": {
+        "value": 130.0654,
+        "energy": 129.2277,
+        "process": 0.0,
+        "afolu": 0.8377
+      }
+    },
+    {
+      "source": "2_Non-ferrous",
+      "target": "3_(Chemical use)",
+      "2025": {
+        "value": 40.0,
+        "energy": 0.0,
+        "process": 40.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 42.7621,
+        "energy": 0.0,
+        "process": 42.7621,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 38.1965,
+        "energy": 0.0,
+        "process": 38.1965,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Non-ferrous",
+      "target": "3_(Non-energy use)",
+      "2025": {
+        "value": 53.0,
+        "energy": 0.0,
+        "process": 53.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 56.6598,
+        "energy": 0.0,
+        "process": 56.6598,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 50.6104,
+        "energy": 0.0,
+        "process": 50.6104,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Non-ferrous",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 84.0,
+        "energy": 82.0,
+        "process": 2.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 79.8435,
+        "energy": 77.7054,
+        "process": 2.1381,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 80.3725,
+        "energy": 78.4627,
+        "process": 1.9098,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Non-ferrous",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 786.0,
+        "energy": 775.0,
+        "process": 1.0,
+        "afolu": 11.0
+      },
+      "2040A": {
+        "value": 746.7082,
+        "energy": 734.4108,
+        "process": 1.0691,
+        "afolu": 11.2283
+      },
+      "2040B": {
+        "value": 751.5624,
+        "energy": 741.5682,
+        "process": 0.9549,
+        "afolu": 9.0393
+      }
+    },
+    {
+      "source": "2_Non-ferrous",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 56.0,
+        "energy": 55.0,
+        "process": 0.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 53.1402,
+        "energy": 52.1195,
+        "process": 0.0,
+        "afolu": 1.0208
+      },
+      "2040B": {
+        "value": 53.4492,
+        "energy": 52.6274,
+        "process": 0.0,
+        "afolu": 0.8218
+      }
+    },
+    {
+      "source": "2_Other industry",
+      "target": "3_(Cement kiln)",
+      "2025": {
+        "value": 269.0,
+        "energy": 0.0,
+        "process": 269.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 286.4493,
+        "energy": 0.0,
+        "process": 286.4493,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 255.8659,
+        "energy": 0.0,
+        "process": 255.8659,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Other industry",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 1482.0,
+        "energy": 1473.0,
+        "process": 8.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 1907.3094,
+        "energy": 1897.785,
+        "process": 8.5189,
+        "afolu": 1.0054
+      },
+      "2040B": {
+        "value": 1553.5603,
+        "energy": 1545.1415,
+        "process": 7.6094,
+        "afolu": 0.8094
+      }
+    },
+    {
+      "source": "2_Other industry",
+      "target": "3_Forestry",
+      "2025": {
+        "value": 205.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 205.0
+      },
+      "2040A": {
+        "value": 206.1107,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 206.1107
+      },
+      "2040B": {
+        "value": 165.928,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 165.928
+      }
+    },
+    {
+      "source": "2_Other industry",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 2105.0,
+        "energy": 2098.0,
+        "process": 1.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 2710.1205,
+        "energy": 2703.0231,
+        "process": 1.0649,
+        "afolu": 6.0325
+      },
+      "2040B": {
+        "value": 2206.559,
+        "energy": 2200.7514,
+        "process": 0.9512,
+        "afolu": 4.8564
+      }
+    },
+    {
+      "source": "2_Other industry",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 897.0,
+        "energy": 893.0,
+        "process": 0.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 1154.5458,
+        "energy": 1150.5241,
+        "process": 0.0,
+        "afolu": 4.0217
+      },
+      "2040B": {
+        "value": 939.9731,
+        "energy": 936.7355,
+        "process": 0.0,
+        "afolu": 3.2376
+      }
+    },
+    {
+      "source": "2_Paper",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 148.0,
+        "energy": 141.0,
+        "process": 6.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 189.0561,
+        "energy": 181.6414,
+        "process": 6.4076,
+        "afolu": 1.0071
+      },
+      "2040B": {
+        "value": 154.4233,
+        "energy": 147.889,
+        "process": 5.7235,
+        "afolu": 0.8108
+      }
+    },
+    {
+      "source": "2_Paper",
+      "target": "3_Forestry",
+      "2025": {
+        "value": 115.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 115.0
+      },
+      "2040A": {
+        "value": 115.818,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 115.818
+      },
+      "2040B": {
+        "value": 93.2384,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 93.2384
+      }
+    },
+    {
+      "source": "2_Paper",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 32.0,
+        "energy": 31.0,
+        "process": 0.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 40.9424,
+        "energy": 39.9353,
+        "process": 0.0,
+        "afolu": 1.0071
+      },
+      "2040B": {
+        "value": 33.3254,
+        "energy": 32.5146,
+        "process": 0.0,
+        "afolu": 0.8108
+      }
+    },
+    {
+      "source": "2_Paper",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 363.0,
+        "energy": 349.0,
+        "process": 1.0,
+        "afolu": 13.0
+      },
+      "2040A": {
+        "value": 463.755,
+        "energy": 449.5946,
+        "process": 1.0679,
+        "afolu": 13.0925
+      },
+      "2040B": {
+        "value": 377.5455,
+        "energy": 366.0516,
+        "process": 0.9539,
+        "afolu": 10.54
+      }
+    },
+    {
+      "source": "2_Passenger transport",
+      "target": "3_Bus",
+      "2025": {
+        "value": 682.0,
+        "energy": 577.0,
+        "process": 0.0,
+        "afolu": 105.0
+      },
+      "2040A": {
+        "value": 552.9919,
+        "energy": 447.9545,
+        "process": 0.0,
+        "afolu": 105.0374
+      },
+      "2040B": {
+        "value": 446.516,
+        "energy": 361.9564,
+        "process": 0.0,
+        "afolu": 84.5596
+      }
+    },
+    {
+      "source": "2_Passenger transport",
+      "target": "3_Car",
+      "2025": {
+        "value": 4381.0,
+        "energy": 4269.0,
+        "process": 0.0,
+        "afolu": 112.0
+      },
+      "2040A": {
+        "value": 3426.2822,
+        "energy": 3314.2423,
+        "process": 0.0,
+        "afolu": 112.0399
+      },
+      "2040B": {
+        "value": 2768.1728,
+        "energy": 2677.9759,
+        "process": 0.0,
+        "afolu": 90.1969
+      }
+    },
+    {
+      "source": "2_Passenger transport",
+      "target": "3_Plane",
+      "2025": {
+        "value": 865.0,
+        "energy": 865.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 671.5436,
+        "energy": 671.5436,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 542.621,
+        "energy": 542.621,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "2_Passenger transport",
+      "target": "3_Train",
+      "2025": {
+        "value": 61.0,
+        "energy": 58.0,
+        "process": 1.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 48.8446,
+        "energy": 45.0284,
+        "process": 1.8155,
+        "afolu": 2.0007
+      },
+      "2040B": {
+        "value": 39.6162,
+        "energy": 36.3838,
+        "process": 1.6217,
+        "afolu": 1.6107
+      }
+    },
+    {
+      "source": "2_Residential",
+      "target": "3_Appliances",
+      "2025": {
+        "value": 2743.0,
+        "energy": 2645.0,
+        "process": 62.0,
+        "afolu": 36.0
+      },
+      "2040A": {
+        "value": 2901.6763,
+        "energy": 2799.7748,
+        "process": 66.0652,
+        "afolu": 35.8363
+      },
+      "2040B": {
+        "value": 2253.2885,
+        "energy": 2165.4271,
+        "process": 59.0116,
+        "afolu": 28.8498
+      }
+    },
+    {
+      "source": "2_Residential",
+      "target": "3_Cooled space",
+      "2025": {
+        "value": 302.0,
+        "energy": 233.0,
+        "process": 68.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 320.0882,
+        "energy": 246.6342,
+        "process": 72.4586,
+        "afolu": 0.9955
+      },
+      "2040B": {
+        "value": 256.2778,
+        "energy": 190.7541,
+        "process": 64.7224,
+        "afolu": 0.8014
+      }
+    },
+    {
+      "source": "2_Residential",
+      "target": "3_Heated space",
+      "2025": {
+        "value": 2426.0,
+        "energy": 2412.0,
+        "process": 1.0,
+        "afolu": 13.0
+      },
+      "2040A": {
+        "value": 2567.147,
+        "energy": 2553.1406,
+        "process": 1.0656,
+        "afolu": 12.9409
+      },
+      "2040B": {
+        "value": 1986.0428,
+        "energy": 1974.673,
+        "process": 0.9518,
+        "afolu": 10.418
+      }
+    },
+    {
+      "source": "2_Residential",
+      "target": "3_Hot water system",
+      "2025": {
+        "value": 1667.0,
+        "energy": 1634.0,
+        "process": 3.0,
+        "afolu": 30.0
+      },
+      "2040A": {
+        "value": 1762.6754,
+        "energy": 1729.6151,
+        "process": 3.1967,
+        "afolu": 29.8636
+      },
+      "2040B": {
+        "value": 1364.6314,
+        "energy": 1337.7346,
+        "process": 2.8554,
+        "afolu": 24.0415
+      }
+    },
+    {
+      "source": "2_Residential",
+      "target": "3_Illuminated space",
+      "2025": {
+        "value": 858.0,
+        "energy": 856.0,
+        "process": 1.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 909.1462,
+        "energy": 906.0897,
+        "process": 1.0656,
+        "afolu": 1.9909
+      },
+      "2040B": {
+        "value": 703.3506,
+        "energy": 700.7961,
+        "process": 0.9518,
+        "afolu": 1.6028
+      }
+    },
+    {
+      "source": "2_Settlements",
+      "target": "3_Settlements",
+      "2025": {
+        "value": 298.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 298.0
+      },
+      "2040A": {
+        "value": 299.7011,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 299.7011
+      },
+      "2040B": {
+        "value": 241.2722,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 241.2722
+      }
+    },
+    {
+      "source": "2_Textiles",
+      "target": "3_Driven system",
+      "2025": {
+        "value": 112.0,
+        "energy": 100.0,
+        "process": 11.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 141.9783,
+        "energy": 129.0018,
+        "process": 11.9609,
+        "afolu": 1.0156
+      },
+      "2040B": {
+        "value": 116.5324,
+        "energy": 105.0308,
+        "process": 10.6839,
+        "afolu": 0.8176
+      }
+    },
+    {
+      "source": "2_Textiles",
+      "target": "3_Fibre crops",
+      "2025": {
+        "value": 42.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 42.0
+      },
+      "2040A": {
+        "value": 42.6556,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 42.6556
+      },
+      "2040B": {
+        "value": 34.3396,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 34.3396
+      }
+    },
+    {
+      "source": "2_Textiles",
+      "target": "3_Furnace",
+      "2025": {
+        "value": 42.0,
+        "energy": 39.0,
+        "process": 0.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 52.3419,
+        "energy": 50.3107,
+        "process": 0.0,
+        "afolu": 2.0312
+      },
+      "2040B": {
+        "value": 42.5972,
+        "energy": 40.962,
+        "process": 0.0,
+        "afolu": 1.6352
+      }
+    },
+    {
+      "source": "2_Textiles",
+      "target": "3_Steam system",
+      "2025": {
+        "value": 86.0,
+        "energy": 78.0,
+        "process": 0.0,
+        "afolu": 7.0
+      },
+      "2040A": {
+        "value": 107.7306,
+        "energy": 100.6214,
+        "process": 0.0,
+        "afolu": 7.1093
+      },
+      "2040B": {
+        "value": 87.6473,
+        "energy": 81.9241,
+        "process": 0.0,
+        "afolu": 5.7233
+      }
+    },
+    {
+      "source": "2_Waste",
+      "target": "3_Landfills",
+      "2025": {
+        "value": 1178.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1178.0
+      },
+      "2040A": {
+        "value": 1271.0531,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1271.0531
+      },
+      "2040B": {
+        "value": 952.1082,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 952.1082
+      }
+    },
+    {
+      "source": "2_Waste",
+      "target": "3_Wastewater",
+      "2025": {
+        "value": 842.0,
+        "energy": 0.0,
+        "process": 41.0,
+        "afolu": 801.0
+      },
+      "2040A": {
+        "value": 907.7381,
+        "energy": 0.0,
+        "process": 43.4652,
+        "afolu": 864.2729
+      },
+      "2040B": {
+        "value": 686.2257,
+        "energy": 0.0,
+        "process": 38.8245,
+        "afolu": 647.4012
+      }
+    },
+    {
+      "source": "3_(Cement kiln)",
+      "target": "4_Cement kiln",
+      "2025": {
+        "value": 1945.0,
+        "energy": 0.0,
+        "process": 1945.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 2076.1012,
+        "energy": 0.0,
+        "process": 2076.1012,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1854.442,
+        "energy": 0.0,
+        "process": 1854.442,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_(Chemical use)",
+      "target": "4_Chemical use",
+      "2025": {
+        "value": 1078.0,
+        "energy": 0.0,
+        "process": 1078.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1150.8225,
+        "energy": 0.0,
+        "process": 1150.8225,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1027.9526,
+        "energy": 0.0,
+        "process": 1027.9526,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_(Non-energy use)",
+      "target": "4_Non-energy use",
+      "2025": {
+        "value": 1152.0,
+        "energy": 0.0,
+        "process": 1152.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1230.4796,
+        "energy": 0.0,
+        "process": 1230.4796,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1099.105,
+        "energy": 0.0,
+        "process": 1099.105,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Biomass burner",
+      "2025": {
+        "value": 190.0,
+        "energy": 123.0,
+        "process": 0.0,
+        "afolu": 67.0
+      },
+      "2040A": {
+        "value": 197.3162,
+        "energy": 130.2567,
+        "process": 0.0,
+        "afolu": 67.0595
+      },
+      "2040B": {
+        "value": 154.8296,
+        "energy": 100.8438,
+        "process": 0.0,
+        "afolu": 53.9858
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Coal burner",
+      "2025": {
+        "value": 123.0,
+        "energy": 123.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 130.2567,
+        "energy": 130.2567,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 100.8438,
+        "energy": 100.8438,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Cooler",
+      "2025": {
+        "value": 1003.0,
+        "energy": 876.0,
+        "process": 126.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 1064.0272,
+        "energy": 927.6815,
+        "process": 135.3448,
+        "afolu": 1.0009
+      },
+      "2040B": {
+        "value": 839.9047,
+        "energy": 718.2045,
+        "process": 120.8944,
+        "afolu": 0.8058
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 329.0,
+        "energy": 329.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 348.4101,
+        "energy": 348.4101,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 269.7366,
+        "energy": 269.7366,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Electric heater",
+      "2025": {
+        "value": 758.0,
+        "energy": 752.0,
+        "process": 2.0,
+        "afolu": 3.0
+      },
+      "2040A": {
+        "value": 801.5169,
+        "energy": 796.3659,
+        "process": 2.1483,
+        "afolu": 3.0027
+      },
+      "2040B": {
+        "value": 620.8771,
+        "energy": 616.5409,
+        "process": 1.919,
+        "afolu": 2.4173
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 537.0,
+        "energy": 535.0,
+        "process": 1.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 568.6385,
+        "energy": 566.5635,
+        "process": 1.0742,
+        "afolu": 1.0009
+      },
+      "2040B": {
+        "value": 440.3947,
+        "energy": 438.6295,
+        "process": 0.9595,
+        "afolu": 0.8058
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Electronics",
+      "2025": {
+        "value": 1009.0,
+        "energy": 1003.0,
+        "process": 2.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 1068.3261,
+        "energy": 1062.1742,
+        "process": 2.1483,
+        "afolu": 4.0036
+      },
+      "2040B": {
+        "value": 827.4698,
+        "energy": 822.3278,
+        "process": 1.919,
+        "afolu": 3.223
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Gas burner",
+      "2025": {
+        "value": 329.0,
+        "energy": 329.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 348.4101,
+        "energy": 348.4101,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 269.7366,
+        "energy": 269.7366,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Appliances",
+      "target": "4_Oil burner",
+      "2025": {
+        "value": 41.0,
+        "energy": 41.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 43.4189,
+        "energy": 43.4189,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 33.6146,
+        "energy": 33.6146,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Bus",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 71.0,
+        "energy": 58.0,
+        "process": 0.0,
+        "afolu": 14.0
+      },
+      "2040A": {
+        "value": 58.8778,
+        "energy": 44.8728,
+        "process": 0.0,
+        "afolu": 14.005
+      },
+      "2040B": {
+        "value": 47.5328,
+        "energy": 36.2582,
+        "process": 0.0,
+        "afolu": 11.2746
+      }
+    },
+    {
+      "source": "3_Bus",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 20.0,
+        "energy": 20.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 15.4734,
+        "energy": 15.4734,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 12.5028,
+        "energy": 12.5028,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Bus",
+      "target": "4_Other Engine (LPG, gas, coal)",
+      "2025": {
+        "value": 27.0,
+        "energy": 27.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 20.8891,
+        "energy": 20.8891,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 16.8788,
+        "energy": 16.8788,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Bus",
+      "target": "4_Petrol engine",
+      "2025": {
+        "value": 564.0,
+        "energy": 474.0,
+        "process": 0.0,
+        "afolu": 91.0
+      },
+      "2040A": {
+        "value": 457.7516,
+        "energy": 366.7192,
+        "process": 0.0,
+        "afolu": 91.0324
+      },
+      "2040B": {
+        "value": 369.6017,
+        "energy": 296.3167,
+        "process": 0.0,
+        "afolu": 73.285
+      }
+    },
+    {
+      "source": "3_Car",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 604.0,
+        "energy": 585.0,
+        "process": 0.0,
+        "afolu": 19.0
+      },
+      "2040A": {
+        "value": 472.7469,
+        "energy": 453.7402,
+        "process": 0.0,
+        "afolu": 19.0068
+      },
+      "2040B": {
+        "value": 381.9326,
+        "energy": 366.6314,
+        "process": 0.0,
+        "afolu": 15.3013
+      }
+    },
+    {
+      "source": "3_Car",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 103.0,
+        "energy": 102.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 79.1137,
+        "energy": 79.1137,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 63.9255,
+        "energy": 63.9255,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Car",
+      "target": "4_Petrol engine",
+      "2025": {
+        "value": 3679.0,
+        "energy": 3586.0,
+        "process": 0.0,
+        "afolu": 93.0
+      },
+      "2040A": {
+        "value": 2874.4216,
+        "energy": 2781.3885,
+        "process": 0.0,
+        "afolu": 93.0331
+      },
+      "2040B": {
+        "value": 2322.3147,
+        "energy": 2247.419,
+        "process": 0.0,
+        "afolu": 74.8956
+      }
+    },
+    {
+      "source": "3_Cooled space",
+      "target": "4_Cooler",
+      "2025": {
+        "value": 1462.0,
+        "energy": 865.0,
+        "process": 592.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 1552.6314,
+        "energy": 915.7767,
+        "process": 630.809,
+        "afolu": 6.0457
+      },
+      "2040B": {
+        "value": 1282.3632,
+        "energy": 714.0368,
+        "process": 563.4594,
+        "afolu": 4.867
+      }
+    },
+    {
+      "source": "3_Digital infrastructure",
+      "target": "4_Computing Infrastructure",
+      "2025": {
+        "value": 274.0,
+        "energy": 266.0,
+        "process": 3.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 289.8379,
+        "energy": 281.617,
+        "process": 3.2008,
+        "afolu": 5.0201
+      },
+      "2040B": {
+        "value": 224.7112,
+        "energy": 217.8108,
+        "process": 2.859,
+        "afolu": 4.0414
+      }
+    },
+    {
+      "source": "3_Driven system",
+      "target": "4_Cooler",
+      "2025": {
+        "value": 432.0,
+        "energy": 370.0,
+        "process": 61.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 489.1831,
+        "energy": 420.9099,
+        "process": 67.385,
+        "afolu": 0.8882
+      },
+      "2040B": {
+        "value": 418.4343,
+        "energy": 357.5288,
+        "process": 60.1905,
+        "afolu": 0.7151
+      }
+    },
+    {
+      "source": "3_Driven system",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 263.0,
+        "energy": 263.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 299.1873,
+        "energy": 299.1873,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 254.1353,
+        "energy": 254.1353,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Driven system",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 2868.0,
+        "energy": 2855.0,
+        "process": 5.0,
+        "afolu": 8.0
+      },
+      "2040A": {
+        "value": 3260.4612,
+        "energy": 3247.8321,
+        "process": 5.5234,
+        "afolu": 7.1058
+      },
+      "2040B": {
+        "value": 2769.4233,
+        "energy": 2758.7692,
+        "process": 4.9336,
+        "afolu": 5.7205
+      }
+    },
+    {
+      "source": "3_Driven system",
+      "target": "4_Other Engine (LPG, gas, coal)",
+      "2025": {
+        "value": 108.0,
+        "energy": 108.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 122.8602,
+        "energy": 122.8602,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 104.3597,
+        "energy": 104.3597,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Feedlots",
+      "target": "4_Clearing for agriculture",
+      "2025": {
+        "value": 359.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 359.0
+      },
+      "2040A": {
+        "value": 360.4829,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 360.4829
+      },
+      "2040B": {
+        "value": 290.2042,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 290.2042
+      }
+    },
+    {
+      "source": "3_Feedlots",
+      "target": "4_Fertilizer use",
+      "2025": {
+        "value": 387.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 387.0
+      },
+      "2040A": {
+        "value": 388.5986,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 388.5986
+      },
+      "2040B": {
+        "value": 312.8385,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 312.8385
+      }
+    },
+    {
+      "source": "3_Feedlots",
+      "target": "4_Tilling and erosion",
+      "2025": {
+        "value": 116.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 116.0
+      },
+      "2040A": {
+        "value": 116.4792,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 116.4792
+      },
+      "2040B": {
+        "value": 93.7707,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 93.7707
+      }
+    },
+    {
+      "source": "3_Fibre crops",
+      "target": "4_Fertilizer use",
+      "2025": {
+        "value": 42.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 42.0
+      },
+      "2040A": {
+        "value": 42.6556,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 42.6556
+      },
+      "2040B": {
+        "value": 34.3396,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 34.3396
+      }
+    },
+    {
+      "source": "3_Food crops",
+      "target": "4_Clearing for agriculture",
+      "2025": {
+        "value": 861.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 861.0
+      },
+      "2040A": {
+        "value": 864.4959,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 864.4959
+      },
+      "2040B": {
+        "value": 695.9561,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 695.9561
+      }
+    },
+    {
+      "source": "3_Food crops",
+      "target": "4_Fertilizer use",
+      "2025": {
+        "value": 497.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 497.0
+      },
+      "2040A": {
+        "value": 499.0179,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 499.0179
+      },
+      "2040B": {
+        "value": 401.7308,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 401.7308
+      }
+    },
+    {
+      "source": "3_Food crops",
+      "target": "4_Rice paddies",
+      "2025": {
+        "value": 1029.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1029.0
+      },
+      "2040A": {
+        "value": 1033.178,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1033.178
+      },
+      "2040B": {
+        "value": 831.7525,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 831.7525
+      }
+    },
+    {
+      "source": "3_Food crops",
+      "target": "4_Tilling and erosion",
+      "2025": {
+        "value": 360.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 360.0
+      },
+      "2040A": {
+        "value": 361.4617,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 361.4617
+      },
+      "2040B": {
+        "value": 290.9921,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 290.9921
+      }
+    },
+    {
+      "source": "3_Forestry",
+      "target": "4_Logging",
+      "2025": {
+        "value": 321.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.0
+      },
+      "2040A": {
+        "value": 321.9287,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.9287
+      },
+      "2040B": {
+        "value": 259.1664,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 259.1664
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Biomass burner",
+      "2025": {
+        "value": 41.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 41.0
+      },
+      "2040A": {
+        "value": 41.417,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 41.417
+      },
+      "2040B": {
+        "value": 33.3424,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 33.3424
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Coal burner",
+      "2025": {
+        "value": 2672.0,
+        "energy": 2672.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 2781.93,
+        "energy": 2781.93,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 2388.4553,
+        "energy": 2388.4553,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Electric heater",
+      "2025": {
+        "value": 2533.0,
+        "energy": 2523.0,
+        "process": 4.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 2637.1308,
+        "energy": 2626.7999,
+        "process": 4.2699,
+        "afolu": 6.061
+      },
+      "2040B": {
+        "value": 2263.9601,
+        "energy": 2255.2667,
+        "process": 3.814,
+        "afolu": 4.8794
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Gas burner",
+      "2025": {
+        "value": 965.0,
+        "energy": 965.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1004.7015,
+        "energy": 1004.7015,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 862.5971,
+        "energy": 862.5971,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Heat exchanger",
+      "2025": {
+        "value": 298.0,
+        "energy": 297.0,
+        "process": 0.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 310.2292,
+        "energy": 309.219,
+        "process": 0.0,
+        "afolu": 1.0102
+      },
+      "2040B": {
+        "value": 266.2965,
+        "energy": 265.4832,
+        "process": 0.0,
+        "afolu": 0.8132
+      }
+    },
+    {
+      "source": "3_Furnace",
+      "target": "4_Oil burner",
+      "2025": {
+        "value": 965.0,
+        "energy": 965.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1004.7015,
+        "energy": 1004.7015,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 862.5971,
+        "energy": 862.5971,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Biomass burner",
+      "2025": {
+        "value": 169.0,
+        "energy": 125.0,
+        "process": 0.0,
+        "afolu": 45.0
+      },
+      "2040A": {
+        "value": 176.6399,
+        "energy": 132.2585,
+        "process": 0.0,
+        "afolu": 44.3814
+      },
+      "2040B": {
+        "value": 139.4082,
+        "energy": 103.6793,
+        "process": 0.0,
+        "afolu": 35.7289
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Coal burner",
+      "2025": {
+        "value": 416.0,
+        "energy": 416.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 440.1564,
+        "energy": 440.1564,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 345.0447,
+        "energy": 345.0447,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Electric heater",
+      "2025": {
+        "value": 1132.0,
+        "energy": 1124.0,
+        "process": 3.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 1197.3958,
+        "energy": 1189.2688,
+        "process": 3.1958,
+        "afolu": 4.9313
+      },
+      "2040B": {
+        "value": 939.1086,
+        "energy": 932.2841,
+        "process": 2.8546,
+        "afolu": 3.9699
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Gas burner",
+      "2025": {
+        "value": 1249.0,
+        "energy": 1249.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1321.5273,
+        "energy": 1321.5273,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1035.9634,
+        "energy": 1035.9634,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Heat exchanger",
+      "2025": {
+        "value": 503.0,
+        "energy": 500.0,
+        "process": 1.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 532.0719,
+        "energy": 529.0341,
+        "process": 1.0653,
+        "afolu": 1.9725
+      },
+      "2040B": {
+        "value": 417.2566,
+        "energy": 414.7171,
+        "process": 0.9515,
+        "afolu": 1.588
+      }
+    },
+    {
+      "source": "3_Heated space",
+      "target": "4_Oil burner",
+      "2025": {
+        "value": 750.0,
+        "energy": 750.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 793.5512,
+        "energy": 793.5512,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 622.0757,
+        "energy": 622.0757,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Biomass burner",
+      "2025": {
+        "value": 115.0,
+        "energy": 48.0,
+        "process": 0.0,
+        "afolu": 67.0
+      },
+      "2040A": {
+        "value": 117.2528,
+        "energy": 50.8272,
+        "process": 0.0,
+        "afolu": 66.4256
+      },
+      "2040B": {
+        "value": 92.9788,
+        "energy": 39.5034,
+        "process": 0.0,
+        "afolu": 53.4754
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Coal burner",
+      "2025": {
+        "value": 144.0,
+        "energy": 144.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 152.4816,
+        "energy": 152.4816,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 118.5102,
+        "energy": 118.5102,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Electric heater",
+      "2025": {
+        "value": 1319.0,
+        "energy": 1303.0,
+        "process": 6.0,
+        "afolu": 9.0
+      },
+      "2040A": {
+        "value": 1395.9758,
+        "energy": 1379.7471,
+        "process": 7.3058,
+        "afolu": 8.9228
+      },
+      "2040B": {
+        "value": 1086.062,
+        "energy": 1072.3529,
+        "process": 6.5258,
+        "afolu": 7.1833
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Gas burner",
+      "2025": {
+        "value": 463.0,
+        "energy": 463.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 490.2708,
+        "energy": 490.2708,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 381.0433,
+        "energy": 381.0433,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Heat exchanger",
+      "2025": {
+        "value": 199.0,
+        "energy": 197.0,
+        "process": 1.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 210.8124,
+        "energy": 208.6034,
+        "process": 1.2176,
+        "afolu": 0.9914
+      },
+      "2040B": {
+        "value": 164.0143,
+        "energy": 162.1286,
+        "process": 1.0876,
+        "afolu": 0.7981
+      }
+    },
+    {
+      "source": "3_Hot water system",
+      "target": "4_Oil burner",
+      "2025": {
+        "value": 245.0,
+        "energy": 245.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 259.4306,
+        "energy": 259.4306,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 201.632,
+        "energy": 201.632,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Illuminated space",
+      "target": "4_Light device",
+      "2025": {
+        "value": 1676.0,
+        "energy": 1666.0,
+        "process": 4.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 1775.3192,
+        "energy": 1765.031,
+        "process": 4.2611,
+        "afolu": 6.0271
+      },
+      "2040B": {
+        "value": 1381.0522,
+        "energy": 1372.394,
+        "process": 3.8061,
+        "afolu": 4.8521
+      }
+    },
+    {
+      "source": "3_Landfills",
+      "target": "4_(Waste)",
+      "2025": {
+        "value": 1178.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1178.0
+      },
+      "2040A": {
+        "value": 1271.0531,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1271.0531
+      },
+      "2040B": {
+        "value": 952.1082,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 952.1082
+      }
+    },
+    {
+      "source": "3_Livestock",
+      "target": "4_Enteric fermentation",
+      "2025": {
+        "value": 3169.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3169.0
+      },
+      "2040A": {
+        "value": 3182.0902,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3182.0902
+      },
+      "2040B": {
+        "value": 2561.7187,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2561.7187
+      }
+    },
+    {
+      "source": "3_Livestock",
+      "target": "4_Manure",
+      "2025": {
+        "value": 432.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 432.0
+      },
+      "2040A": {
+        "value": 433.7845,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 433.7845
+      },
+      "2040B": {
+        "value": 349.215,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 349.215
+      }
+    },
+    {
+      "source": "3_Pasture",
+      "target": "4_Clearing for agriculture",
+      "2025": {
+        "value": 927.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 927.0
+      },
+      "2040A": {
+        "value": 930.8292,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 930.8292
+      },
+      "2040B": {
+        "value": 749.3573,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 749.3573
+      }
+    },
+    {
+      "source": "3_Pasture",
+      "target": "4_Manure",
+      "2025": {
+        "value": 238.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 238.0
+      },
+      "2040A": {
+        "value": 238.9831,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 238.9831
+      },
+      "2040B": {
+        "value": 192.3916,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 192.3916
+      }
+    },
+    {
+      "source": "3_Plane",
+      "target": "4_Aircraft engine",
+      "2025": {
+        "value": 1012.0,
+        "energy": 1012.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 853.5973,
+        "energy": 853.5973,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 688.179,
+        "energy": 688.179,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Settlements",
+      "target": "4_Clearing for settlements",
+      "2025": {
+        "value": 298.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 298.0
+      },
+      "2040A": {
+        "value": 299.7011,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 299.7011
+      },
+      "2040B": {
+        "value": 241.2722,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 241.2722
+      }
+    },
+    {
+      "source": "3_Ship",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 969.0,
+        "energy": 969.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1200.0682,
+        "energy": 1200.0682,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 959.4945,
+        "energy": 959.4945,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Biomass burner",
+      "2025": {
+        "value": 41.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 41.0
+      },
+      "2040A": {
+        "value": 40.062,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 40.062
+      },
+      "2040B": {
+        "value": 32.2517,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 32.2517
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Coal burner",
+      "2025": {
+        "value": 1395.0,
+        "energy": 1395.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1661.3877,
+        "energy": 1661.3877,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1368.7182,
+        "energy": 1368.7182,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Electric heater",
+      "2025": {
+        "value": 219.0,
+        "energy": 217.0,
+        "process": 1.0,
+        "afolu": 2.0
+      },
+      "2040A": {
+        "value": 260.9263,
+        "energy": 258.4381,
+        "process": 0.534,
+        "afolu": 1.9542
+      },
+      "2040B": {
+        "value": 214.9619,
+        "energy": 212.9117,
+        "process": 0.477,
+        "afolu": 1.5733
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Gas burner",
+      "2025": {
+        "value": 385.0,
+        "energy": 385.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 458.5192,
+        "energy": 458.5192,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 377.7466,
+        "energy": 377.7466,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Heat exchanger",
+      "2025": {
+        "value": 219.0,
+        "energy": 217.0,
+        "process": 1.0,
+        "afolu": 1.0
+      },
+      "2040A": {
+        "value": 259.9492,
+        "energy": 258.4381,
+        "process": 0.534,
+        "afolu": 0.9771
+      },
+      "2040B": {
+        "value": 214.1753,
+        "energy": 212.9117,
+        "process": 0.477,
+        "afolu": 0.7866
+      }
+    },
+    {
+      "source": "3_Steam system",
+      "target": "4_Oil burner",
+      "2025": {
+        "value": 192.0,
+        "energy": 192.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 228.6641,
+        "energy": 228.6641,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 188.3827,
+        "energy": 188.3827,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Tractor",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 537.0,
+        "energy": 537.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 536.4899,
+        "energy": 536.4899,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 536.4899,
+        "energy": 536.4899,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Train",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 61.0,
+        "energy": 61.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 64.7169,
+        "energy": 64.7169,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 51.9052,
+        "energy": 51.9052,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Train",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 93.0,
+        "energy": 83.0,
+        "process": 4.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 98.7524,
+        "energy": 88.0575,
+        "process": 4.6989,
+        "afolu": 5.996
+      },
+      "2040B": {
+        "value": 79.6494,
+        "energy": 70.6252,
+        "process": 4.1972,
+        "afolu": 4.827
+      }
+    },
+    {
+      "source": "3_Truck",
+      "target": "4_Diesel engine",
+      "2025": {
+        "value": 3021.0,
+        "energy": 2895.0,
+        "process": 0.0,
+        "afolu": 126.0
+      },
+      "2040A": {
+        "value": 3705.287,
+        "energy": 3578.4679,
+        "process": 0.0,
+        "afolu": 126.8191
+      },
+      "2040B": {
+        "value": 2963.1993,
+        "energy": 2861.1045,
+        "process": 0.0,
+        "afolu": 102.0948
+      }
+    },
+    {
+      "source": "3_Truck",
+      "target": "4_Electric motor",
+      "2025": {
+        "value": 25.0,
+        "energy": 25.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 30.9021,
+        "energy": 30.9021,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 24.7073,
+        "energy": 24.7073,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Truck",
+      "target": "4_Other Engine (LPG, gas, coal)",
+      "2025": {
+        "value": 84.0,
+        "energy": 84.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 103.8312,
+        "energy": 103.8312,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 83.0165,
+        "energy": 83.0165,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "3_Truck",
+      "target": "4_Petrol engine",
+      "2025": {
+        "value": 129.0,
+        "energy": 125.0,
+        "process": 0.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 158.5367,
+        "energy": 154.5107,
+        "process": 0.0,
+        "afolu": 4.026
+      },
+      "2040B": {
+        "value": 126.7776,
+        "energy": 123.5365,
+        "process": 0.0,
+        "afolu": 3.2411
+      }
+    },
+    {
+      "source": "3_Wastewater",
+      "target": "4_(Waste)",
+      "2025": {
+        "value": 842.0,
+        "energy": 0.0,
+        "process": 41.0,
+        "afolu": 801.0
+      },
+      "2040A": {
+        "value": 907.7381,
+        "energy": 0.0,
+        "process": 43.4652,
+        "afolu": 864.2729
+      },
+      "2040B": {
+        "value": 686.2257,
+        "energy": 0.0,
+        "process": 38.8245,
+        "afolu": 647.4012
+      }
+    },
+    {
+      "source": "4_(Waste)",
+      "target": "5_(Waste)",
+      "2025": {
+        "value": 2020.0,
+        "energy": 0.0,
+        "process": 41.0,
+        "afolu": 1979.0
+      },
+      "2040A": {
+        "value": 2178.7912,
+        "energy": 0.0,
+        "process": 43.4652,
+        "afolu": 2135.326
+      },
+      "2040B": {
+        "value": 1638.3339,
+        "energy": 0.0,
+        "process": 38.8245,
+        "afolu": 1599.5094
+      }
+    },
+    {
+      "source": "4_Aircraft engine",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 780.0,
+        "energy": 779.6,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 657.8336,
+        "energy": 657.8336,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 530.3523,
+        "energy": 530.3523,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Aircraft engine",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 20.0,
+        "energy": 20.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 16.8762,
+        "energy": 16.8762,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 13.6058,
+        "energy": 13.6058,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Aircraft engine",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 91.0,
+        "energy": 91.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 76.7866,
+        "energy": 76.7866,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 61.9062,
+        "energy": 61.9062,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Aircraft engine",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 121.0,
+        "energy": 121.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 102.1009,
+        "energy": 102.1009,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 82.3148,
+        "energy": 82.3148,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Biomass burner",
+      "target": "5_Dry biomass",
+      "2025": {
+        "value": 557.0,
+        "energy": 296.0,
+        "process": 0.0,
+        "afolu": 261.0
+      },
+      "2040A": {
+        "value": 572.6879,
+        "energy": 313.3424,
+        "process": 0.0,
+        "afolu": 259.3455
+      },
+      "2040B": {
+        "value": 452.8107,
+        "energy": 244.0265,
+        "process": 0.0,
+        "afolu": 208.7842
+      }
+    },
+    {
+      "source": "4_Cement kiln",
+      "target": "5_(Cement kiln)",
+      "2025": {
+        "value": 1945.0,
+        "energy": 0.0,
+        "process": 1945.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 2076.1012,
+        "energy": 0.0,
+        "process": 2076.1012,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1854.442,
+        "energy": 0.0,
+        "process": 1854.442,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Chemical use",
+      "target": "5_(Chemical use)",
+      "2025": {
+        "value": 1078.0,
+        "energy": 0.0,
+        "process": 1078.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1150.8225,
+        "energy": 0.0,
+        "process": 1150.8225,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1027.9526,
+        "energy": 0.0,
+        "process": 1027.9526,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Clearing for agriculture",
+      "target": "5_(Clearing for agriculture)",
+      "2025": {
+        "value": 2146.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2146.0
+      },
+      "2040A": {
+        "value": 2155.8079,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2155.8079
+      },
+      "2040B": {
+        "value": 1735.5176,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1735.5176
+      }
+    },
+    {
+      "source": "4_Clearing for settlements",
+      "target": "5_(Clearing for settlements)",
+      "2025": {
+        "value": 298.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 298.0
+      },
+      "2040A": {
+        "value": 299.7011,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 299.7011
+      },
+      "2040B": {
+        "value": 241.2722,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 241.2722
+      }
+    },
+    {
+      "source": "4_Coal burner",
+      "target": "5_(Waste)",
+      "2025": {
+        "value": 48.0,
+        "energy": 48.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 52.184,
+        "energy": 52.184,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 43.6522,
+        "energy": 43.6522,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Coal burner",
+      "target": "5_Direct coal use",
+      "2025": {
+        "value": 3753.0,
+        "energy": 3753.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 4080.1337,
+        "energy": 4080.1337,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 3413.0598,
+        "energy": 3413.0598,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Coal burner",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 48.0,
+        "energy": 48.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 52.184,
+        "energy": 52.184,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 43.6522,
+        "energy": 43.6522,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Coal burner",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 665.0,
+        "energy": 665.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 722.9653,
+        "energy": 722.9653,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 604.7655,
+        "energy": 604.7655,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Coal burner",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 238.0,
+        "energy": 238.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 258.7455,
+        "energy": 258.7455,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 216.4424,
+        "energy": 216.4424,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Computing Infrastructure",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 240.0,
+        "energy": 232.0,
+        "process": 3.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 253.8417,
+        "energy": 245.6209,
+        "process": 3.2008,
+        "afolu": 5.0201
+      },
+      "2040B": {
+        "value": 196.8707,
+        "energy": 189.9703,
+        "process": 2.859,
+        "afolu": 4.0414
+      }
+    },
+    {
+      "source": "4_Computing Infrastructure",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 25.0,
+        "energy": 25.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 26.4678,
+        "energy": 26.4678,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 20.4709,
+        "energy": 20.4709,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Computing Infrastructure",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 9.0,
+        "energy": 9.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 9.5284,
+        "energy": 9.5284,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 7.3695,
+        "energy": 7.3695,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Cooler",
+      "target": "5_(Chemical use)",
+      "2025": {
+        "value": 773.0,
+        "energy": 0.0,
+        "process": 773.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 828.1818,
+        "energy": 0.0,
+        "process": 828.1818,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 739.7593,
+        "energy": 0.0,
+        "process": 739.7593,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Cooler",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 21.0,
+        "energy": 21.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 22.5257,
+        "energy": 22.5257,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 17.8044,
+        "energy": 17.8044,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Cooler",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 1837.0,
+        "energy": 1824.0,
+        "process": 5.0,
+        "afolu": 8.0
+      },
+      "2040A": {
+        "value": 1969.8088,
+        "energy": 1956.5171,
+        "process": 5.3569,
+        "afolu": 7.9348
+      },
+      "2040B": {
+        "value": 1557.6156,
+        "energy": 1546.4427,
+        "process": 4.785,
+        "afolu": 6.3879
+      }
+    },
+    {
+      "source": "4_Cooler",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 198.0,
+        "energy": 198.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 212.3851,
+        "energy": 212.3851,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 167.8704,
+        "energy": 167.8704,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Cooler",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 68.0,
+        "energy": 68.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 72.9403,
+        "energy": 72.9403,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 57.6525,
+        "energy": 57.6525,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Diesel engine",
+      "target": "5_Biofuels",
+      "2025": {
+        "value": 158.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 158.0
+      },
+      "2040A": {
+        "value": 159.8309,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 159.8309
+      },
+      "2040B": {
+        "value": 128.6707,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 128.6707
+      }
+    },
+    {
+      "source": "4_Diesel engine",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 4385.0,
+        "energy": 4385.3,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 5024.8913,
+        "energy": 5024.8913,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 4108.456,
+        "energy": 4108.456,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Diesel engine",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 114.0,
+        "energy": 114.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 130.6268,
+        "energy": 130.6268,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 106.8032,
+        "energy": 106.8032,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Diesel engine",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 513.0,
+        "energy": 513.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 587.8205,
+        "energy": 587.8205,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 480.6143,
+        "energy": 480.6143,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Diesel engine",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 683.0,
+        "energy": 683.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 782.6148,
+        "energy": 782.6148,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 639.8822,
+        "energy": 639.8822,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electric heater",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 5215.0,
+        "energy": 5174.0,
+        "process": 17.0,
+        "afolu": 24.0
+      },
+      "2040A": {
+        "value": 5505.2831,
+        "energy": 5462.9572,
+        "process": 17.4538,
+        "afolu": 24.872
+      },
+      "2040B": {
+        "value": 4483.6421,
+        "energy": 4448.0287,
+        "process": 15.5903,
+        "afolu": 20.0231
+      }
+    },
+    {
+      "source": "4_Electric heater",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 551.0,
+        "energy": 551.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 581.7722,
+        "energy": 581.7722,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 473.6884,
+        "energy": 473.6884,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electric heater",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 195.0,
+        "energy": 195.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 205.8903,
+        "energy": 205.8903,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 167.6393,
+        "energy": 167.6393,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electric motor",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 145.0,
+        "energy": 145.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 161.3402,
+        "energy": 161.3402,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 134.9525,
+        "energy": 134.9525,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electric motor",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 3045.0,
+        "energy": 3019.0,
+        "process": 11.0,
+        "afolu": 15.0
+      },
+      "2040A": {
+        "value": 3384.614,
+        "energy": 3359.2148,
+        "process": 11.2965,
+        "afolu": 14.1027
+      },
+      "2040B": {
+        "value": 2831.2481,
+        "energy": 2809.8045,
+        "process": 10.0904,
+        "afolu": 11.3533
+      }
+    },
+    {
+      "source": "4_Electric motor",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 340.0,
+        "energy": 340.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 378.315,
+        "energy": 378.315,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 316.4404,
+        "energy": 316.4404,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electric motor",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 116.0,
+        "energy": 116.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 129.0722,
+        "energy": 129.0722,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 107.962,
+        "energy": 107.962,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electronics",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 883.0,
+        "energy": 877.0,
+        "process": 2.0,
+        "afolu": 4.0
+      },
+      "2040A": {
+        "value": 934.8924,
+        "energy": 928.7405,
+        "process": 2.1483,
+        "afolu": 4.0036
+      },
+      "2040B": {
+        "value": 724.1664,
+        "energy": 719.0244,
+        "process": 1.919,
+        "afolu": 3.223
+      }
+    },
+    {
+      "source": "4_Electronics",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 94.0,
+        "energy": 94.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 99.5457,
+        "energy": 99.5457,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 77.0676,
+        "energy": 77.0676,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Electronics",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 32.0,
+        "energy": 32.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 33.8879,
+        "energy": 33.8879,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 26.2358,
+        "energy": 26.2358,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Enteric fermentation",
+      "target": "5_(Enteric fermentation)",
+      "2025": {
+        "value": 3169.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3169.0
+      },
+      "2040A": {
+        "value": 3182.0902,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3182.0902
+      },
+      "2040B": {
+        "value": 2561.7187,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2561.7187
+      }
+    },
+    {
+      "source": "4_Fertilizer use",
+      "target": "5_Fertilizer use",
+      "2025": {
+        "value": 1044.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1044.0
+      },
+      "2040A": {
+        "value": 930.2721,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 930.2721
+      },
+      "2040B": {
+        "value": 748.9088,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 748.9088
+      }
+    },
+    {
+      "source": "4_Gas burner",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 2950.0,
+        "energy": 2950.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 3152.2015,
+        "energy": 3152.2015,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 2546.419,
+        "energy": 2546.419,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Gas burner",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 34.0,
+        "energy": 34.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 36.3305,
+        "energy": 36.3305,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 29.3486,
+        "energy": 29.3486,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Gas burner",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 305.0,
+        "energy": 305.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 325.9056,
+        "energy": 325.9056,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 263.2738,
+        "energy": 263.2738,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Gas burner",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 102.0,
+        "energy": 102.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 108.9914,
+        "energy": 108.9914,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 88.0457,
+        "energy": 88.0457,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Heat exchanger",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 1066.0,
+        "energy": 1057.0,
+        "process": 3.0,
+        "afolu": 5.0
+      },
+      "2040A": {
+        "value": 1148.0131,
+        "energy": 1140.245,
+        "process": 2.8169,
+        "afolu": 4.9512
+      },
+      "2040B": {
+        "value": 928.3115,
+        "energy": 921.8094,
+        "process": 2.5161,
+        "afolu": 3.9859
+      }
+    },
+    {
+      "source": "4_Heat exchanger",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 113.0,
+        "energy": 113.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 121.8994,
+        "energy": 121.8994,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 98.5473,
+        "energy": 98.5473,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Heat exchanger",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 40.0,
+        "energy": 40.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 43.1502,
+        "energy": 43.1502,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 34.884,
+        "energy": 34.884,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Light device",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 17.0,
+        "energy": 17.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 18.003,
+        "energy": 18.003,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 13.9981,
+        "energy": 13.9981,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Light device",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 17.0,
+        "energy": 16.7,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 17.6853,
+        "energy": 17.6853,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 13.7511,
+        "energy": 13.7511,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Light device",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 1426.0,
+        "energy": 1416.0,
+        "process": 4.0,
+        "afolu": 6.0
+      },
+      "2040A": {
+        "value": 1509.8285,
+        "energy": 1499.5404,
+        "process": 4.2611,
+        "afolu": 6.0271
+      },
+      "2040B": {
+        "value": 1174.6208,
+        "energy": 1165.9626,
+        "process": 3.8061,
+        "afolu": 4.8521
+      }
+    },
+    {
+      "source": "4_Light device",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 150.0,
+        "energy": 150.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 158.8496,
+        "energy": 158.8496,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 123.513,
+        "energy": 123.513,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Light device",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 67.0,
+        "energy": 67.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 70.9528,
+        "energy": 70.9528,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 55.1691,
+        "energy": 55.1691,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Logging",
+      "target": "5_(Logging)",
+      "2025": {
+        "value": 321.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.0
+      },
+      "2040A": {
+        "value": 321.9287,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.9287
+      },
+      "2040B": {
+        "value": 259.1664,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 259.1664
+      }
+    },
+    {
+      "source": "4_Manure",
+      "target": "5_(Manure)",
+      "2025": {
+        "value": 670.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 670.0
+      },
+      "2040A": {
+        "value": 672.7676,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 672.7676
+      },
+      "2040B": {
+        "value": 541.6067,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 541.6067
+      }
+    },
+    {
+      "source": "4_Non-energy use",
+      "target": "5_Direct coal use",
+      "2025": {
+        "value": 147.0,
+        "energy": 0.0,
+        "process": 147.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 157.0143,
+        "energy": 0.0,
+        "process": 157.0143,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 140.2504,
+        "energy": 0.0,
+        "process": 140.2504,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Non-energy use",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 251.0,
+        "energy": 0.0,
+        "process": 251.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 268.0993,
+        "energy": 0.0,
+        "process": 268.0993,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 239.4751,
+        "energy": 0.0,
+        "process": 239.4751,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Non-energy use",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 539.0,
+        "energy": 0.0,
+        "process": 539.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 575.7192,
+        "energy": 0.0,
+        "process": 575.7192,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 514.2514,
+        "energy": 0.0,
+        "process": 514.2514,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Non-energy use",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 102.0,
+        "energy": 0.0,
+        "process": 102.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 108.9487,
+        "energy": 0.0,
+        "process": 108.9487,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 97.3166,
+        "energy": 0.0,
+        "process": 97.3166,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Non-energy use",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 113.0,
+        "energy": 0.0,
+        "process": 113.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 120.6981,
+        "energy": 0.0,
+        "process": 120.6981,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 107.8115,
+        "energy": 0.0,
+        "process": 107.8115,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Oil burner",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 1688.0,
+        "energy": 1688.4,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1794.1878,
+        "energy": 1794.1878,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1469.6119,
+        "energy": 1469.6119,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Oil burner",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 44.0,
+        "energy": 44.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 46.7568,
+        "energy": 46.7568,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 38.2983,
+        "energy": 38.2983,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Oil burner",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 197.0,
+        "energy": 197.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 209.3432,
+        "energy": 209.3432,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 171.4721,
+        "energy": 171.4721,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Oil burner",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 263.0,
+        "energy": 263.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 279.4784,
+        "energy": 279.4784,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 228.9197,
+        "energy": 228.9197,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Other Engine (LPG, gas, coal)",
+      "target": "5_Direct coal use",
+      "2025": {
+        "value": 11.0,
+        "energy": 11.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 12.4355,
+        "energy": 12.4355,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 10.2594,
+        "energy": 10.2594,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Other Engine (LPG, gas, coal)",
+      "target": "5_Direct gas use",
+      "2025": {
+        "value": 127.0,
+        "energy": 127.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 143.5741,
+        "energy": 143.5741,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 118.4493,
+        "energy": 118.4493,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Other Engine (LPG, gas, coal)",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 46.0,
+        "energy": 46.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 52.0032,
+        "energy": 52.0032,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 42.9029,
+        "energy": 42.9029,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Other Engine (LPG, gas, coal)",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 20.0,
+        "energy": 20.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 22.6101,
+        "energy": 22.6101,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 18.6534,
+        "energy": 18.6534,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Other Engine (LPG, gas, coal)",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 15.0,
+        "energy": 15.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 16.9576,
+        "energy": 16.9576,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 13.9901,
+        "energy": 13.9901,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Petrol engine",
+      "target": "5_Biofuels",
+      "2025": {
+        "value": 188.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 188.0
+      },
+      "2040A": {
+        "value": 188.0915,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 188.0915
+      },
+      "2040B": {
+        "value": 151.4217,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 151.4217
+      }
+    },
+    {
+      "source": "4_Petrol engine",
+      "target": "5_Direct oil use",
+      "2025": {
+        "value": 3222.0,
+        "energy": 3222.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 2542.6611,
+        "energy": 2542.6611,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 2053.5128,
+        "energy": 2053.5128,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Petrol engine",
+      "target": "5_Electricity and heat",
+      "2025": {
+        "value": 84.0,
+        "energy": 84.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 66.2891,
+        "energy": 66.2891,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 53.5366,
+        "energy": 53.5366,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Petrol engine",
+      "target": "5_Fugitive emissions",
+      "2025": {
+        "value": 377.0,
+        "energy": 377.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 297.5119,
+        "energy": 297.5119,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 240.2776,
+        "energy": 240.2776,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Petrol engine",
+      "target": "5_Refineries, extraction",
+      "2025": {
+        "value": 502.0,
+        "energy": 502.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 396.1564,
+        "energy": 396.1564,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 319.9452,
+        "energy": 319.9452,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "4_Rice paddies",
+      "target": "5_(Rice paddies)",
+      "2025": {
+        "value": 1029.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1029.0
+      },
+      "2040A": {
+        "value": 1033.178,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1033.178
+      },
+      "2040B": {
+        "value": 831.7525,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 831.7525
+      }
+    },
+    {
+      "source": "4_Tilling and erosion",
+      "target": "5_Tilling and erosion",
+      "2025": {
+        "value": 476.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 476.0
+      },
+      "2040A": {
+        "value": 477.9408,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 477.9408
+      },
+      "2040B": {
+        "value": 384.7628,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 384.7628
+      }
+    },
+    {
+      "source": "5_(Cement kiln)",
+      "target": "6_Calcination",
+      "2025": {
+        "value": 1945.0,
+        "energy": 0.0,
+        "process": 1945.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 2076.1012,
+        "energy": 0.0,
+        "process": 2076.1012,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1854.442,
+        "energy": 0.0,
+        "process": 1854.442,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_(Chemical use)",
+      "target": "6_Chemical use",
+      "2025": {
+        "value": 1851.0,
+        "energy": 0.0,
+        "process": 1851.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1979.0044,
+        "energy": 0.0,
+        "process": 1979.0044,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1767.7119,
+        "energy": 0.0,
+        "process": 1767.7119,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_(Clearing for agriculture)",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 2146.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2146.0
+      },
+      "2040A": {
+        "value": 2155.8079,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2155.8079
+      },
+      "2040B": {
+        "value": 1735.5176,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1735.5176
+      }
+    },
+    {
+      "source": "5_(Clearing for settlements)",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 298.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 298.0
+      },
+      "2040A": {
+        "value": 299.7011,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 299.7011
+      },
+      "2040B": {
+        "value": 241.2722,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 241.2722
+      }
+    },
+    {
+      "source": "5_(Enteric fermentation)",
+      "target": "6_Methanogenesis",
+      "2025": {
+        "value": 3169.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3169.0
+      },
+      "2040A": {
+        "value": 3182.0902,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 3182.0902
+      },
+      "2040B": {
+        "value": 2561.7187,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2561.7187
+      }
+    },
+    {
+      "source": "5_(Logging)",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 321.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.0
+      },
+      "2040A": {
+        "value": 321.9287,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 321.9287
+      },
+      "2040B": {
+        "value": 259.1664,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 259.1664
+      }
+    },
+    {
+      "source": "5_(Manure)",
+      "target": "6_Methanogenesis",
+      "2025": {
+        "value": 346.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 346.0
+      },
+      "2040A": {
+        "value": 347.4292,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 347.4292
+      },
+      "2040B": {
+        "value": 279.6954,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 279.6954
+      }
+    },
+    {
+      "source": "5_(Manure)",
+      "target": "6_Nitrification",
+      "2025": {
+        "value": 324.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 324.0
+      },
+      "2040A": {
+        "value": 325.3383,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 325.3383
+      },
+      "2040B": {
+        "value": 261.9113,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 261.9113
+      }
+    },
+    {
+      "source": "5_(Rice paddies)",
+      "target": "6_Methanogenesis",
+      "2025": {
+        "value": 1029.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1029.0
+      },
+      "2040A": {
+        "value": 1033.178,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1033.178
+      },
+      "2040B": {
+        "value": 831.7525,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 831.7525
+      }
+    },
+    {
+      "source": "5_(Waste)",
+      "target": "6_Calcination",
+      "2025": {
+        "value": 41.0,
+        "energy": 0.0,
+        "process": 41.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 43.4652,
+        "energy": 0.0,
+        "process": 43.4652,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 38.8245,
+        "energy": 0.0,
+        "process": 38.8245,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_(Waste)",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 18.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 18.0
+      },
+      "2040A": {
+        "value": 19.4219,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 19.4219
+      },
+      "2040B": {
+        "value": 14.5483,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 14.5483
+      }
+    },
+    {
+      "source": "5_(Waste)",
+      "target": "6_Methanogenesis",
+      "2025": {
+        "value": 1834.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1834.0
+      },
+      "2040A": {
+        "value": 1978.8721,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1978.8721
+      },
+      "2040B": {
+        "value": 1482.3144,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1482.3144
+      }
+    },
+    {
+      "source": "5_(Waste)",
+      "target": "6_Nitrification",
+      "2025": {
+        "value": 127.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 127.0
+      },
+      "2040A": {
+        "value": 137.032,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 137.032
+      },
+      "2040B": {
+        "value": 102.6466,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 102.6466
+      }
+    },
+    {
+      "source": "5_(Waste)",
+      "target": "6_Waste",
+      "2025": {
+        "value": 48.0,
+        "energy": 48.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 52.184,
+        "energy": 52.184,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 43.6522,
+        "energy": 43.6522,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Biofuels",
+      "target": "6_Chemical use",
+      "2025": {
+        "value": 16.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 16.0
+      },
+      "2040A": {
+        "value": 16.0889,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 16.0889
+      },
+      "2040B": {
+        "value": 12.9522,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 12.9522
+      }
+    },
+    {
+      "source": "5_Biofuels",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 228.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 228.0
+      },
+      "2040A": {
+        "value": 229.2668,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 229.2668
+      },
+      "2040B": {
+        "value": 184.5696,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 184.5696
+      }
+    },
+    {
+      "source": "5_Biofuels",
+      "target": "6_Nitrification",
+      "2025": {
+        "value": 102.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 102.0
+      },
+      "2040A": {
+        "value": 102.5667,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 102.5667
+      },
+      "2040B": {
+        "value": 82.5706,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 82.5706
+      }
+    },
+    {
+      "source": "5_Direct coal use",
+      "target": "6_Coal",
+      "2025": {
+        "value": 4436.0,
+        "energy": 4289.0,
+        "process": 147.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 4249.5835,
+        "energy": 4092.5692,
+        "process": 157.0143,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 3563.5696,
+        "energy": 3423.3192,
+        "process": 140.2504,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Direct gas use",
+      "target": "6_Natural gas",
+      "2025": {
+        "value": 3888.0,
+        "energy": 3637.0,
+        "process": 251.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 3765.7437,
+        "energy": 3497.6444,
+        "process": 268.0993,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 3071.0985,
+        "energy": 2831.6233,
+        "process": 239.4751,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Direct oil use",
+      "target": "6_Oil",
+      "2025": {
+        "value": 10623.0,
+        "energy": 10084.0,
+        "process": 539.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 10664.9814,
+        "energy": 10089.2622,
+        "process": 575.7192,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 8732.8384,
+        "energy": 8218.587,
+        "process": 514.2514,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Dry biomass",
+      "target": "6_(Biomass)",
+      "2025": {
+        "value": 296.0,
+        "energy": 296.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 313.3424,
+        "energy": 313.3424,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 244.0265,
+        "energy": 244.0265,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Dry biomass",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 261.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 261.0
+      },
+      "2040A": {
+        "value": 259.3455,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 259.3455
+      },
+      "2040B": {
+        "value": 208.7842,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 208.7842
+      }
+    },
+    {
+      "source": "5_Electricity and heat",
+      "target": "6_Coal",
+      "2025": {
+        "value": 10351.0,
+        "energy": 10317.0,
+        "process": 34.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 11092.872,
+        "energy": 11057.7128,
+        "process": 35.1592,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 8975.8303,
+        "energy": 8944.4249,
+        "process": 31.4054,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Electricity and heat",
+      "target": "6_Land use change",
+      "2025": {
+        "value": 66.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 66.0
+      },
+      "2040A": {
+        "value": 66.9115,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 66.9115
+      },
+      "2040B": {
+        "value": 53.8666,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 53.8666
+      }
+    },
+    {
+      "source": "5_Electricity and heat",
+      "target": "6_Natural gas",
+      "2025": {
+        "value": 3077.0,
+        "energy": 3067.0,
+        "process": 10.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 3297.5373,
+        "energy": 3287.1964,
+        "process": 10.3409,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 2668.2028,
+        "energy": 2658.9659,
+        "process": 9.2369,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Electricity and heat",
+      "target": "6_Oil",
+      "2025": {
+        "value": 420.0,
+        "energy": 418.0,
+        "process": 1.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 449.0446,
+        "energy": 448.0105,
+        "process": 1.0341,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 363.3129,
+        "energy": 362.3892,
+        "process": 0.9237,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Electricity and heat",
+      "target": "6_Waste",
+      "2025": {
+        "value": 139.0,
+        "energy": 139.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 148.9796,
+        "energy": 148.9796,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 120.5074,
+        "energy": 120.5074,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Fertilizer use",
+      "target": "6_Chemical use",
+      "2025": {
+        "value": 144.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 144.0
+      },
+      "2040A": {
+        "value": 128.3134,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 128.3134
+      },
+      "2040B": {
+        "value": 103.2978,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 103.2978
+      }
+    },
+    {
+      "source": "5_Fertilizer use",
+      "target": "6_Nitrification",
+      "2025": {
+        "value": 900.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 900.0
+      },
+      "2040A": {
+        "value": 801.9587,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 801.9587
+      },
+      "2040B": {
+        "value": 645.611,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 645.611
+      }
+    },
+    {
+      "source": "5_Fugitive emissions",
+      "target": "6_Coal",
+      "2025": {
+        "value": 1720.0,
+        "energy": 1674.0,
+        "process": 47.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1808.4668,
+        "energy": 1758.2649,
+        "process": 50.2019,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1479.4314,
+        "energy": 1434.5895,
+        "process": 44.842,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Fugitive emissions",
+      "target": "6_Natural gas",
+      "2025": {
+        "value": 673.0,
+        "energy": 655.0,
+        "process": 18.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 707.1973,
+        "energy": 687.971,
+        "process": 19.2262,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 578.4973,
+        "energy": 561.3238,
+        "process": 17.1735,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Fugitive emissions",
+      "target": "6_Oil",
+      "2025": {
+        "value": 1346.0,
+        "energy": 1310.0,
+        "process": 37.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1415.4627,
+        "energy": 1375.9421,
+        "process": 39.5206,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1157.9488,
+        "energy": 1122.6477,
+        "process": 35.3011,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Refineries, extraction",
+      "target": "6_Coal",
+      "2025": {
+        "value": 641.0,
+        "energy": 613.0,
+        "process": 28.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 657.7804,
+        "energy": 627.8729,
+        "process": 29.9075,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 538.5361,
+        "energy": 511.8218,
+        "process": 26.7144,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Refineries, extraction",
+      "target": "6_Natural gas",
+      "2025": {
+        "value": 923.0,
+        "energy": 882.0,
+        "process": 41.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 947.1926,
+        "energy": 903.3995,
+        "process": 43.7931,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 775.5397,
+        "energy": 736.4222,
+        "process": 39.1175,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Refineries, extraction",
+      "target": "6_Oil",
+      "2025": {
+        "value": 1000.0,
+        "energy": 956.0,
+        "process": 44.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1026.1924,
+        "energy": 979.1949,
+        "process": 46.9975,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 840.1879,
+        "energy": 798.2082,
+        "process": 41.9797,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "5_Tilling and erosion",
+      "target": "6_Nitrification",
+      "2025": {
+        "value": 476.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 476.0
+      },
+      "2040A": {
+        "value": 477.9408,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 477.9408
+      },
+      "2040B": {
+        "value": 384.7628,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 384.7628
+      }
+    },
+    {
+      "source": "6_(Biomass)",
+      "target": "7_CH4",
+      "2025": {
+        "value": 246.0,
+        "energy": 246.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 260.4129,
+        "energy": 260.4129,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 202.8058,
+        "energy": 202.8058,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_(Biomass)",
+      "target": "7_N2O",
+      "2025": {
+        "value": 50.0,
+        "energy": 50.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 52.9295,
+        "energy": 52.9295,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 41.2207,
+        "energy": 41.2207,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Calcination",
+      "target": "7_CO2",
+      "2025": {
+        "value": 1716.0,
+        "energy": 0.0,
+        "process": 1716.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1832.3304,
+        "energy": 0.0,
+        "process": 1832.3304,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1636.6979,
+        "energy": 0.0,
+        "process": 1636.6979,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Calcination",
+      "target": "7_F-gas",
+      "2025": {
+        "value": 269.0,
+        "energy": 0.0,
+        "process": 269.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 287.2359,
+        "energy": 0.0,
+        "process": 287.2359,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 256.5686,
+        "energy": 0.0,
+        "process": 256.5686,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Chemical use",
+      "target": "7_CO2",
+      "2025": {
+        "value": 705.0,
+        "energy": 0.0,
+        "process": 545.0,
+        "afolu": 160.0
+      },
+      "2040A": {
+        "value": 727.4063,
+        "energy": 0.0,
+        "process": 583.004,
+        "afolu": 144.4023
+      },
+      "2040B": {
+        "value": 637.0084,
+        "energy": 0.0,
+        "process": 520.7584,
+        "afolu": 116.25
+      }
+    },
+    {
+      "source": "6_Chemical use",
+      "target": "7_F-gas",
+      "2025": {
+        "value": 1182.0,
+        "energy": 0.0,
+        "process": 1182.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1264.4233,
+        "energy": 0.0,
+        "process": 1264.4233,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1129.4246,
+        "energy": 0.0,
+        "process": 1129.4246,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Chemical use",
+      "target": "7_N2O",
+      "2025": {
+        "value": 123.0,
+        "energy": 0.0,
+        "process": 123.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 131.577,
+        "energy": 0.0,
+        "process": 131.577,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 117.529,
+        "energy": 0.0,
+        "process": 117.529,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Coal",
+      "target": "7_CH4",
+      "2025": {
+        "value": 1622.0,
+        "energy": 1571.0,
+        "process": 51.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1685.08,
+        "energy": 1630.8362,
+        "process": 54.2439,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1379.6273,
+        "energy": 1331.1749,
+        "process": 48.4524,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Coal",
+      "target": "7_CO2",
+      "2025": {
+        "value": 15357.0,
+        "energy": 15153.0,
+        "process": 205.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 15948.1857,
+        "energy": 15730.1467,
+        "process": 218.039,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 13034.5392,
+        "energy": 12839.7796,
+        "process": 194.7597,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Coal",
+      "target": "7_N2O",
+      "2025": {
+        "value": 169.0,
+        "energy": 169.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 175.4369,
+        "energy": 175.4369,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 143.2009,
+        "energy": 143.2009,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Land use change",
+      "target": "7_CH4",
+      "2025": {
+        "value": 209.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 209.0
+      },
+      "2040A": {
+        "value": 209.8377,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 209.8377
+      },
+      "2040B": {
+        "value": 168.8603,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 168.8603
+      }
+    },
+    {
+      "source": "6_Land use change",
+      "target": "7_CO2",
+      "2025": {
+        "value": 2970.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2970.0
+      },
+      "2040A": {
+        "value": 2981.9044,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2981.9044
+      },
+      "2040B": {
+        "value": 2399.5936,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 2399.5936
+      }
+    },
+    {
+      "source": "6_Land use change",
+      "target": "7_N2O",
+      "2025": {
+        "value": 160.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 160.0
+      },
+      "2040A": {
+        "value": 160.6413,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 160.6413
+      },
+      "2040B": {
+        "value": 129.271,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 129.271
+      }
+    },
+    {
+      "source": "6_Methanogenesis",
+      "target": "7_CH4",
+      "2025": {
+        "value": 6378.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 6378.0
+      },
+      "2040A": {
+        "value": 6541.5695,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 6541.5695
+      },
+      "2040B": {
+        "value": 5155.4809,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 5155.4809
+      }
+    },
+    {
+      "source": "6_Natural gas",
+      "target": "7_CH4",
+      "2025": {
+        "value": 792.0,
+        "energy": 766.0,
+        "process": 26.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 806.225,
+        "energy": 778.5679,
+        "process": 27.6572,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 655.6793,
+        "energy": 630.975,
+        "process": 24.7043,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Natural gas",
+      "target": "7_CO2",
+      "2025": {
+        "value": 7687.0,
+        "energy": 7393.0,
+        "process": 295.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 7828.1005,
+        "energy": 7514.298,
+        "process": 313.8024,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 6370.1133,
+        "energy": 6089.8147,
+        "process": 280.2987,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Natural gas",
+      "target": "7_N2O",
+      "2025": {
+        "value": 82.0,
+        "energy": 82.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 83.3454,
+        "energy": 83.3454,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 67.5456,
+        "energy": 67.5456,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Nitrification",
+      "target": "7_N2O",
+      "2025": {
+        "value": 1929.0,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1929.0
+      },
+      "2040A": {
+        "value": 1844.8366,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1844.8366
+      },
+      "2040B": {
+        "value": 1477.5024,
+        "energy": 0.0,
+        "process": 0.0,
+        "afolu": 1477.5024
+      }
+    },
+    {
+      "source": "6_Oil",
+      "target": "7_CH4",
+      "2025": {
+        "value": 1325.0,
+        "energy": 1277.0,
+        "process": 49.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 1341.7783,
+        "energy": 1289.4429,
+        "process": 52.3354,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 1097.0954,
+        "energy": 1050.3477,
+        "process": 46.7477,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Oil",
+      "target": "7_CO2",
+      "2025": {
+        "value": 11936.0,
+        "energy": 11363.0,
+        "process": 572.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 12084.6555,
+        "energy": 11473.7195,
+        "process": 610.936,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 9891.911,
+        "energy": 9346.2028,
+        "process": 545.7081,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Oil",
+      "target": "7_N2O",
+      "2025": {
+        "value": 128.0,
+        "energy": 128.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 129.2472,
+        "energy": 129.2472,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 105.2815,
+        "energy": 105.2815,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    },
+    {
+      "source": "6_Waste",
+      "target": "7_CO2",
+      "2025": {
+        "value": 187.0,
+        "energy": 187.0,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040A": {
+        "value": 201.1635,
+        "energy": 201.1635,
+        "process": 0.0,
+        "afolu": 0.0
+      },
+      "2040B": {
+        "value": 164.1597,
+        "energy": 164.1597,
+        "process": 0.0,
+        "afolu": 0.0
+      }
+    }
+  ]
+}
