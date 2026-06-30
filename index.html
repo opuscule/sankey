@@ -19,431 +19,23 @@
 		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="icon.png" />
 
-		<style>
-			:root {
-				color-scheme: light;
-				--color-hero-highlight: #F0FB00;
-				--color-final-service: #EA7179;
-				--color-sector: #D72C49;
-				--color-equipment: #EC582F;
-				--color-device: #F79525;
-				--color-final-energy: #3DD19B;
-				--color-fuel: #A3D9E1;
-				--color-emissions: #224BB8;
-			}
-
-			* {
-				box-sizing: border-box;
-			}
-
-			html,
-			body {
-				margin: 0;
-				min-height: 100%;
-			}
-
-			body {
-				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-				line-height: 1.4;
-			}
-
-			#hero-intro {
-				background: #000;
-				position: relative;
-			}
-
-			.hero-stage {
-				height: 100vh;
-				overflow: hidden;
-				position: relative;
-			}
-
-			.hero-globe {
-				left: 50%;
-				max-width: min(92vw, 1120px);
-				opacity: 0;
-				position: absolute;
-				top: 52%;
-				transform: translate(-50%, -50%);
-				transform-origin: 50% 50%;
-				width: 72vw;
-				will-change: transform, opacity;
-				z-index: 1;
-			}
-
-			.hero-logo {
-				left: 50%;
-				opacity: 0;
-				position: absolute;
-				top: clamp(1.4rem, 4.4vh, 3rem);
-				transform: translateX(-50%);
-				width: min(350px, 80vw);
-				will-change: transform, opacity;
-				z-index: 4;
-			}
-
-			.hero-logo svg {
-				height: auto;
-				display: block;
-				width: 100%;
-			}
-
-			.hero-copy {
-				display: grid;
-				gap: clamp(0.8rem, 2.2vh, 1.6rem);
-				left: 50%;
-				max-width: min(1240px, 95vw);
-				place-items: center;
-				position: absolute;
-				top: 52%;
-				transform: translate(-50%, -50%);
-				width: 100%;
-				z-index: 5;
-			}
-
-			.hero-headline {
-				color: var(--color-hero-highlight);
-				font-size: clamp(2.2rem, 9vw, 8.1rem);
-				font-weight: 860;
-				letter-spacing: -0.03em;
-				line-height: 0.88;
-				margin: 0;
-				opacity: 0;
-				text-align: center;
-				text-transform: uppercase;
-				text-wrap: balance;
-				will-change: transform, opacity;
-			}
-
-			.hero-subtitle {
-				color: #e8edf5;
-				font-size: clamp(1.05rem, 2.3vw, 1.6rem);
-				font-weight: 500;
-				line-height: 1.25;
-				margin: 0;
-				max-width: 54ch;
-				opacity: 0;
-				text-align: center;
-				transform: translateY(28px);
-				will-change: transform, opacity;
-			}
-
-			#intro-anchor {
-				height: 0;
-				overflow: hidden;
-			}
-
-			#emissions-landscape {
-				background: radial-gradient(120% 90% at 55% 52%, rgba(255, 172, 34, 0.14), transparent 54%), #010101;
-				color: #fff;
-				overflow: clip;
-				padding: 0;
-			}
-
-			.landscape-layout {
-				min-height: 320vh;
-				position: relative;
-			}
-
-			.landscape-copy {
-				display: grid;
-				gap: 8vh;
-				margin-top: -100vh;
-				padding: 14vh 6vw 22vh;
-				place-items: center;
-				position: relative;
-				z-index: 2;
-			}
-
-			.landscape-snippet {
-				color: #e5ee35;
-				display: flex;
-				font-size: clamp(1.9rem, 5vw, 3rem);
-				font-weight: 850;
-				letter-spacing: -0.03em;
-				line-height: 0.96;
-				margin: 0;
-				max-width: 1200px;
-				min-height: 88vh;
-				opacity: 0.92;
-				text-align: center;
-				text-shadow: 0 0 16px rgba(211, 220, 47, 0.2), 0 0 48px rgba(211, 220, 47, 0.09);
-				text-wrap: balance;
-				z-index: 2;
-			}
-
-			.landscape-snippet + .landscape-snippet {
-				margin-top: 4vh;
-			}
-
-			[data-animation="word-reveal"] {
-				contain: paint;
-			}
-
-			.reveal-word {
-				display: inline-block;
-				opacity: 0.12;
-				transform: translate3d(0, 0.55em, 0) scale(0.95);
-				filter: blur(7px);
-				will-change: opacity, transform, filter;
-			}
-
-			.landscape-visual {
-				display: grid;
-				isolation: isolate;
-				place-items: center;
-				position: sticky;
-				top: 0;
-				height: 100vh;
-				z-index: 1;
-			}
-
-			.bars-canvas {
-				height: min(74vh, 620px);
-				filter: brightness(0.9) saturate(1.15);
-				position: relative;
-				width: min(96vw, 1240px);
-			}
-
-			.vector-bar {
-				background: var(--color-final-service);
-				height: clamp(240px, 58vh, 520px);
-				left: 50%;
-				position: absolute;
-				top: 50%;
-				transform: translate(-50%, -50%);
-				width: clamp(22px, 2.1vw, 34px);
-			}
-
-			.vector-bar[data-bar="0"] {
-				background: var(--color-final-service);
-			}
-
-			.vector-bar[data-bar="1"] {
-				background: var(--color-sector);
-			}
-
-			.vector-bar[data-bar="2"] {
-				background: var(--color-equipment);
-			}
-
-			.vector-bar[data-bar="3"] {
-				background: var(--color-device);
-			}
-
-			.vector-bar[data-bar="4"] {
-				background: var(--color-final-energy);
-			}
-
-			.vector-bar[data-bar="5"] {
-				background: var(--color-fuel);
-			}
-
-			.vector-bar[data-bar="6"] {
-				background: var(--color-emissions);
-			}
-
-			#full-sankey {
-				background:
-					radial-gradient(120% 120% at 10% 10%, rgba(0, 141, 255, 0.14), transparent 45%),
-					linear-gradient(180deg, #031226 0%, #020b18 100%);
-				color: #e8f4ff;
-				padding: 4.2rem 2.2rem;
-			}
-
-			.sankey-shell {
-				border: 1px solid rgba(115, 170, 220, 0.22);
-				border-radius: 14px;
-				overflow: hidden;
-			}
-
-			.sankey-meta {
-				align-items: center;
-				backdrop-filter: blur(8px);
-				background: rgba(2, 14, 29, 0.92);
-				border-bottom: 1px solid rgba(115, 170, 220, 0.22);
-				display: flex;
-				gap: 0.9rem;
-				justify-content: space-between;
-				padding: 0.85rem 1rem;
-			}
-
-			.sankey-title {
-				font-size: 0.95rem;
-				font-weight: 650;
-				letter-spacing: 0.02em;
-				margin: 0;
-			}
-
-			#sankey-status {
-				color: rgba(229, 241, 255, 0.85);
-				font-size: 0.8rem;
-				letter-spacing: 0.04em;
-				text-transform: uppercase;
-			}
-
-			#sankey-chart {
-				display: block;
-				height: 74vh;
-				min-height: 640px;
-				width: 100%;
-			}
-
-			.sankey-stage-label {
-				fill: rgba(198, 222, 245, 0.75);
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
-				font-size: 12px;
-				font-weight: 600;
-				letter-spacing: 0.12em;
-				text-transform: uppercase;
-			}
-
-			.sankey-node rect {
-				fill: rgba(154, 173, 194, 0.85);
-				rx: 0;
-				ry: 0;
-				stroke: rgba(220, 238, 255, 0.45);
-				stroke-width: 1;
-			}
-
-			.sankey-node.stage-1 rect {
-				fill: var(--color-final-service);
-			}
-
-			.sankey-node.stage-2 rect {
-				fill: var(--color-sector);
-			}
-
-			.sankey-node.stage-3 rect {
-				fill: var(--color-equipment);
-			}
-
-			.sankey-node.stage-4 rect {
-				fill: var(--color-device);
-			}
-
-			.sankey-node.stage-5 rect {
-				fill: var(--color-final-energy);
-			}
-
-			.sankey-node.stage-6 rect {
-				fill: var(--color-fuel);
-			}
-
-			.sankey-node.stage-7 rect {
-				fill: var(--color-emissions);
-			}
-
-			.sankey-node text {
-				fill: #eef5ff;
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
-				font-size: 11px;
-				pointer-events: none;
-			}
-
-			.sankey-link {
-				fill: none;
-				mix-blend-mode: screen;
-				stroke: rgba(208, 222, 235, 0.38);
-				transition: opacity 220ms ease, stroke 220ms ease;
-			}
-
-			.sankey-link.is-active {
-				stroke: rgba(110, 188, 255, 0.95);
-			}
-
-			.sankey-link.is-faded,
-			.sankey-node.is-faded {
-				opacity: 0.08;
-			}
-
-			.sankey-node.is-selected rect {
-				stroke: #d4ecff;
-				stroke-width: 1.6;
-			}
-
-			@media (max-width: 900px) {
-				.hero-globe {
-					max-width: 160vw;
-					top: 51%;
-					width: 150vw;
-				}
-
-				.hero-copy {
-					top: 53%;
-					width: min(94vw, 42rem);
-				}
-
-				.hero-headline {
-					font-size: clamp(2.1rem, 13.6vw, 4.7rem);
-					line-height: 0.9;
-				}
-
-				.hero-subtitle {
-					font-size: clamp(0.95rem, 4.4vw, 1.2rem);
-					max-width: 32ch;
-				}
-
-				.landscape-layout {
-					min-height: 270vh;
-				}
-
-				.landscape-visual {
-					height: 100vh;
-					position: sticky;
-					top: 0;
-				}
-
-				.landscape-copy {
-					margin-top: -100vh;
-					padding: 12vh 8vw 16vh;
-				}
-
-				.landscape-snippet {
-					font-size: clamp(1.45rem, 8.8vw, 2.6rem);
-					max-width: 15ch;
-					min-height: 74vh;
-				}
-
-				.bars-canvas {
-					height: min(62vh, 460px);
-					width: 120vw;
-				}
-
-				#full-sankey {
-					padding: 2.5rem 1rem;
-				}
-
-				#sankey-chart {
-					height: 65vh;
-					min-height: 520px;
-				}
-
-				.sankey-meta {
-					align-items: flex-start;
-					flex-direction: column;
-				}
-			}
-
-			@media (prefers-reduced-motion: reduce) {
-				.hero-globe,
-				.hero-logo,
-				.hero-headline,
-				.hero-subtitle {
-					transform: none !important;
-					will-change: auto;
-				}
-
-				.reveal-word {
-					filter: none !important;
-					opacity: 1 !important;
-					transform: none !important;
-					will-change: auto;
-				}
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
+		 <header style="display:none;">
+            logo
+            <nav>
+                <ul>
+                    <li>Introduction</li>
+                    <li>Global Emissions Landscape</li>
+                    <li>TIF/TGIF Portfolio</li>
+                    <li>2040 Scenarios</li>
+                    <li>Climate Impacts</li>
+                    <li>System-Level Themes</li>
+                    <li>Acknowledgements and Methodology</li>
+                </ul>
+            </nav>
+        </header>
 		<section id="hero-intro" aria-label="Opening hero scene">
 			<div class="hero-stage">
 				<img class="hero-globe" src="globe.png" alt="Earth globe visual" />
@@ -488,77 +80,66 @@
 				<div class="hero-copy">
 					<h1 class="hero-headline">Real World<br />Climate Impact<br />At Scale</h1>
 					<p class="hero-subtitle">
-						Explore how climate technologies across the TIF and TGIF portfolios are forecast to alter the landscape over the next 15 years.
+						Explore how climate technologies across the TIF and TGIF portfolios are forecast to alter the trajectory of global emissions over the next 15 years.
 					</p>
 				</div>
-			</div>
+				</div>
+				<div class="hero-copy-2">
+					<p>
+						In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscape <span style="color:var(--color-hero-highlight);">as it is today</span> and <span style="color:var(--color-hero-highlight);">how it could evolve</span> through the scaling of climate technologies across the global economy.
+					</p>
+				</div>
+				<div class="hero-copy-3">
+					<p>
+						Centered on the portfolios of the <strong style="color:var(--color-hero-highlight);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-hero-highlight);">Technology Growth Impact Fund (TGIF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Professor Bojana Bajželj* and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
+					</p>
+					<p>
+						The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.
+					</p>
+					<p>
+						From there, users can explore three 2040 scenarios and examine how technologies across the TIF and TGIF portfolios are transforming critical systems and accelerating the transition to a lower-carbon economy.
+					</p>
+					<p>
+						<strong>Begin exploring the flows shaping our future.</strong>
+					</p>
+				</div>
 		</section>
 
 		<section id="intro-anchor" aria-hidden="true">
 		</section>
-        <header>
-            logo
-            <nav>
-                <ul>
-                    <li>Introduction</li>
-                    <li>Global Emissions Landscape</li>
-                    <li>TIF/TGIF Portfolio</li>
-                    <li>2040 Scenarios</li>
-                    <li>Climate Impacts</li>
-                    <li>System-Level Themes</li>
-                    <li>Acknowledgements and Methodology</li>
-                </ul>
-            </nav>
-        </header>
+       
 		<main id="app">
 
-            <section id="intro">
-                <h1>Explore how climate technologies across the TIF and TGIF portfolios are forecast to alter the architecture of the global emissions landscapesystem over the next 15 years.</h1>
-                <p>In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscapeworld as it is today and howas it could evolve through the scaling of climate technologies across the global economy.</p>
 
-				<p data-animation="word-reveal" data-reveal-start="top 86%" data-reveal-end="bottom 36%">Centered on the portfolios of the Technology Impact Fund (TIF) and Technology Growth Impact Fund (TGIF), the experience builds upon the pioneering systems modeling work of Professor Bojana Bajželj* and incorporates updated 2025 data to visualize the relationships between economic activitiesy and greenhouse gas emissions at planetary scale.</p>
 
-                <p>From there, users can explore possible 2040 futures and examine how technologies across the TIF and TGIF portfolios are transforming critical systems and accelerating the transition to a lower-carbon economy.</p>
-            </section>
 
-            <section id="emissions-landscape">
-				<div class="landscape-layout">
-					<div class="landscape-visual" aria-hidden="true">
-						<div class="bars-canvas" id="bars-canvas">
-							<div class="vector-bar" data-bar="0"></div>
-							<div class="vector-bar" data-bar="1"></div>
-							<div class="vector-bar" data-bar="2"></div>
-							<div class="vector-bar" data-bar="3"></div>
-							<div class="vector-bar" data-bar="4"></div>
-							<div class="vector-bar" data-bar="5"></div>
-							<div class="vector-bar" data-bar="6"></div>
+			<section id="sankey-narrative" aria-label="Global emissions narrative and Sankey chart">
+				<div class="sankey-layout">
+					<div class="sankey-copy" aria-label="Narrative text">
+						<p id="snippet-1" class="sankey-snippet">
+							In 2025, global emissions totaled 54GT of CO2e.
+						</p>
+						<p id="snippet-2" class="sankey-snippet">
+							Transitioning to a low-carbon economy requires understanding the origin of these emissions.
+						</p>
+						<p id="snippet-3" class="sankey-snippet">
+							The same total emissions can be viewed through seven different lenses.
+						</p>
+						<p id="snippet-4" class="sankey-snippet">
+							<span>These lenses include the <strong>final services</strong> provided to us, such as travel and food.</span>
+						</p>
+					</div>
+
+					<section id="full-sankey">
+						<div class="sankey-shell">
+							<div class="sankey-meta">
+								<div id="sankey-status">Loading data...</div>
+							</div>
+							<svg id="sankey-chart" role="img" aria-label="Interactive multi-stage emissions sankey chart"></svg>
 						</div>
-					</div>
-
-					<div class="landscape-copy">
-						<p class="landscape-snippet" id="snippet-1">
-							Global emissions are concentrated in a handful of tightly linked production systems, from industry and transport to food and buildings.
-						</p>
-						<p class="landscape-snippet" id="snippet-2" data-animation="word-reveal" data-reveal-start="top 84%" data-reveal-end="bottom 34%" data-reveal-stagger="0.06">
-							As pressure shifts across those systems, one central flow fragments into multiple pathways that each demand a distinct decarbonization strategy.
-						</p>
-						<p class="landscape-snippet" id="snippet-3">
-							The result is a more distributed emissions architecture, where intervention points multiply and portfolio-level coordination becomes essential.
-						</p>
-					</div>
+					</section>
 				</div>
-            </section>
-
-            <section id="full-sankey">
-				<div class="sankey-shell">
-					<div class="sankey-meta">
-						<p class="sankey-title">Global Emissions Flow (Click Any Node)</p>
-						<div id="sankey-status">Loading data...</div>
-					</div>
-					<svg id="sankey-chart" role="img" aria-label="Interactive multi-stage emissions sankey chart"></svg>
-				</div>
-            </section>
-
+			</section>
 
         </main>
 
@@ -581,6 +162,20 @@
 			const heroLogo = document.querySelector(".hero-logo");
 			const heroHeadline = document.querySelector(".hero-headline");
 			const heroSubtitle = document.querySelector(".hero-subtitle");
+
+			if (!prefersReducedMotion) {
+				gsap.to(document.body, {
+					"--page-bg-shift": "-140px",
+					ease: "none",
+					scrollTrigger: {
+						trigger: document.body,
+						start: "top top",
+						end: () => ScrollTrigger.maxScroll(window) || 1,
+						scrub: true,
+						invalidateOnRefresh: true
+					}
+				});
+			}
 
 			if (heroIntro && heroStage && heroGlobe && heroLogo && heroHeadline && heroSubtitle) {
 				if (prefersReducedMotion) {

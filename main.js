@@ -7,26 +7,33 @@
 		return;
 	}
 
-	const stageLabels = {
-		1: "Final Service",
-		2: "Sector",
-		3: "Equipment",
-		4: "Device",
-		5: "Final Energy",
-		6: "Fuel",
-		7: "Emissions"
+	const stageColorVars = {
+		1: "--color-final-service",
+		2: "--color-sector",
+		3: "--color-equipment",
+		4: "--color-device",
+		5: "--color-final-energy",
+		6: "--color-fuel",
+		7: "--color-emissions"
 	};
 
 	const state = {
 		nodes: [],
 		links: [],
 		selectedNodeId: null,
-		rendered: null
+		rendered: null,
+		layoutProgress: 0,
+		sankeyInteractive: false
 	};
 
 	const fmtMt = d3.format(",.2f");
 	const fmtPct = d3.format(".2f");
-	const stageLabelFor = (stage) => stageLabels[stage] || `Stage ${stage}`;
+	const linkGradientId = (sourceStage, targetStage) => `link-gradient-${sourceStage}-${targetStage}`;
+	const classSlug = (value) =>
+		String(value || "")
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "") || "unknown";
 
 	loadAndRender().catch((err) => {
 		console.error(err);
@@ -83,6 +90,7 @@
 			const afolu = Number.parseFloat(row.AFOLU || "0") || 0;
 
 			links.push({
+				id: `link-${links.length}`,
 				source: sourceMeta.id,
 				target: targetMeta.id,
 				value,
@@ -118,6 +126,10 @@
 	}
 
 	function render() {
+		if (state.rendered?.layoutScrollTrigger) {
+			state.rendered.layoutScrollTrigger.kill();
+		}
+
 		const bounds = chart.getBoundingClientRect();
 		const width = Math.max(920, Math.floor(bounds.width));
 		const height = Math.max(560, Math.floor(bounds.height));
@@ -134,21 +146,132 @@
 			links: state.links.map((link) => ({ ...link }))
 		};
 
-		const sankeyLayout = d3
-			.sankey()
-			.nodeId((d) => d.id)
-			.nodeWidth(20)
-			.nodePadding(9)
-			.nodeAlign(d3.sankeyJustify)
-			.extent([
-				[28, 44],
-				[width - 28, height - 34]
-			])
-			.iterations(64);
+		const sankeyExtentTop = 44;
+		const sankeyExtentBottom = height - 34;
+		const sankeyExtentLeft = 28;
+		const sankeyExtentRight = width - 28;
 
-		sankeyLayout(graph);
+		const computeLayout = (nodePadding) => {
+			const layoutGraph = {
+				nodes: graph.nodes.map((node) => ({ ...node })),
+				links: graph.links.map((link) => ({ ...link }))
+			};
 
-		renderStageHeaders(svg, graph.nodes, width);
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(nodePadding)
+				.nodeAlign(d3.sankeyJustify)
+				.extent([
+					[sankeyExtentLeft, sankeyExtentTop],
+					[sankeyExtentRight, sankeyExtentBottom]
+				])
+				.iterations(64)(layoutGraph);
+
+			return layoutGraph;
+		};
+
+		const derivePackedLayout = (expandedLayout) => {
+			const expandedNodeById = new Map(expandedLayout.nodes.map((node) => [node.id, node]));
+			const expandedLinkById = new Map(expandedLayout.links.map((link) => [link.id, link]));
+
+			const packedNodes = expandedLayout.nodes.map((node) => ({ ...node }));
+			const packedNodeById = new Map(packedNodes.map((node) => [node.id, node]));
+
+			const nodesByStage = d3.group(packedNodes, (node) => node.stage);
+			nodesByStage.forEach((stageNodes) => {
+				const ordered = stageNodes
+					.slice()
+					.sort((a, b) => {
+						const expandedA = expandedNodeById.get(a.id);
+						const expandedB = expandedNodeById.get(b.id);
+						return (expandedA?.y0 || 0) - (expandedB?.y0 || 0);
+					});
+
+				let cursor = sankeyExtentTop;
+				ordered.forEach((node) => {
+					const expandedNode = expandedNodeById.get(node.id);
+					const nodeHeight = Math.max(3, (expandedNode?.y1 || 0) - (expandedNode?.y0 || 0));
+					node.y0 = cursor;
+					node.y1 = cursor + nodeHeight;
+					cursor = node.y1;
+				});
+			});
+
+			const packedLinks = expandedLayout.links.map((link) => ({
+				...link,
+				source: packedNodeById.get(link.source.id),
+				target: packedNodeById.get(link.target.id)
+			}));
+
+			const sourceLinksByNode = d3.group(packedLinks, (link) => link.source.id);
+			const targetLinksByNode = d3.group(packedLinks, (link) => link.target.id);
+
+			packedNodes.forEach((node) => {
+				const sourceLinks = (sourceLinksByNode.get(node.id) || [])
+					.slice()
+					.sort((a, b) => (expandedLinkById.get(a.id)?.y0 || 0) - (expandedLinkById.get(b.id)?.y0 || 0));
+				let sourceCursor = node.y0;
+				sourceLinks.forEach((link) => {
+					link.y0 = sourceCursor + link.width / 2;
+					sourceCursor += link.width;
+				});
+
+				const targetLinks = (targetLinksByNode.get(node.id) || [])
+					.slice()
+					.sort((a, b) => (expandedLinkById.get(a.id)?.y1 || 0) - (expandedLinkById.get(b.id)?.y1 || 0));
+				let targetCursor = node.y0;
+				targetLinks.forEach((link) => {
+					link.y1 = targetCursor + link.width / 2;
+					targetCursor += link.width;
+				});
+			});
+
+			return {
+				nodes: packedNodes,
+				links: packedLinks
+			};
+		};
+
+		const expandedGraph = computeLayout(9);
+		const collapsedGraph = derivePackedLayout(expandedGraph);
+
+		const defs = svg.append("defs");
+		const stagePairs = Array.from(
+			new Set(
+				expandedGraph.links
+					.map((link) => `${link.source?.stage ?? "unknown"}-${link.target?.stage ?? "unknown"}`)
+			)
+		);
+
+		stagePairs.forEach((pair) => {
+			const [sourceStageRaw, targetStageRaw] = pair.split("-");
+			const sourceStage = Number.parseInt(sourceStageRaw, 10);
+			const targetStage = Number.parseInt(targetStageRaw, 10);
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", linkGradientId(sourceStage, targetStage))
+				.attr("x1", "0%")
+				.attr("y1", "0%")
+				.attr("x2", "100%")
+				.attr("y2", "0%");
+
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${sourceColorVar})`).attr("stop-opacity", 0.3);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`).attr("stop-opacity", 0.3);
+		});
+
+		const nodeStartMap = new Map(collapsedGraph.nodes.map((node) => [node.id, node]));
+		const nodeEndMap = new Map(expandedGraph.nodes.map((node) => [node.id, node]));
+		const linkStartMap = new Map(collapsedGraph.links.map((link) => [link.id, link]));
+		const linkEndMap = new Map(expandedGraph.links.map((link) => [link.id, link]));
 
 		const linksGroup = svg
 			.append("g")
@@ -156,13 +279,43 @@
 			.attr("stroke-opacity", 1)
 			.attr("class", "sankey-links");
 
-		const linkSelection = linksGroup
+		const linkClassNames = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : "unknown";
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : "unknown";
+			const fromId = classSlug(link.source?.id);
+			const toId = classSlug(link.target?.id);
+
+			return [
+				"sankey-link",
+				`stage-${sourceStage}-${targetStage}`,
+				`link-stage-${sourceStage}-${targetStage}`,
+				`link-from-${fromId}`,
+				`link-to-${toId}`,
+				`link-${fromId}-to-${toId}`
+			].join(" ");
+		};
+
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#${linkGradientId(sourceStage, targetStage)})`;
+			}
+
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
+		const linkPaths = linksGroup
 			.selectAll("path")
-			.data(graph.links)
+			.data(expandedGraph.links, (d) => d.id)
 			.join("path")
-			.attr("class", "sankey-link")
-			.attr("d", d3.sankeyLinkHorizontal())
-			.attr("stroke-width", (d) => Math.max(1, d.width))
+			.attr("class", linkClassNames)
+			.style("stroke", linkStroke)
+			.attr("stroke-width", 1)
+			;
+
+		linkPaths
 			.append("title")
 			.text((d) => {
 				const source = d.source.label;
@@ -174,12 +327,16 @@
 
 		const nodeSelection = nodesGroup
 			.selectAll("g")
-			.data(graph.nodes)
+			.data(expandedGraph.nodes, (d) => d.id)
 			.join("g")
 			.attr("class", (d) => `sankey-node stage-${d.stage}`)
-			.attr("transform", (d) => `translate(${d.x0},${d.y0})`)
+			.attr("transform", "translate(0,0)")
 			.style("cursor", "pointer")
 			.on("click", function (event, d) {
+				if (!state.sankeyInteractive) {
+					return;
+				}
+
 				event.stopPropagation();
 				state.selectedNodeId = state.selectedNodeId === d.id ? null : d.id;
 				applySelection();
@@ -187,22 +344,26 @@
 
 		nodeSelection
 			.append("rect")
-			.attr("height", (d) => Math.max(3, d.y1 - d.y0))
-			.attr("width", (d) => d.x1 - d.x0);
+			.attr("height", 1)
+			.attr("width", 20);
 
 		nodeSelection
 			.append("title")
-			.text((d) => `${stageLabelFor(d.stage)}\n${d.label}`);
+			.text((d) => `${d.label}`);
 
 		nodeSelection
 			.append("text")
-			.attr("x", (d) => (d.x0 < width / 2 ? d.x1 - d.x0 + 7 : -7))
-			.attr("y", (d) => (d.y1 - d.y0) / 2)
+			.attr("x", 0)
+			.attr("y", 0)
 			.attr("dy", "0.35em")
-			.attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+			.attr("text-anchor", "start")
 			.text((d) => d.label);
 
 		svg.on("click", () => {
+			if (!state.sankeyInteractive) {
+				return;
+			}
+
 			if (!state.selectedNodeId) {
 				return;
 			}
@@ -210,34 +371,155 @@
 			applySelection();
 		});
 
+		const lerp = (start, end, progress) => start + (end - start) * progress;
+		const fadeIn = (progress, start = 0.08, span = 0.32) =>
+			Math.max(0, Math.min(1, (progress - start) / span));
+
+		const setSankeyInteraction = (enabled) => {
+			if (state.sankeyInteractive === enabled) {
+				return;
+			}
+
+			state.sankeyInteractive = enabled;
+			chart.style.pointerEvents = enabled ? "auto" : "none";
+
+			if (!state.selectedNodeId) {
+				statusEl.textContent = enabled
+					? "Click a node to isolate direct flows"
+					: "Scroll to expand Sankey";
+			}
+		};
+
+		const drawLayout = (progress) => {
+			const clamped = Math.max(0, Math.min(1, progress));
+			state.layoutProgress = clamped;
+			setSankeyInteraction(clamped >= 0.999);
+
+			nodeSelection.each(function (nodeDatum) {
+				const startNode = nodeStartMap.get(nodeDatum.id);
+				const endNode = nodeEndMap.get(nodeDatum.id);
+				if (!startNode || !endNode) {
+					return;
+				}
+
+				const x0 = lerp(startNode.x0, endNode.x0, clamped);
+				const x1 = lerp(startNode.x1, endNode.x1, clamped);
+				const y0 = lerp(startNode.y0, endNode.y0, clamped);
+				const y1 = lerp(startNode.y1, endNode.y1, clamped);
+				const nodeWidth = Math.max(1, x1 - x0);
+				const nodeHeight = Math.max(3, y1 - y0);
+
+				const nodeGroup = d3.select(this);
+				nodeGroup.attr("transform", `translate(${x0},${y0})`);
+				nodeGroup.select("rect").attr("width", nodeWidth).attr("height", nodeHeight);
+				nodeGroup
+					.select("text")
+					.attr("x", x0 < width / 2 ? nodeWidth + 7 : -7)
+					.attr("y", nodeHeight / 2)
+					.attr("text-anchor", x0 < width / 2 ? "start" : "end");
+			});
+
+			const linkOpacity = fadeIn(clamped, 0.06, 0.3);
+			const labelOpacity = fadeIn(clamped, 0.16, 0.28);
+
+			linkPaths.style("opacity", linkOpacity);
+			nodeSelection.select("text").style("opacity", labelOpacity);
+
+			linkPaths.each(function (linkDatum) {
+				const startLink = linkStartMap.get(linkDatum.id);
+				const endLink = linkEndMap.get(linkDatum.id);
+				if (!startLink || !endLink) {
+					return;
+				}
+
+				const startSource = nodeStartMap.get(startLink.source.id);
+				const endSource = nodeEndMap.get(endLink.source.id);
+				const startTarget = nodeStartMap.get(startLink.target.id);
+				const endTarget = nodeEndMap.get(endLink.target.id);
+				if (!startSource || !endSource || !startTarget || !endTarget) {
+					return;
+				}
+
+				const pathDatum = {
+					source: {
+						x0: lerp(startSource.x0, endSource.x0, clamped),
+						x1: lerp(startSource.x1, endSource.x1, clamped),
+						y0: lerp(startSource.y0, endSource.y0, clamped),
+						y1: lerp(startSource.y1, endSource.y1, clamped)
+					},
+					target: {
+						x0: lerp(startTarget.x0, endTarget.x0, clamped),
+						x1: lerp(startTarget.x1, endTarget.x1, clamped),
+						y0: lerp(startTarget.y0, endTarget.y0, clamped),
+						y1: lerp(startTarget.y1, endTarget.y1, clamped)
+					},
+					y0: lerp(startLink.y0, endLink.y0, clamped),
+					y1: lerp(startLink.y1, endLink.y1, clamped)
+				};
+
+				d3.select(this)
+					.attr("d", d3.sankeyLinkHorizontal()(pathDatum))
+					.attr("stroke-width", Math.max(1, lerp(startLink.width, endLink.width, clamped)));
+			});
+		};
+
+		drawLayout(prefersReducedMotion ? 1 : 0);
+		if (prefersReducedMotion) {
+			setSankeyInteraction(true);
+		}
+
+		let layoutScrollTrigger = null;
+		if (!prefersReducedMotion && window.gsap && window.ScrollTrigger) {
+			ScrollTrigger.matchMedia({
+				"(max-width: 900px)": () => {
+					drawLayout(1);
+					setSankeyInteraction(true);
+				},
+				"(min-width: 901px)": () => {
+					drawLayout(0);
+					setSankeyInteraction(false);
+
+					const motionState = { progress: 0 };
+					const tween = gsap.to(motionState, {
+						progress: 1,
+						ease: "none",
+						paused: true,
+						onUpdate: () => drawLayout(motionState.progress)
+					});
+
+					layoutScrollTrigger = ScrollTrigger.create({
+						trigger: "#sankey-narrative",
+						start: "top top",
+						end: "bottom bottom",
+						scrub: true,
+						invalidateOnRefresh: true,
+						onUpdate: (self) => {
+							tween.progress(self.progress);
+						}
+					});
+
+					return () => {
+						tween.kill();
+						if (layoutScrollTrigger) {
+							layoutScrollTrigger.kill();
+							layoutScrollTrigger = null;
+						}
+					};
+				}
+			});
+		} else if (!prefersReducedMotion) {
+			drawLayout(1);
+			setSankeyInteraction(true);
+		}
+
 		state.rendered = {
 			nodeSelection,
-			linkSelection: linksGroup.selectAll("path"),
-			graph
+			linkSelection: linkPaths,
+			graph: expandedGraph,
+			layoutScrollTrigger
 		};
 
 		applySelection();
-	}
-
-	function renderStageHeaders(svg, nodes, width) {
-		const stageCenters = d3
-			.rollups(
-				nodes,
-				(values) => d3.mean(values, (node) => (node.x0 + node.x1) / 2),
-				(node) => node.stage
-			)
-			.sort((a, b) => a[0] - b[0]);
-
-		svg
-			.append("g")
-			.selectAll("text")
-			.data(stageCenters)
-			.join("text")
-			.attr("class", "sankey-stage-label")
-			.attr("x", (d) => Math.min(width - 40, Math.max(40, d[1])))
-			.attr("y", 20)
-			.attr("text-anchor", "middle")
-			.text((d) => stageLabelFor(d[0]));
 	}
 
 	function applySelection() {
