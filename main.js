@@ -991,23 +991,24 @@
 					setSankeyInteraction(false);
 
 					const motionState = { progress: 0 };
-					const tween = gsap.to(motionState, {
-						progress: 1,
-						ease: "none",
-						paused: true,
-						onUpdate: () => drawLayout(motionState.progress)
-					});
-
-					layoutScrollTrigger = ScrollTrigger.create({
+					const tween = gsap.fromTo(
+						motionState,
+						{ progress: 0 },
+						{
+							progress: 1,
+							ease: "power2.inOut",
+							onUpdate: () => drawLayout(motionState.progress),
+							scrollTrigger: {
 						trigger: "#sankey-narrative",
 						start: "top top",
 						end: "bottom bottom",
-						scrub: true,
-						invalidateOnRefresh: true,
-						onUpdate: (self) => {
-							tween.progress(self.progress);
+							scrub: 0.8,
+							invalidateOnRefresh: true
 						}
-					});
+						}
+					);
+
+					layoutScrollTrigger = tween.scrollTrigger || null;
 
 					return () => {
 						tween.kill();

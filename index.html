@@ -343,6 +343,68 @@
 				}
 			});
 
+			const sankeySnippets = gsap.utils.toArray(".sankey-snippet");
+			if (sankeySnippets.length) {
+				if (prefersReducedMotion) {
+					gsap.set(sankeySnippets, { clearProps: "all" });
+				} else {
+					const sankeyNarrative = document.getElementById("sankey-narrative");
+					const snippetCount = sankeySnippets.length;
+					const snippetTimelineScrollDistance = 6000;
+					const segmentSize = 1 / snippetCount;
+					const fadeInPortion = 0.15;
+					const fadeOutStart = 0.85;
+					if (sankeyNarrative) {
+						sankeyNarrative.style.setProperty("--sankey-snippet-count", String(snippetCount));
+						sankeyNarrative.style.setProperty(
+							"--sankey-scroll-distance",
+							`${snippetTimelineScrollDistance}px`
+						);
+					}
+
+					const getSnippetOpacity = (globalProgress, index) => {
+						const segmentStart = index * segmentSize;
+						const localProgress = (globalProgress - segmentStart) / segmentSize;
+
+						if (localProgress <= 0 || localProgress >= 1) {
+							return 0;
+						}
+
+						if (localProgress < fadeInPortion) {
+							return localProgress / fadeInPortion;
+						}
+
+						if (localProgress <= fadeOutStart) {
+							return 1;
+						}
+
+						return (1 - localProgress) / (1 - fadeOutStart);
+					};
+
+					const applySnippetProgress = (globalProgress) => {
+						sankeySnippets.forEach((snippet, index) => {
+							const opacity = Math.max(0, Math.min(1, getSnippetOpacity(globalProgress, index)));
+							gsap.set(snippet, {
+								autoAlpha: opacity,
+								filter: "blur(0px)"
+							});
+						});
+					};
+
+					gsap.set(sankeySnippets, { autoAlpha: 0, filter: "blur(0px)" });
+					applySnippetProgress(0);
+
+					ScrollTrigger.create({
+						trigger: "#sankey-narrative",
+						start: "top top",
+						end: `+=${snippetTimelineScrollDistance}`,
+						onUpdate: (self) => {
+							applySnippetProgress(self.progress);
+						}
+					});
+				}
+			}
+
 			// Add data-animation="word-reveal" to any paragraph to opt it into this scroll-scrub reveal.
 			const revealTargets = gsap.utils.toArray('[data-animation="word-reveal"]');
 

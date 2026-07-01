@@ -317,7 +317,9 @@
 			}
 
 			#sankey-narrative {
+				--sankey-snippet-count: 8;
 				color: #e8f4ff;
+				min-height: var(--sankey-scroll-distance, calc(var(--sankey-snippet-count) * 100vh));
 				padding: 0 0 10vh;
 			}
 
@@ -325,13 +327,20 @@
 				display: grid;
 				gap: 5%;
 				grid-template-columns: minmax(260px, 30%) minmax(0, 65%);
+				height: 100vh;
 				justify-content: center;
 				padding: 0 4vw;
+				position: sticky;
+				top: 0;
 			}
 
 			.sankey-copy {
 				display: grid;
-				padding: 8vh 0 12vh;
+				height: 100%;
+				padding: 0;
+				place-items: center;
+				position: relative;
+				width: 100%;
 			}
 
 			.sankey-snippet {
@@ -340,9 +349,10 @@
 				display: flex;
 				font-size: clamp(1.35rem, 1.95vw, 1.95rem);
 				font-weight: 700;
+				grid-area: 1 / 1;
 				line-height: 1.2;
 				margin: 0;
-				min-height: 92vh;
+				min-height: auto;
 				text-wrap: balance;
 			}
 
@@ -910,15 +920,26 @@
 				.sankey-layout {
 					gap: 1.5rem;
 					grid-template-columns: 1fr;
+					height: auto;
 					padding: 0 1rem 2.5rem;
+					position: static;
+					top: auto;
+				}
+
+				#sankey-narrative {
+					min-height: auto;
 				}
 
 				.sankey-copy {
+					height: auto;
 					padding: 3rem 0 1rem;
+					place-items: normal;
+					position: static;
 				}
 
 				.sankey-snippet {
 					font-size: clamp(1.2rem, 5vw, 1.6rem);
+					grid-area: auto;
 					min-height: 72vh;
 				}
 
