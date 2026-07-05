@@ -317,7 +317,7 @@
 			}
 
 			#sankey-narrative {
-				--sankey-snippet-count: 8;
+				--sankey-snippet-count: 11;
 				color: #e8f4ff;
 				min-height: var(--sankey-scroll-distance, calc(var(--sankey-snippet-count) * 100vh));
 				padding: 0 0 10vh;
@@ -336,6 +336,7 @@
 
 			.sankey-copy {
 				display: grid;
+				grid-template-columns: minmax(0, 1fr);
 				height: 100%;
 				padding: 0;
 				place-items: center;
@@ -344,14 +345,14 @@
 			}
 
 			.sankey-snippet {
-				align-items: center;
 				color: #fff;
-				display: flex;
+				display: block;
 				font-size: clamp(1.35rem, 1.95vw, 1.95rem);
 				font-weight: 700;
 				grid-area: 1 / 1;
 				line-height: 1.2;
 				margin: 0;
+				max-width: 100%;
 				min-height: auto;
 				text-wrap: balance;
 			}
@@ -405,9 +406,71 @@
 				width: 100%;
 			}
 
+			.sankey-snippet--headline {
+				display: block;
+				font-size: clamp(1.8rem, 2.7vw, 2.7rem);
+				font-weight: 800;
+				line-height: 1.12;
+			}
+
+			.sankey-snippet--headline .headline-accent {
+				color: var(--color-hero-highlight);
+			}
+
+			.sankey-snippet--headline .headline-plain {
+				color: #fff;
+			}
+
+			.sankey-snippet .kw {
+				font-weight: 800;
+			}
+
+			.sankey-snippet .kw-final-service {
+				color: var(--color-final-service);
+			}
+
+			.sankey-snippet .kw-sector {
+				color: var(--color-sector);
+			}
+
+			.sankey-snippet .kw-equipment {
+				color: var(--color-equipment);
+			}
+
+			.sankey-snippet .kw-device {
+				color: var(--color-device);
+			}
+
+			.sankey-snippet .kw-final-energy {
+				color: var(--color-final-energy);
+			}
+
+			.sankey-snippet .kw-fuel {
+				color: var(--color-fuel);
+			}
+
+			.sankey-snippet .kw-emissions {
+				color: var(--color-emissions);
+			}
+
+			.stage-header {
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 1rem;
+				font-style: italic;
+				font-weight: 400;
+				letter-spacing: 0.01em;
+				pointer-events: none;
+			}
+
 			.section-anchor {
 				height: 0;
 				overflow: hidden;
+			}
+
+			/* Dev scrub mode (?p=…): hide the hero so #sankey-narrative sits at the
+			   top of the document for precise visual QA. */
+			.dev-scrub #hero-intro {
+				display: none;
 			}
 
 			.portfolio-top-nav {
@@ -737,6 +800,26 @@
 				mix-blend-mode: screen;
 				stroke: rgba(208, 222, 235, 0.38);
 				transition: opacity 220ms ease, stroke 220ms ease;
+			}
+
+			/* During the scroll morph, link/node opacity is driven per-frame from
+			   JS; transitions would lag the scrub. Once the chart unlocks
+			   (.is-interactive), inline opacities are cleared and these rules take
+			   over so the click-to-isolate classes can animate. */
+			#sankey-chart:not(.is-interactive) .sankey-link {
+				transition: none;
+			}
+
+			#sankey-chart.is-interactive .sankey-link {
+				opacity: 0.16;
+			}
+
+			#sankey-chart.is-interactive .sankey-link.is-active {
+				opacity: 0.95;
+			}
+
+			#sankey-chart.is-interactive .sankey-link.is-faded {
+				opacity: 0.03;
 			}
 
 			.sankey-link.is-active {

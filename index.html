@@ -20,6 +20,15 @@
 		<link rel="apple-touch-icon" href="icon.png" />
 
 		<link rel="stylesheet" href="styles.css" />
+
+		<!-- Intro title-card photo covers (used by the Sankey narrative overlay) -->
+		<link rel="preload" as="image" href="final-service.webp" />
+		<link rel="preload" as="image" href="sector.webp" />
+		<link rel="preload" as="image" href="equipment.webp" />
+		<link rel="preload" as="image" href="device.webp" />
+		<link rel="preload" as="image" href="final-energy.webp" />
+		<link rel="preload" as="image" href="fuel.webp" />
+		<link rel="preload" as="image" href="emissions.webp" />
 	</head>
 	<body>
 		<div id="introduction" class="section-anchor" aria-hidden="true"></div>
@@ -98,42 +107,11 @@
 			<section id="sankey-narrative" aria-label="Global emissions narrative and Sankey chart">
 				<div class="sankey-layout">
 					<div class="sankey-copy" aria-label="Narrative text">
-						<p id="snippet-1" class="sankey-snippet">
-							In 2025, global emissions totaled 54GT of CO2e.
-						</p>
-						<p id="snippet-2" class="sankey-snippet">
-							Transitioning to a low-carbon economy requires understanding the origin of these emissions.
-						</p>
-						<p id="snippet-3" class="sankey-snippet">
-							The same total emissions can be viewed through seven different lenses.
-						</p>
-						<p id="snippet-4" class="sankey-snippet">
-							<span>These lenses include the <strong>final services</strong> provided to us, such as travel and food.</span>
-						</p>
-						<p id="snippet-5" class="sankey-snippet">
-							<span>
-								They also include the economic sectors that provide those final services, the equipment that composes each sector, the devices that make up equipment, the final energy that powers devices, the fuels we use, and the types of greenhouse gas emissions.
-							</span>
-						</p>
-						<p id="snippet-6" class="sankey-snippet">
-							<span>
-								Each lens is inclusive of all the world's emissions. Emissions can be traced between domains as they flow through the global economy.
-							</span>
-						</p>
-						<p id="snippet-7" class="sankey-snippet">
-							<span>
-								Each lens can be broken down into nodes, such as travel and food when looking through the lens of final services. Together, all the nodes for one lens sum to global emissions.
-							</span>
-						</p>
-						<p id="snippet-8" class="sankey-snippet">
-							<span>
-								Flows between neighboring nodes show how emissions are connected across lenses, with flow width reflecting the magnitude of those connections. For example, of the 6 Gt CO2e due to Passenger Transport, 4.4 Gt are due to cars.
-							</span>
-						</p>
-
+						<!-- Narrative snippets are rendered from NARRATIVE_BEATS in main.js -->
 					</div>
 
 					<section id="full-sankey">
+
 						<div class="sankey-shell">
 							<div class="sankey-meta">
 								<div id="sankey-status">Loading data...</div>
@@ -311,98 +289,7 @@
 						.to(heroHeadline, { yPercent: -118, duration: 1, ease: "none" }, 0)
 						.to(heroSubtitle, { opacity: 1, yPercent: -42, duration: 0.58, ease: "none" }, 0.38)
 						.to(heroSubtitle, { yPercent: -96, duration: 0.42, ease: "none" }, 0.66);
-				}
-			}
-
-			const bars = gsap.utils.toArray(".vector-bar");
-			const centerIndex = Math.floor(bars.length / 2);
-			const gap = 50;
-			const barWidth = 30;
-			const stride = barWidth + gap;
-
-			gsap.set(bars, {
-				xPercent: -50,
-				yPercent: -50,
-				x: 0,
-				opacity: (index) => (index === centerIndex ? 1 : 0)
-			});
-
-			gsap.to(bars, {
-				x: (index) => (index - centerIndex) * stride,
-				opacity: 1,
-				ease: "none",
-				stagger: {
-					each: 0.03,
-					from: "center"
-				},
-				scrollTrigger: {
-					trigger: "#snippet-2",
-					start: "top 75%",
-					end: "bottom 25%",
-					scrub: true
-				}
-			});
-
-			const sankeySnippets = gsap.utils.toArray(".sankey-snippet");
-			if (sankeySnippets.length) {
-				if (prefersReducedMotion) {
-					gsap.set(sankeySnippets, { clearProps: "all" });
-				} else {
-					const sankeyNarrative = document.getElementById("sankey-narrative");
-					const snippetCount = sankeySnippets.length;
-					const snippetTimelineScrollDistance = 6000;
-					const segmentSize = 1 / snippetCount;
-					const fadeInPortion = 0.15;
-					const fadeOutStart = 0.85;
-					if (sankeyNarrative) {
-						sankeyNarrative.style.setProperty("--sankey-snippet-count", String(snippetCount));
-						sankeyNarrative.style.setProperty(
-							"--sankey-scroll-distance",
-							`${snippetTimelineScrollDistance}px`
-						);
-					}
-
-					const getSnippetOpacity = (globalProgress, index) => {
-						const segmentStart = index * segmentSize;
-						const localProgress = (globalProgress - segmentStart) / segmentSize;
-
-						if (localProgress <= 0 || localProgress >= 1) {
-							return 0;
-						}
-
-						if (localProgress < fadeInPortion) {
-							return localProgress / fadeInPortion;
-						}
-
-						if (localProgress <= fadeOutStart) {
-							return 1;
-						}
-
-						return (1 - localProgress) / (1 - fadeOutStart);
-					};
-
-					const applySnippetProgress = (globalProgress) => {
-						sankeySnippets.forEach((snippet, index) => {
-							const opacity = Math.max(0, Math.min(1, getSnippetOpacity(globalProgress, index)));
-							gsap.set(snippet, {
-								autoAlpha: opacity,
-								filter: "blur(0px)"
-							});
-						});
-					};
-
-					gsap.set(sankeySnippets, { autoAlpha: 0, filter: "blur(0px)" });
-					applySnippetProgress(0);
-
-					ScrollTrigger.create({
-						trigger: "#sankey-narrative",
-						start: "top top",
-						end: `+=${snippetTimelineScrollDistance}`,
-						onUpdate: (self) => {
-							applySnippetProgress(self.progress);
-						}
-					});
-				}
+				} 
 			}
 
 			// Add data-animation="word-reveal" to any paragraph to opt it into this scroll-scrub reveal.
