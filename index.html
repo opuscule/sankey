@@ -220,6 +220,59 @@
 					<h2 class="scenarios-intro__body">The emissions landscape today shows not only the scale of the climate challenge, but also <span>where the greatest opportunities for decarbonization may lie.</span></h2> 
 					<p>To understand the potential impact of these technologies as they scale, we first need to see how emissions flow through the global economy, and how those flows could change over time.</p>
 				</div>
+
+				<div class="scenario-layout" data-nav-theme="highlight">
+					<div class="scenario-layout__copy">
+						<div class="scenario-layout__lead-stage" data-scenario-lead-stage>
+							<div class="scenario-layout__lead-pin">
+								<p class="scenario-layout__lead">
+									Under current government policies already enacted, annual emissions are forecast to rise to 60 Gt CO2e by 2040.
+								</p>
+
+								<p class="scenario-layout__lead">
+									Of course, the future is uncertain.
+								</p>
+
+								<p class="scenario-layout__lead">
+									We consider two alternative scenarios: one in which governments follow through on stated climate commitments that are not yet fully implemented, and one in which electricity demand accelerates rapidly due to the expansion of AI.
+								</p>
+							</div>
+						</div>
+
+						<section class="scenario-selector" aria-label="2040 scenarios">
+							<div class="scenario-selector__pin">
+								<div class="scenario-selector__detail">
+									<div id="scenario-panel-enacted-policies" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="enacted-policies" aria-labelledby="scenario-enacted-policies" hidden>
+										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">Enacted Policies</span></h3>
+										<p class="scenario-selector__desc">This scenario reflects the current policy landscape: a future shaped by climate and energy policies that have already been enacted or are firmly in place. It provides a baseline view of how global emissions may evolve if today&rsquo;s policy momentum continues, but governments do not fully implement additional commitments or more ambitious transition measures. The total annual global emissions in 2040 under this scenario is 60GT.</p>
+									</div>
+
+									<div id="scenario-panel-stated-commitments" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="stated-commitments" aria-labelledby="scenario-stated-commitments" hidden>
+										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">Stated Commitments</span></h3>
+										<p class="scenario-selector__desc">This scenario explores a more ambitious pathway in which governments follow through on stated climate commitments that are not yet fully implemented. It shows how stronger policy execution could accelerate deployment of low-carbon technologies, reshape emissions flows, and expand the opportunity set for climate solutions across the global economy. The total annual global emissions in 2040 under this scenario are 46GT.</p>
+									</div>
+
+									<div id="scenario-panel-high-ai-electricity-demand" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="high-ai-electricity-demand" aria-labelledby="scenario-high-ai-electricity-demand" hidden>
+										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">High AI Electricity Demand</span></h3>
+										<p class="scenario-selector__desc">This scenario considers a future in which electricity demand grows faster than expected, including from the rapid expansion of AI and data centers. By placing additional pressure on the global energy system, it helps users explore how demand growth could affect emissions and why technologies that expand clean power, improve efficiency, and strengthen grid flexibility may become even more critical. The total annual global emissions in 2040 under this scenario are XXGT.</p>
+									</div>
+								</div>
+
+								<hr class="scenario-selector__divider" aria-hidden="true">
+
+								<div class="scenario-selector__list" role="tablist" aria-label="2040 scenarios">
+									<button class="scenario-selector__tab" role="tab" id="scenario-enacted-policies" data-scenario-tab="enacted-policies" aria-controls="scenario-panel-enacted-policies" aria-selected="false" tabindex="0">Enacted Policies</button>
+									<button class="scenario-selector__tab" role="tab" id="scenario-stated-commitments" data-scenario-tab="stated-commitments" aria-controls="scenario-panel-stated-commitments" aria-selected="false" tabindex="-1">Stated Commitments</button>
+									<button class="scenario-selector__tab" role="tab" id="scenario-high-ai-electricity-demand" data-scenario-tab="high-ai-electricity-demand" aria-controls="scenario-panel-high-ai-electricity-demand" aria-selected="false" tabindex="-1">High AI Electricity Demand</button>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<div class="scenario-layout__visual" aria-hidden="true">
+						<svg id="scenario-sankey-chart" role="img" aria-label="2040 scenario emissions flow context"></svg>
+					</div>
+				</div>
 			</section>
 			<section id="climate-impacts" class="section-placeholder" aria-label="Climate Impacts"></section>
 			<section id="system-level-themes" class="section-placeholder" aria-label="System-Level Themes"></section>
@@ -367,11 +420,15 @@
 				const businessTabs = Array.from(document.querySelectorAll("[data-business-tab]"));
 				const selectableTabs = businessTabs.filter((tab) => !tab.disabled);
 				const businessPanels = Array.from(document.querySelectorAll("[data-business-panel]"));
+				const scenarioTabs = Array.from(document.querySelectorAll("[data-scenario-tab]"));
+				const selectableScenarioTabs = scenarioTabs.filter((tab) => !tab.disabled);
+				const scenarioPanels = Array.from(document.querySelectorAll("[data-scenario-panel]"));
 				const portfolioSection = document.getElementById("tif-tgif-portfolio");
 				const themeMarkers = Array.from(document.querySelectorAll("[data-nav-theme]"));
 				const mobileMq = window.matchMedia("(max-width: 900px)");
 				const themeClassNames = ["nav-theme-dark", "nav-theme-highlight", "nav-theme-energy"];
 				let activeBusinessId = "";
+				let activeScenarioId = "";
 
 				const closeMobileNav = () => {
 					portfolioNavRoot.classList.remove("is-open");
@@ -447,6 +504,41 @@
 					});
 				});
 
+				const setActiveScenario = (scenarioId) => {
+					if (!scenarioId) {
+						return;
+					}
+
+					if (!selectableScenarioTabs.some((tab) => tab.dataset.scenarioTab === scenarioId)) {
+						return;
+					}
+
+					activeScenarioId = scenarioId;
+					window.currentScenarioId = scenarioId;
+					document.dispatchEvent(
+						new CustomEvent("scenario-change", {
+							detail: { scenarioId }
+						})
+					);
+
+					scenarioTabs.forEach((tab) => {
+						const isActive = tab.dataset.scenarioTab === scenarioId;
+						tab.classList.toggle("is-active", isActive);
+						tab.setAttribute("aria-selected", isActive ? "true" : "false");
+						tab.setAttribute("tabindex", isActive ? "0" : "-1");
+					});
+
+					scenarioPanels.forEach((panel) => {
+						panel.hidden = panel.dataset.scenarioPanel !== scenarioId;
+					});
+				};
+
+				scenarioTabs.forEach((tab) => {
+					tab.addEventListener("click", () => {
+						setActiveScenario(tab.dataset.scenarioTab);
+					});
+				});
+
 				const tablistEl = document.querySelector(".portfolio-businesses__list");
 				if (tablistEl) {
 					tablistEl.addEventListener("keydown", (event) => {
@@ -463,6 +555,25 @@
 						event.preventDefault();
 						setActiveBusiness(selectableTabs[nextIdx].dataset.businessTab, { syncHash: true });
 						selectableTabs[nextIdx].focus();
+					});
+				}
+
+				const scenarioTablistEl = document.querySelector(".scenario-selector__list");
+				if (scenarioTablistEl) {
+					scenarioTablistEl.addEventListener("keydown", (event) => {
+						const count = selectableScenarioTabs.length;
+						if (!count) return;
+						const currentIdx = selectableScenarioTabs.findIndex((t) => t === document.activeElement);
+						if (currentIdx === -1) return;
+						let nextIdx = currentIdx;
+						if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIdx = (currentIdx + 1) % count;
+						else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIdx = (currentIdx - 1 + count) % count;
+						else if (event.key === "Home") nextIdx = 0;
+						else if (event.key === "End") nextIdx = count - 1;
+						else return;
+						event.preventDefault();
+						setActiveScenario(selectableScenarioTabs[nextIdx].dataset.scenarioTab);
+						selectableScenarioTabs[nextIdx].focus();
 					});
 				}
 
@@ -541,6 +652,10 @@
 					setActiveBusiness(hashBusinessId, { syncHash: false });
 				} else {
 					setActiveBusiness(activeBusinessId, { syncHash: false });
+				}
+
+				if (selectableScenarioTabs.length) {
+					setActiveScenario(selectableScenarioTabs[0].dataset.scenarioTab || activeScenarioId);
 				}
 
 				updateActiveNav();

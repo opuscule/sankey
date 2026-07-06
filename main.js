@@ -5,6 +5,7 @@
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
+	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 
 	// --- Shared math helpers --------------------------------------------------
@@ -332,10 +333,13 @@
 	const state = {
 		nodes: [],
 		links: [],
+		initData: null,
+		baselinesData: null,
 		selectedNodeId: null,
 		rendered: null,
 		sankeyInteractive: false,
 		portfolioRendered: null,
+		scenarioRendered: null,
 		portfolioBusinessNodeMap: new Map(),
 		nodeDetails: null,
 		nodeDetailsPromise: null,
@@ -359,6 +363,44 @@
 		"electric-hydrogen",
 		"redwood-materials"
 	]);
+
+	const scenarioKeyById = {
+		"enacted-policies": "2040A",
+		"stated-commitments": "2040B",
+		"high-ai-electricity-demand": "2040C"
+	};
+	const warnedMissingScenarioKeys = new Set();
+
+	function resolveScenarioRequest(rawScenarioId) {
+		const scenarioId = Object.prototype.hasOwnProperty.call(scenarioKeyById, rawScenarioId)
+			? rawScenarioId
+			: "enacted-policies";
+		const requestedScenarioKey = scenarioKeyById[scenarioId] || scenarioKeyById["enacted-policies"];
+		const availableScenarios = Array.isArray(state.baselinesData?.scenarios)
+			? state.baselinesData.scenarios
+			: [];
+		const enactedScenarioKey = scenarioKeyById["enacted-policies"];
+
+		const resolvedScenarioKey = availableScenarios.includes(requestedScenarioKey)
+			? requestedScenarioKey
+			: availableScenarios.includes(enactedScenarioKey)
+				? enactedScenarioKey
+				: availableScenarios[0] || requestedScenarioKey;
+
+		if (resolvedScenarioKey !== requestedScenarioKey && !warnedMissingScenarioKeys.has(requestedScenarioKey)) {
+			warnedMissingScenarioKeys.add(requestedScenarioKey);
+			console.warn(
+				`[Sankey] Scenario "${requestedScenarioKey}" not yet available; using "${resolvedScenarioKey}" for now.`
+			);
+		}
+
+		return {
+			scenarioId,
+			requestedScenarioKey,
+			resolvedScenarioKey,
+			enactedScenarioKey
+		};
+	}
 
 	const toFiniteNumber = (value, fallback = 0) => {
 		const parsed = Number.parseFloat(String(value ?? "").trim());
@@ -514,6 +556,8 @@
 		]);
 
 		state.introAssets = introAssets;
+		state.initData = initData;
+		state.baselinesData = baselinesData;
 
 		const graph = buildGraph(initData, baselinesData, defaultScenario);
 		state.nodes = graph.nodes;
@@ -527,8 +571,11 @@
 
 		render();
 		renderPortfolioSankey();
+		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 		setupPortfolioBusinessSync();
+		setupScenarioSync();
 		setupLeadFades();
+		setupScenarioLeadFades();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -727,6 +774,321 @@
 	function setupPortfolioBusinessSync() {
 		document.addEventListener("portfolio-business-change", (event) => {
 			applyPortfolioBusinessHighlight(event?.detail?.businessId);
+		});
+	}
+
+	function renderScenarioSankey(rawScenarioId) {
+		if (!scenarioChart || !state.initData || !state.baselinesData) {
+			return;
+		}
+
+		const scenarioRequest = resolveScenarioRequest(rawScenarioId);
+
+		const scenarioGraph = buildGraph(
+			state.initData,
+			state.baselinesData,
+			scenarioRequest.resolvedScenarioKey
+		);
+		const baselineGraph = buildGraph(
+			state.initData,
+			state.baselinesData,
+			scenarioRequest.enactedScenarioKey
+		);
+
+		const bounds = scenarioChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(560, Math.floor(bounds.height));
+
+		d3.select(scenarioChart).selectAll("*").remove();
+
+		const svg = d3
+			.select(scenarioChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+
+		const graph = {
+			nodes: scenarioGraph.nodes.map((node) => ({ ...node })),
+			links: scenarioGraph.links.map((link) => ({ ...link }))
+		};
+
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(20)
+			.nodePadding(9)
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[28, 44],
+				[width - 28, height - 34]
+			])
+			.iterations(64)(graph);
+
+		const defs = svg.append("defs");
+		const stagePairs = Array.from(
+			new Set(
+				graph.links.map(
+					(link) => `${link.source?.stage ?? "unknown"}-${link.target?.stage ?? "unknown"}`
+				)
+			)
+		);
+
+		stagePairs.forEach((pair) => {
+			const [sourceStageRaw, targetStageRaw] = pair.split("-");
+			const sourceStage = Number.parseInt(sourceStageRaw, 10);
+			const targetStage = Number.parseInt(targetStageRaw, 10);
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `scenario-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("x1", "0%")
+				.attr("y1", "0%")
+				.attr("x2", "100%")
+				.attr("y2", "0%");
+
+			gradient
+				.append("stop")
+				.attr("offset", "0%")
+				.style("stop-color", `var(${sourceColorVar})`)
+				.attr("stop-opacity", 0.35);
+			gradient
+				.append("stop")
+				.attr("offset", "100%")
+				.style("stop-color", `var(${targetColorVar})`)
+				.attr("stop-opacity", 0.35);
+		});
+
+		const linksGroup = svg
+			.append("g")
+			.attr("fill", "none")
+			.attr("stroke-opacity", 1)
+			.attr("class", "sankey-links");
+
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(graph.links, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", (link) => {
+				const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+				const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+				if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+					return `url(#scenario-link-gradient-${sourceStage}-${targetStage})`;
+				}
+				return "rgba(208, 222, 235, 0.38)";
+			})
+			.attr("d", d3.sankeyLinkHorizontal())
+			.attr("stroke-width", (d) => Math.max(1, d.width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => (d.x0 < width / 2 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
+			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+			.text((d) => d.label);
+
+		state.scenarioRendered = {
+			nodeSelection,
+			linkSelection,
+			graph,
+			baselineGraph,
+			scenarioId: scenarioRequest.scenarioId,
+			requestedScenarioKey: scenarioRequest.requestedScenarioKey,
+			resolvedScenarioKey: scenarioRequest.resolvedScenarioKey
+		};
+
+		applyScenarioHighlight(scenarioRequest.scenarioId);
+	}
+
+	function setupScenarioSync() {
+		document.addEventListener("scenario-change", (event) => {
+			renderScenarioSankey(event?.detail?.scenarioId);
+		});
+	}
+
+	function clearScenarioHighlight(linkSelection, nodeSelection) {
+		linkSelection
+			.classed("scenario-is-highlight", false)
+			.classed("scenario-is-muted", false);
+		nodeSelection
+			.classed("scenario-is-highlight", false)
+			.classed("scenario-is-muted", false);
+	}
+
+	function pairValueMap(links) {
+		const map = new Map();
+		for (const link of links) {
+			const key = `${link.source.id}|${link.target.id}`;
+			map.set(key, Number(link.value) || 0);
+		}
+		return map;
+	}
+
+	function applyScenarioHighlight(rawScenarioId) {
+		if (!state.scenarioRendered) {
+			return;
+		}
+
+		const scenarioId = Object.prototype.hasOwnProperty.call(scenarioKeyById, rawScenarioId)
+			? rawScenarioId
+			: state.scenarioRendered.scenarioId;
+		const { nodeSelection, linkSelection, graph, baselineGraph } = state.scenarioRendered;
+
+		if (scenarioId === "enacted-policies") {
+			clearScenarioHighlight(linkSelection, nodeSelection);
+			return;
+		}
+
+		const baselinePairs = pairValueMap(baselineGraph.links);
+		const selectedPairs = pairValueMap(graph.links);
+
+		const relevantPairs = new Set();
+		for (const [pair, selectedValue] of selectedPairs.entries()) {
+			const baselineValue = baselinePairs.get(pair) || 0;
+			const delta = selectedValue - baselineValue;
+			if (scenarioId === "stated-commitments" && delta < -0.05) {
+				relevantPairs.add(pair);
+			}
+			if (scenarioId === "high-ai-electricity-demand" && delta > 0.05) {
+				relevantPairs.add(pair);
+			}
+		}
+
+		if (!relevantPairs.size) {
+			clearScenarioHighlight(linkSelection, nodeSelection);
+			return;
+		}
+
+		const relevantNodes = new Set();
+		for (const pair of relevantPairs) {
+			const [sourceId, targetId] = pair.split("|");
+			relevantNodes.add(sourceId);
+			relevantNodes.add(targetId);
+		}
+
+		const isRelevant = (link) => relevantPairs.has(`${link.source.id}|${link.target.id}`);
+		linkSelection
+			.classed("scenario-is-highlight", isRelevant)
+			.classed("scenario-is-muted", (link) => !isRelevant(link));
+		nodeSelection
+			.classed("scenario-is-highlight", (node) => relevantNodes.has(node.id))
+			.classed("scenario-is-muted", (node) => !relevantNodes.has(node.id));
+	}
+
+	function setupScenarioLeadFades() {
+		const stageEl = document.querySelector(".scenario-layout__lead-stage");
+		const leadEls = Array.from(document.querySelectorAll(".scenario-layout__lead"));
+		const selectorEl = document.querySelector(".scenario-selector");
+		if (!stageEl || !leadEls.length) {
+			return;
+		}
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+			return;
+		}
+
+		const seg = (p, a, b, c, d) => {
+			if (p <= a || p >= d) return 0;
+			if (p < b) return (p - a) / (b - a);
+			if (p <= c) return 1;
+			return (d - p) / (d - c);
+		};
+
+		const applyLeadProgress = (progress) => {
+			const n = leadEls.length;
+			const slot = 1 / n;
+			const fade = slot * 0.26;
+			leadEls.forEach((el, i) => {
+				const start = i * slot;
+				const end = (i + 1) * slot;
+				const opacity = i === n - 1
+					? seg(progress, start, start + fade, 1, 1.05)
+					: seg(progress, start, start + fade, end - fade, end);
+				gsap.set(el, { autoAlpha: Math.max(0, Math.min(1, opacity)) });
+			});
+		};
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				stageEl.classList.add("is-pinned");
+				if (selectorEl) {
+					selectorEl.classList.add("is-held");
+				}
+				gsap.set(leadEls, { autoAlpha: 0 });
+
+				const stageST = ScrollTrigger.create({
+					trigger: stageEl,
+					start: "top top",
+					end: "bottom bottom",
+					scrub: 0.55,
+					invalidateOnRefresh: true,
+					onRefresh: (self) => applyLeadProgress(self.progress),
+					onUpdate: (self) => applyLeadProgress(self.progress)
+				});
+
+				applyLeadProgress(0);
+
+				let selectorTween = null;
+				if (selectorEl) {
+					selectorTween = gsap.fromTo(
+						selectorEl,
+						{ autoAlpha: 0, y: 40 },
+						{
+							autoAlpha: 1,
+							y: 0,
+							ease: "none",
+							scrollTrigger: {
+								trigger: selectorEl,
+								start: "top 85%",
+								end: "top 54%",
+								scrub: 0.55,
+								invalidateOnRefresh: true
+							}
+						}
+					);
+				}
+
+				return () => {
+					stageST.kill();
+					if (selectorTween) {
+						selectorTween.scrollTrigger && selectorTween.scrollTrigger.kill();
+						selectorTween.kill();
+					}
+					stageEl.classList.remove("is-pinned");
+					if (selectorEl) {
+						selectorEl.classList.remove("is-held");
+					}
+					gsap.set(leadEls, { clearProps: "opacity,visibility" });
+					if (selectorEl) {
+						gsap.set(selectorEl, { clearProps: "opacity,visibility,transform" });
+					}
+				};
+			}
 		});
 	}
 
@@ -2113,6 +2475,7 @@
 			frameId = requestAnimationFrame(() => {
 				render();
 				renderPortfolioSankey();
+				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 				frameId = null;
 			});
 		};
