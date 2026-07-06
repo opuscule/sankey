@@ -918,6 +918,17 @@
 				stroke-width: 1.6;
 			}
 
+			/* Full-chain isolation overlay: the selected node's chain drawn as its
+			   own ribbons at attributed widths (see applySelection in main.js). */
+			.sankey-chain {
+				pointer-events: none;
+			}
+
+			#sankey-chart .sankey-chain-link {
+				fill: none;
+				opacity: 0.95;
+			}
+
 			@media (max-width: 900px) {
 				.portfolio-top-nav__inner {
 					gap: 0.8rem;

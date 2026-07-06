@@ -144,6 +144,19 @@
 		}
 	})();
 
+	// ?select=3_Car (dev scrub only): auto-select a node after render so the
+	// chain isolation can be screenshotted headlessly. Pair with ?p=1.
+	const DEV_SELECT = (() => {
+		if (DEV_SCRUB === null) {
+			return null;
+		}
+		try {
+			return new URLSearchParams(window.location.search).get("select");
+		} catch (err) {
+			return null;
+		}
+	})();
+
 	const devState = { progress: DEV_SCRUB ?? 0, beatsHook: null, chartHook: null, readout: null };
 
 	const devApply = () => {
@@ -308,7 +321,12 @@
 	const nodeIdAliases = {
 		"5_Cement Kiln": "5_(Cement kiln)",
 		"5_Chemical use": "5_(Chemical use)",
-		"5_Waste": "5_(Waste)"
+		"5_Waste": "5_(Waste)",
+		// Early node_details.json drops used ids that don't exist in
+		// init/baselines. Fixed in the 2026-07-06 drop; kept as a cheap defense
+		// against regressions in future bundles.
+		"1_Personal travel": "1_Travel",
+		"6_Land-use change": "6_Land use change"
 	};
 
 	const state = {
@@ -319,8 +337,8 @@
 		sankeyInteractive: false,
 		portfolioRendered: null,
 		portfolioBusinessNodeMap: new Map(),
-		portfolioNodeDetails: null,
-		portfolioNodeDetailsPromise: null,
+		nodeDetails: null,
+		nodeDetailsPromise: null,
 		introAssets: null
 	};
 
@@ -831,15 +849,16 @@
 			.classed("portfolio-is-muted", (node) => !connectedNodeIds.has(node.id));
 	}
 
-	// node_details.json holds each node's full layer-1→7 flow chain. It is large
-	// once populated, so fetch it lazily on the first company selection and cache
-	// the parsed result (an empty object is cached on failure so we don't refetch).
-	function ensurePortfolioNodeDetails() {
-		if (state.portfolioNodeDetails) {
-			return Promise.resolve(state.portfolioNodeDetails);
+	// node_details.json holds each node's full layer-1→7 flow chain, shared by
+	// the portfolio highlight and the main chart's click-to-isolate. It is large
+	// once populated, so fetch it lazily on first use and cache the parsed
+	// result (an empty object is cached on failure so we don't refetch).
+	function ensureNodeDetails() {
+		if (state.nodeDetails) {
+			return Promise.resolve(state.nodeDetails);
 		}
-		if (!state.portfolioNodeDetailsPromise) {
-			state.portfolioNodeDetailsPromise = fetch(nodeDetailsPath)
+		if (!state.nodeDetailsPromise) {
+			state.nodeDetailsPromise = fetch(nodeDetailsPath)
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP ${response.status}`);
@@ -847,16 +866,68 @@
 					return response.json();
 				})
 				.then((data) => {
-					state.portfolioNodeDetails = data || {};
-					return state.portfolioNodeDetails;
+					state.nodeDetails = data || {};
+					return state.nodeDetails;
 				})
 				.catch((err) => {
 					console.warn(`[Sankey] Could not load ${nodeDetailsPath}:`, err);
-					state.portfolioNodeDetails = {};
-					return state.portfolioNodeDetails;
+					state.nodeDetails = {};
+					return state.nodeDetails;
 				});
 		}
-		return state.portfolioNodeDetailsPromise;
+		return state.nodeDetailsPromise;
+	}
+
+	// Normalized full-chain links for the main chart's click-to-isolate:
+	// endpoint ids aliased onto the rendered graph, restricted to the active
+	// scenario, zero/null flows dropped, duplicate pairs merged. Returns null
+	// when the node's chain has not been generated yet (README: empty links
+	// array), which callers treat as "fall back to direct-neighbor isolation".
+	// Cached per node id — chain data and node ids are static for a session.
+	const chainLinkCache = new Map();
+	const warnedChainIds = new Set();
+	function chainLinksFor(nodeId, nodeById) {
+		if (chainLinkCache.has(nodeId)) {
+			return chainLinkCache.get(nodeId);
+		}
+
+		const rawLinks = state.nodeDetails?.[nodeId]?.links;
+		if (!Array.isArray(rawLinks) || !rawLinks.length) {
+			chainLinkCache.set(nodeId, null);
+			return null;
+		}
+
+		const merged = new Map();
+		rawLinks.forEach((raw) => {
+			const value = toFiniteNumber(raw?.[defaultScenario]?.value, 0);
+			if (value <= 0) {
+				return;
+			}
+			const sourceId = normalizeNodeId(raw.source, nodeById);
+			const targetId = normalizeNodeId(raw.target, nodeById);
+			for (const id of [sourceId, targetId]) {
+				if (!nodeById.has(id)) {
+					if (!warnedChainIds.has(id)) {
+						warnedChainIds.add(id);
+						console.warn(
+							`[Sankey] node_details chain references unknown node id "${id}"; link skipped.`
+						);
+					}
+					return;
+				}
+			}
+			const key = `${sourceId}|${targetId}`;
+			const entry = merged.get(key);
+			if (entry) {
+				entry.value += value;
+			} else {
+				merged.set(key, { sourceId, targetId, value });
+			}
+		});
+
+		const links = merged.size ? Array.from(merged.values()) : null;
+		chainLinkCache.set(nodeId, links);
+		return links;
 	}
 
 	function applyPortfolioBusinessHighlight(rawBusinessId) {
@@ -882,9 +953,9 @@
 		// Full-chain isolation needs node_details.json. Until it has loaded, show
 		// the direct-connected fallback, then re-run once the data is available
 		// (only if this company is still the active selection).
-		if (!state.portfolioNodeDetails) {
+		if (!state.nodeDetails) {
 			applyPortfolioDirectHighlight(nodeId, linkSelection, nodeSelection, graph);
-			ensurePortfolioNodeDetails().then(() => {
+			ensureNodeDetails().then(() => {
 				if (normalizeBusinessSlug(window.currentPortfolioBusinessId) === businessId) {
 					applyPortfolioBusinessHighlight(businessId);
 				}
@@ -892,8 +963,8 @@
 			return;
 		}
 
-		const chainLinks = Array.isArray(state.portfolioNodeDetails[nodeId]?.links)
-			? state.portfolioNodeDetails[nodeId].links
+		const chainLinks = Array.isArray(state.nodeDetails[nodeId]?.links)
+			? state.nodeDetails[nodeId].links
 			: [];
 
 		// Node's chain not generated yet → direct-connected fallback.
@@ -1296,6 +1367,11 @@
 				return `${source} -> ${target}\n${fmtMt(d.value)} Mt CO2e\nEnergy ${fmtMt(d.energy)} | Process ${fmtMt(d.process)} | AFOLU ${fmtMt(d.afolu)}`;
 			});
 
+		// Full-chain isolation overlay, populated by applySelection(): the
+		// selected node's chain drawn as its own ribbons at attributed widths.
+		// Sits above the baseline ribbons, below the nodes.
+		const chainGroup = svg.append("g").attr("class", "sankey-chain");
+
 		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
 
 		const nodeSelection = nodesGroup
@@ -1463,6 +1539,12 @@
 			state.sankeyInteractive = enabled;
 			chart.style.pointerEvents = enabled ? "auto" : "none";
 			chart.classList.toggle("is-interactive", enabled);
+
+			if (enabled) {
+				// Prefetch the chain data so the first node click can usually
+				// isolate the full chain immediately (still lazy: not on page load).
+				ensureNodeDetails();
+			}
 
 			if (!enabled && state.selectedNodeId) {
 				state.selectedNodeId = null;
@@ -1853,10 +1935,20 @@
 			nodeSelection,
 			linkSelection: linkPaths,
 			graph: expandedGraph,
+			chainGroup,
 			layoutScrollTrigger
 		};
 
 		applySelection();
+
+		if (DEV_SELECT && !state.selectedNodeId) {
+			ensureNodeDetails().then(() => {
+				if (!state.selectedNodeId) {
+					state.selectedNodeId = DEV_SELECT;
+					applySelection();
+				}
+			});
+		}
 	}
 
 	function applySelection() {
@@ -1864,7 +1956,9 @@
 			return;
 		}
 
-		const { nodeSelection, linkSelection, graph } = state.rendered;
+		const { nodeSelection, linkSelection, graph, chainGroup } = state.rendered;
+
+		chainGroup.selectAll("*").remove();
 
 		if (!state.selectedNodeId) {
 			linkSelection.classed("is-faded", false).classed("is-active", false);
@@ -1874,6 +1968,102 @@
 		}
 
 		const selectedId = state.selectedNodeId;
+
+		// Full-chain isolation needs node_details.json; show the direct-neighbor
+		// fallback until it arrives, then upgrade in place if still selected.
+		if (!state.nodeDetails) {
+			applyDirectSelection(selectedId);
+			ensureNodeDetails().then(() => {
+				if (state.selectedNodeId === selectedId) {
+					applySelection();
+				}
+			});
+			return;
+		}
+
+		const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+		const chainLinks = chainLinksFor(selectedId, nodeById);
+
+		// Chain not generated for this node yet -> direct-neighbor fallback.
+		if (!chainLinks) {
+			applyDirectSelection(selectedId);
+			return;
+		}
+
+		// --- Full-chain isolation: fade the whole baseline chart and draw the
+		// chain as its own ribbons at attributed widths. The chain's values are
+		// per-node slices (e.g. Car's share of Oil->CO2), so widths must come
+		// from the chain data, not the baseline ribbons.
+		const chainNodeIds = new Set([selectedId]);
+		chainLinks.forEach((link) => {
+			chainNodeIds.add(link.sourceId);
+			chainNodeIds.add(link.targetId);
+		});
+
+		linkSelection.classed("is-active", false).classed("is-faded", true);
+		nodeSelection
+			.classed("is-selected", (node) => node.id === selectedId)
+			.classed("is-faded", (node) => !chainNodeIds.has(node.id));
+
+		// px per Mt from the expanded layout so overlay widths share the chart scale.
+		const scaleLink = graph.links.find((link) => link.value > 0 && link.width > 0);
+		const pxPerMt = scaleLink ? scaleLink.width / scaleLink.value : 0;
+
+		const datums = chainLinks.map((link) => ({
+			source: nodeById.get(link.sourceId),
+			target: nodeById.get(link.targetId),
+			value: link.value,
+			width: Math.max(1, link.value * pxPerMt),
+			y0: 0,
+			y1: 0
+		}));
+
+		// Stack each node's chain slices from its top edge, ordered by the far
+		// endpoint's height, so slices fan out without crossing.
+		const nodeCenter = (node) => (node.y0 + node.y1) / 2;
+		d3.group(datums, (d) => d.source.id).forEach((group) => {
+			group.sort((a, b) => nodeCenter(a.target) - nodeCenter(b.target));
+			let offset = 0;
+			group.forEach((d) => {
+				d.y0 = d.source.y0 + offset + d.width / 2;
+				offset += d.width;
+			});
+		});
+		d3.group(datums, (d) => d.target.id).forEach((group) => {
+			group.sort((a, b) => nodeCenter(a.source) - nodeCenter(b.source));
+			let offset = 0;
+			group.forEach((d) => {
+				d.y1 = d.target.y0 + offset + d.width / 2;
+				offset += d.width;
+			});
+		});
+
+		chainGroup
+			.selectAll("path")
+			.data(datums)
+			.join("path")
+			.attr("class", "sankey-chain-link")
+			.style("stroke", (d) =>
+				stageColorVars[d.source.stage] && stageColorVars[d.target.stage]
+					? `url(#${linkGradientId(d.source.stage, d.target.stage)})`
+					: "rgba(208, 222, 235, 0.6)"
+			)
+			.attr("d", d3.sankeyLinkHorizontal())
+			.attr("stroke-width", (d) => d.width);
+
+		const selectedNode = nodeById.get(selectedId);
+		const inflow = d3.sum(datums, (d) => (d.target.id === selectedId ? d.value : 0));
+		const outflow = d3.sum(datums, (d) => (d.source.id === selectedId ? d.value : 0));
+		const throughput = inflow > 0 ? inflow : outflow;
+		statusEl.textContent = `${selectedNode?.label ?? selectedId}: ${formatMass(throughput)} traced end-to-end`;
+	}
+
+	// Direct-neighbor isolation (one hop each way): the behavior for nodes
+	// whose full chain hasn't been generated yet, and while node_details.json
+	// is still loading.
+	function applyDirectSelection(selectedId) {
+		const { nodeSelection, linkSelection, graph } = state.rendered;
+
 		const connectedLinks = graph.links.filter(
 			(link) => link.source.id === selectedId || link.target.id === selectedId
 		);

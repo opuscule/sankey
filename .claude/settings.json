@@ -22,7 +22,12 @@
       "Read(//Users/opuscule/.cache/**)",
       "Read(//Applications/Google Chrome.app/Contents/MacOS/**)",
       "Bash(NODE_PATH=\"/Users/opuscule/.npm/_npx/e41f203b7505f1fb/node_modules\" node verify.js)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --window-size=1600,900 --hide-scrollbars --virtual-time-budget=15000 --screenshot=chain-car.png \"http://localhost:5500/?p=1&select=3_Car\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --window-size=1600,900 --hide-scrollbars --virtual-time-budget=15000 --screenshot=chain-fallback.png \"http://localhost:5500/?p=1&select=4_Gas%20burner\")",
+      "Bash(python3 -)",
+      "Bash(curl -s http://localhost:5500/node_details.json)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --window-size=1600,900 --hide-scrollbars --virtual-time-budget=15000 --enable-logging=stderr --screenshot=chain-gas.png \"http://localhost:5500/?p=1&select=4_Gas%20burner\")"
     ]
   }
 }

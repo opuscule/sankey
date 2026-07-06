@@ -18,7 +18,12 @@ A static single-page interactive data visualisation showing global greenhouse ga
 | `styles.css` | All layout and visual styles |
 | `main.js` | Sankey data loading, layout, scroll animation, and interaction (single IIFE) |
 
-Data is loaded at runtime from `init.json` (node metadata) and `baselines.json` (scenario flow values) in the repo root.
+Data is loaded at runtime from `init.json` (node metadata) and `baselines.json`
+(scenario flow values) in the repo root. `node_details.json` (per-node full
+flow chains, ~5 MB — fully populated by the data team 2026-07-06) is fetched
+lazily when the chart first becomes interactive; it powers full-chain
+click-to-isolate on the main chart and the portfolio highlight. The Option B
+bundle's `avoided.json` and `STATUS.md` are not yet delivered.
 
 Design assets in the repo root, one pair per stage
 (`final-service, sector, equipment, device, final-energy, fuel, emissions`):
@@ -236,14 +241,35 @@ Links (`<path class="sankey-link ...">`) receive semantic classes:
 `stage-{s}-{t}`, `link-stage-{s}-{t}`, `link-from-{slug}`, `link-to-{slug}`,
 `link-{fromSlug}-to-{toSlug}`.
 
-### Node interaction
+### Node interaction — full-chain isolation
 
-Clicking a node (only when `.is-interactive`):
-- Sets `state.selectedNodeId`; `applySelection()` adds `is-active` to directly
-  connected links, `is-faded` to everything else, `is-selected` to the node.
-- Background click resets. CSS: `.is-interactive .sankey-link { opacity: 0.16 }`,
-  `.is-active { 0.95 }`, `.is-faded { 0.03 }`; transitions are disabled while
-  **not** interactive so scrubbing never animates.
+Clicking a node (only when `.is-interactive`) sets `state.selectedNodeId` and
+runs `applySelection()`, which has two modes:
+
+- **Full chain (default)**: the node's layer-1→7 chain from
+  `node_details.json` is drawn as its own ribbons in `<g.sankey-chain>`
+  (between links and nodes, `pointer-events: none`) at **attributed widths** —
+  the chain's `6_Oil → 7_CO2` value is only the slice of that flow passing
+  through the selected node, so widths come from chain values scaled by the
+  expanded layout's px-per-Mt (`link.width / link.value`), not from the
+  baseline ribbons. Slices stack from each node's top edge, ordered by the far
+  endpoint's height. All baseline links get `is-faded`; nodes off the chain get
+  `is-faded`; the selected node gets `is-selected`. Chain links are normalized
+  in `chainLinksFor()` (module scope): endpoint ids aliased via
+  `nodeIdAliases`, active-scenario value filter, duplicate pairs merged,
+  unknown endpoints dropped with a one-time console warning; results cached
+  per node id.
+- **Direct-neighbor fallback** (`applyDirectSelection()`): the original
+  one-hop behavior — used while `node_details.json` is still loading (upgrades
+  in place when it resolves), if the fetch failed, or for a node whose chain
+  is missing/empty in a future data drop.
+
+`node_details.json` is fetched lazily by `ensureNodeDetails()` (shared with
+the portfolio highlight): kicked off the first time `setSankeyInteraction(true)`
+runs, cached, empty-object on failure. Background click resets everything and
+clears the overlay. CSS: `.is-interactive .sankey-link { opacity: 0.16 }`,
+`.is-active { 0.95 }`, `.is-faded { 0.03 }`, `.sankey-chain-link { 0.95 }`;
+transitions are disabled while **not** interactive so scrubbing never animates.
 
 ### Resize handling
 
@@ -272,6 +298,10 @@ makes headless screenshots work:
 hold. Useful checkpoints vs the mock-up PDF: `p=0.04`→p.6, `0.10`→fan mid,
 `0.19`→p.9 (wipe), `0.26`→p.10, `0.44`→p.12, `0.53`→p.13, `0.65`→p.15,
 `0.68`→p.16, `0.77`→p.17, `0.85`–`1.0`→p.19 (hold, interactive).
+
+`?select=<node id>` (dev scrub only, pair with `?p=1`, e.g.
+`?p=1&select=3_Car`) auto-selects a node after render so the full-chain
+isolation can be screenshotted headlessly.
 
 Harmless in production (no `?p` → no hook), but can be stripped for the demo.
 
@@ -332,9 +362,9 @@ starfield via the `--page-bg-shift` custom property.
 | Title-card art / wipe | `main.js` — `loadIntroAssets()`, intro card build in `render()`, `WIPE_JITTER`/`WIPE_SPAN` |
 | Overall scroll length | `main.js` — `NARRATIVE_SCROLL_DISTANCE` |
 | Node/link colours | `styles.css` — `:root` CSS variables + `.sankey-node.stage-N rect` |
-| Node click interaction | `main.js` — `applySelection()`; CSS `.is-interactive` rules |
+| Node click interaction | `main.js` — `applySelection()`, `applyDirectSelection()`, `chainLinksFor()`; CSS `.is-interactive` + `.sankey-chain` rules |
 | Hero animation | `index.html` — inline `<script>` after `gsap.registerPlugin` |
-| Data | `init.json` + `baselines.json` |
+| Data | `init.json` + `baselines.json` + `node_details.json` |
 
 ---
 
