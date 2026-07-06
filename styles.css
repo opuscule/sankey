@@ -596,118 +596,137 @@
 			}
 
 			.portfolio-layout__lead {
-				align-items: center;
 				color: #fff;
-				display: flex;
 				font-size: clamp(1.15rem, 1.8vw, 1.6rem);
 				font-weight: 600;
 				line-height: 1.25;
 				margin: 0;
 				max-width: 25ch;
-				min-height: 92vh;
 				text-wrap: balance;
+			}
+
+			/* Leads pinned in one centered cell, crossfading on scroll — no x/y movement. */
+			.portfolio-layout__lead-stage {
+				position: relative;
+			}
+
+			.portfolio-layout__lead-stage.is-pinned {
+				height: 220vh;
+			}
+
+			.portfolio-layout__lead-stage.is-pinned .portfolio-layout__lead-pin {
+				display: grid;
+				height: 100vh;
+				place-items: center;
+				position: sticky;
+				top: 0;
+			}
+
+			.portfolio-layout__lead-stage.is-pinned .portfolio-layout__lead {
+				grid-area: 1 / 1;
 			}
 
 			.portfolio-businesses {
 				margin-top: 8vh;
-				position: relative;
 			}
 
-			.portfolio-businesses__sticky {
-				background: rgba(196, 196, 196, 0.94);
-				border: 1px solid rgba(20, 20, 20, 0.25);
-				color: #111;
-				position: sticky;
-				top: clamp(1.2rem, 8vh, 5rem);
-				z-index: 2;
+			/* Selected-company detail block — dark treatment on the section's dark bg. */
+			.portfolio-businesses__detail {
+				min-height: 9rem;
 			}
 
-			.portfolio-businesses__nav {
-				display: grid;
-				grid-template-columns: 1fr;
+			.portfolio-businesses__panel:not([hidden]) {
+				animation: panel-fade-in 240ms ease;
 			}
 
-			.portfolio-businesses__link {
-				align-items: center;
-				border-top: 1px solid rgba(16, 16, 16, 0.55);
-				color: #111;
-				display: grid;
-				font-size: clamp(1.05rem, 1.2vw, 1.45rem);
-				font-weight: 520;
-				gap: 0.7rem;
-				grid-template-columns: 1fr auto;
-				grid-template-areas:
-					"label dot"
-					"panel panel";
-				letter-spacing: -0.01em;
-				padding: 1.05rem 1.15rem;
-				text-decoration: none;
-				transition: background-color 160ms ease;
+			@keyframes panel-fade-in {
+				from { opacity: 0; }
+				to   { opacity: 1; }
 			}
 
-			.portfolio-businesses__link > span:first-child {
-				grid-area: label;
-			}
-
-			.portfolio-businesses__link:first-child {
-				border-top: 0;
-			}
-
-			.portfolio-businesses__link.is-active {
-				background: rgba(255, 255, 255, 0.42);
-			}
-
-			.portfolio-businesses__dot {
-				border: 2px solid currentColor;
-				border-radius: 999px;
+			.portfolio-businesses__logo {
 				display: block;
-				grid-area: dot;
-				height: 1.1rem;
-				position: relative;
-				width: 1.1rem;
+				height: auto;
+				margin-bottom: 1.1rem;
+				max-height: 2.2rem;
+				max-width: 60%;
+				width: auto;
 			}
 
-			.portfolio-businesses__link.is-active .portfolio-businesses__dot::after {
-				background: currentColor;
-				border-radius: 999px;
-				content: "";
-				inset: 0.19rem;
-				position: absolute;
-			}
-
-			.portfolio-businesses__panel {
-				background: rgba(255, 255, 255, 0.18);
-				border-top: 1px solid rgba(16, 16, 16, 0.55);
-				grid-area: panel;
-				padding: 1.2rem 1.15rem 1.35rem;
-			}
-
-			.portfolio-businesses__panel p {
-				color: #111;
-				font-size: clamp(0.97rem, 1vw, 1.2rem);
-				font-weight: 500;
-				line-height: 1.3;
+			.portfolio-businesses__heading {
+				color: #fff;
+				font-size: clamp(1.35rem, 2vw, 2rem);
+				font-weight: 700;
+				letter-spacing: -0.01em;
+				line-height: 1.15;
 				margin: 0;
-				max-width: none;
-				min-height: 0;
+				max-width: 30ch;
+				text-wrap: balance;
 			}
 
-			.portfolio-businesses__panel p + p {
-				margin-top: 1rem;
+			.portfolio-businesses__accent {
+				color: var(--color-hero-highlight);
 			}
 
-			.portfolio-businesses__steps {
-				margin-top: 1rem;
+			.portfolio-businesses__desc {
+				color: rgba(255, 255, 255, 0.82);
+				font-size: clamp(1rem, 1.15vw, 1.25rem);
+				font-weight: 500;
+				line-height: 1.35;
+				margin: 1.1rem 0 0;
+				max-width: 42ch;
 			}
 
-			.portfolio-businesses__step {
-				min-height: 86vh;
+			.portfolio-businesses__divider {
+				background: var(--color-hero-highlight);
+				border: 0;
+				height: 2px;
+				margin: 1.8rem 0;
+				width: 100%;
+			}
+
+			.portfolio-businesses__list {
+				display: grid;
+				gap: 0.55rem 2.5rem;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.portfolio-businesses__company {
+				appearance: none;
+				background: transparent;
+				border: 0;
+				color: rgba(255, 255, 255, 0.85);
+				cursor: pointer;
+				font-family: inherit;
+				font-size: clamp(1rem, 1.1vw, 1.25rem);
+				font-weight: 600;
+				letter-spacing: -0.01em;
+				padding: 0.35rem 0;
+				text-align: left;
+				transition: color 160ms ease;
+				width: 100%;
+			}
+
+			.portfolio-businesses__company:hover:not(:disabled) {
+				color: #fff;
+			}
+
+			.portfolio-businesses__company[aria-selected="true"] {
+				color: var(--color-hero-highlight);
+			}
+
+			.portfolio-businesses__company:disabled,
+			.portfolio-businesses__company[aria-disabled="true"] {
+				color: rgba(255, 255, 255, 0.3);
+				cursor: default;
+				pointer-events: none;
 			}
 
 			.portfolio-layout__visual {
-				background: rgba(255, 255, 255, 0.03);
-				border: 1px solid rgba(255, 255, 255, 0.16);
-				display: block;
+				background: transparent;
+				border: 0;
+				display: grid;
+				place-items: center;
 				height: 100vh;
 				min-height: 100vh;
 				overflow: hidden;
@@ -748,6 +767,24 @@
 
 			.section-placeholder {
 				min-height: 24vh;
+			}
+
+			.scenarios-intro {
+				background: var(--color-final-energy);
+				color: #000;
+				min-height: 100vh;
+				display: grid;
+				align-items: center;
+				padding: clamp(4rem, 8vh, 7rem) 6vw;
+			}
+
+			.scenarios-intro__body {
+				font-size: clamp(1.5rem, 3.2vw, 3rem);
+				font-weight: 400;
+				line-height: 1.18;
+				letter-spacing: -0.03em;
+				margin: 0;
+				max-width: 36ch;
 			}
 
 			#sankey-chart .sankey-stage-label {
@@ -901,6 +938,14 @@
 					max-width: 18ch;
 				}
 
+				.scenarios-intro {
+					padding: 3.5rem 1rem;
+				}
+
+				.scenarios-intro__body {
+					font-size: clamp(1.25rem, 6vw, 2rem);
+				}
+
 				.portfolio-layout {
 					gap: 1rem;
 					grid-template-columns: 1fr;
@@ -912,36 +957,24 @@
 				}
 
 				.portfolio-layout__lead {
-					align-items: flex-start;
-					display: block;
 					max-width: none;
-					min-height: auto;
+				}
+
+				.portfolio-layout__lead + .portfolio-layout__lead {
+					margin-top: 1.4rem;
 				}
 
 				.portfolio-businesses {
 					margin-top: 2.4rem;
 				}
 
-				.portfolio-businesses__sticky {
-					position: relative;
-					top: auto;
+				.portfolio-businesses__list {
+					gap: 0.5rem 1.25rem;
 				}
 
-				.portfolio-businesses__link {
-					font-size: 1.18rem;
-					padding: 0.95rem 1rem;
-				}
-
-				.portfolio-businesses__panel {
-					padding: 1rem;
-				}
-
-				.portfolio-businesses__panel p {
-					font-size: 1rem;
-				}
-
-				.portfolio-businesses__steps {
-					display: none;
+				.portfolio-businesses__heading,
+				.portfolio-businesses__desc {
+					max-width: none;
 				}
 
 				.portfolio-layout__visual {

@@ -31,29 +31,29 @@
 		},
 		{
 			id: "beat-2",
-			phase: "origin-hold",
+			phase: "fan-out",
 			start: 9,
-			end: 15,
+			end: 17,
 			copy: "Transitioning to a low-carbon economy requires understanding the origin of these emissions."
 		},
 		{
 			id: "beat-3",
-			phase: "seven-bars",
-			start: 15,
-			end: 21,
+			phase: "wipe-reveal",
+			start: 17,
+			end: 27,
 			copy: "The same total emissions can be viewed through seven different lenses."
 		},
 		{
 			id: "beat-4",
-			phase: "final-services",
-			start: 21,
-			end: 29,
+			phase: "hold-services",
+			start: 27,
+			end: 34,
 			copy: 'These lenses include the <span class="kw kw-final-service">final services</span> provided to us, such as travel and food.'
 		},
 		{
 			id: "beat-5",
-			phase: "title-reveal",
-			start: 29,
+			phase: "hold-lenses",
+			start: 34,
 			end: 43,
 			copy: 'They also include the economic <span class="kw kw-sector">sectors</span> that provide those final services, the <span class="kw kw-equipment">equipment</span> that composes each sector, the <span class="kw kw-device">devices</span> that make up equipment, the <span class="kw kw-final-energy">final energy</span> that powers devices, <span class="kw kw-fuel">fuels</span> we use, and the type of greenhouse gas <span class="kw kw-emissions">emissions</span>.'
 		},
@@ -117,7 +117,15 @@
 
 	// Total scroll length of the narrative section, in px. Longer distance =
 	// more breathing room per scene.
-	const NARRATIVE_SCROLL_DISTANCE = 11000;
+	const NARRATIVE_SCROLL_DISTANCE = 13000;
+
+	// The final HOLD_TAIL fraction of the section is a pinned hold on the
+	// finished interactive chart — the user keeps scrolling but nothing moves,
+	// emphasizing that the Sankey is now theirs to explore before the page
+	// releases to the next section. Scene windows map onto the first
+	// (1 - HOLD_TAIL) of the scroll.
+	const HOLD_TAIL = 0.15;
+	const ANIM_SPAN = 1 - HOLD_TAIL;
 
 	// --- Dev scrub (?p=0.47) ---------------------------------------------------
 	// Lets QA land on an exact master progress without fighting an 11000px
@@ -244,7 +252,7 @@
 		};
 
 		const applyBeatProgress = (progress) => {
-			const globalPercent = progress * 100;
+			const globalPercent = clamp01(progress / ANIM_SPAN) * 100;
 			beatEls.forEach((el, index) => {
 				const opacity = Math.max(0, Math.min(1, getBeatOpacity(globalPercent, SCENES[index])));
 				gsap.set(el, { autoAlpha: opacity, filter: "blur(0px)" });
@@ -499,6 +507,7 @@
 		render();
 		renderPortfolioSankey();
 		setupPortfolioBusinessSync();
+		setupLeadFades();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -695,6 +704,92 @@
 	function setupPortfolioBusinessSync() {
 		document.addEventListener("portfolio-business-change", (event) => {
 			applyPortfolioBusinessHighlight(event?.detail?.businessId);
+		});
+	}
+
+	function setupLeadFades() {
+		const stageEl = document.querySelector(".portfolio-layout__lead-stage");
+		const leadEls = Array.from(document.querySelectorAll(".portfolio-layout__lead"));
+		const businessesEl = document.querySelector(".portfolio-businesses");
+		if (!stageEl || !leadEls.length) return;
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+			// Fallback: leads flow normally, both visible; panel stays visible.
+			return;
+		}
+
+		// Trapezoidal opacity for a lead's [in→hold→out] scroll window.
+		const seg = (p, a, b, c, d) => {
+			if (p <= a || p >= d) return 0;
+			if (p < b) return (p - a) / (b - a);
+			if (p <= c) return 1;
+			return (d - p) / (d - c);
+		};
+
+		// Both leads live in one pinned cell and crossfade — no x/y movement.
+		const applyLeadProgress = (progress) => {
+			const n = leadEls.length;
+			const slot = 1 / n;
+			const fade = slot * 0.28;
+			leadEls.forEach((el, i) => {
+				const start = i * slot;
+				const end = (i + 1) * slot;
+				const opacity =
+					i === n - 1
+						? Math.min(1, Math.max(0, (progress - start) / fade)) // last: fade in, hold to end
+						: seg(progress, start, start + fade, end - fade, end);
+				gsap.set(el, { autoAlpha: Math.max(0, Math.min(1, opacity)) });
+			});
+		};
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				stageEl.classList.add("is-pinned");
+				gsap.set(leadEls, { autoAlpha: 0 });
+
+				const stageST = ScrollTrigger.create({
+					trigger: stageEl,
+					start: "top top",
+					end: "bottom bottom",
+					scrub: 0.5,
+					invalidateOnRefresh: true,
+					onRefresh: (self) => applyLeadProgress(self.progress),
+					onUpdate: (self) => applyLeadProgress(self.progress),
+				});
+				applyLeadProgress(0);
+
+				// Company panel fades in once the lead text has passed. Opacity only.
+				let businessTween = null;
+				if (businessesEl) {
+					businessTween = gsap.fromTo(
+						businessesEl,
+						{ autoAlpha: 0 },
+						{
+							autoAlpha: 1,
+							ease: "none",
+							scrollTrigger: {
+								trigger: businessesEl,
+								start: "top 82%",
+								end: "top 55%",
+								scrub: 0.5,
+								invalidateOnRefresh: true,
+							},
+						}
+					);
+				}
+
+				return () => {
+					stageST.kill();
+					if (businessTween) {
+						businessTween.scrollTrigger && businessTween.scrollTrigger.kill();
+						businessTween.kill();
+					}
+					stageEl.classList.remove("is-pinned");
+					gsap.set(leadEls, { clearProps: "opacity,visibility" });
+					if (businessesEl) gsap.set(businessesEl, { clearProps: "opacity,visibility" });
+				};
+			},
 		});
 	}
 
@@ -1252,7 +1347,7 @@
 					.attr("height", photoGeom.h)
 					.attr("preserveAspectRatio", "xMidYMid slice");
 
-				introCards.push({ stage, mark, barRect, photo, clipRect, photoGeom, barScreen });
+				introCards.push({ stage, group: card, slotCx: cx, mark, barRect, photo, clipRect, photoGeom, barScreen });
 			}
 		}
 
@@ -1440,10 +1535,12 @@
 		};
 
 		const drawMaster = (progress) => {
-			const p = clamp01(progress);
+			// Remap section progress onto the animation span; the HOLD_TAIL at the
+			// end clamps to the finished state.
+			const p = clamp01(clamp01(progress) / ANIM_SPAN);
 			const B = SCENE_BOUNDS;
-			const tSeven = sceneT(p, "seven-bars");
-			const tReveal = sceneT(p, "title-reveal");
+			const tFan = sceneT(p, "fan-out");
+			const tReveal = sceneT(p, "wipe-reveal");
 			const tCollapse = sceneT(p, "collapse");
 			const tUnstack = sceneT(p, "unstack");
 			const tExpand = sceneT(p, "expand");
@@ -1456,18 +1553,23 @@
 			introGroup.style("display", introDone ? "none" : null);
 			if (!introDone) {
 				const artReady = tReveal > 0 ? 1 : 0;
+				const emissionsSlotCx = introCards.find((card) => card.stage === 7)?.slotCx ?? 0;
 
 				introCards.forEach((card) => {
 					const { stage, photoGeom, barScreen } = card;
 
-					// Photo strip growth: emissions card in scene 1, the rest
-					// staggered left-to-right in scene 3.
+					// Scene 1: the emissions strip grows in alone. Scene 2: the other
+					// six strips fan out leftward from behind it — full height, all
+					// travelling together so the spread reads as a fan opening.
 					let grow;
 					if (stage === 7) {
 						grow = smoothstep(sceneT(p, "one-bar"));
+						card.group.attr("transform", null);
 					} else {
-						const startOffset = ((stage - 1) / 6) * 0.6;
-						grow = smoothstep(clamp01((tSeven - startOffset) / 0.4));
+						grow = smoothstep(clamp01(tFan / 0.12));
+						const move = smoothstep(tFan);
+						const dx = (emissionsSlotCx - card.slotCx) * (1 - move);
+						card.group.attr("transform", dx > 0.5 ? `translate(${dx}, 0)` : null);
 					}
 
 					// Scene 5: photo swipes upward out of a fixed clip window.
@@ -1639,7 +1741,10 @@
 						{ progress: 0 },
 						{
 							progress: 1,
-							ease: "power2.inOut",
+							// Linear: the copy beats fade on raw scroll position, so any
+							// ease here desynchronizes graphics from copy. Scenes apply
+							// their own smoothstep internally.
+							ease: "none",
 							onUpdate: () => drawMaster(motionState.progress),
 							scrollTrigger: {
 								trigger: "#sankey-narrative",

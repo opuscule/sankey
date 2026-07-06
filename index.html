@@ -157,61 +157,51 @@
 
 				<div class="portfolio-layout" data-nav-theme="highlight">
 					<div class="portfolio-layout__copy">
-						<p class="portfolio-layout__lead">
-							The technologies in the TIF and TGIF portfolios have each been assigned to a node and, together, touch many parts of the global economy.
-						</p>
+						<div class="portfolio-layout__lead-stage" data-lead-stage>
+							<div class="portfolio-layout__lead-pin">
+								<p class="portfolio-layout__lead">
+									The technologies in the TIF and TGIF portfolios have each been assigned to a node and, together, touch many parts of the global economy.
+								</p>
 
-						<p class="portfolio-layout__lead">
-							Select a company from TIF and TGIF's portfolio to see where its specific technology makes an impact.
-						</p>
+								<p class="portfolio-layout__lead">
+									Select a company from TIF and TGIF's portfolio to see where its specific technology makes an impact.
+								</p>
+							</div>
+						</div>
 
 						<section class="portfolio-businesses" aria-label="Portfolio businesses">
-							<div class="portfolio-businesses__sticky" data-business-accordion>
-								<nav class="portfolio-businesses__nav" aria-label="Business anchors">
-									<a class="portfolio-businesses__link is-active" href="#fervo" data-business-link="fervo" aria-expanded="true" aria-controls="business-panel-fervo" aria-current="true">
-										<span>Fervo</span>
-										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
-										<div id="business-panel-fervo" class="portfolio-businesses__panel" data-business-panel="fervo">
-											<p>Fervo Energy is scaling next-generation geothermal power.</p>
-											<p>Geothermal power has a direct impact on electricity and heat emissions, where low-carbon baseload energy can help reduce dependence on fossil fuel generation across the economy.</p>
-										</div>
-									</a>
-									<a class="portfolio-businesses__link" href="#propel-aero" data-business-link="propel-aero" aria-expanded="false" aria-controls="business-panel-propel-aero" aria-current="false">
-										<span>Propel Aero</span>
-										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
-										<div id="business-panel-propel-aero" class="portfolio-businesses__panel" data-business-panel="propel-aero" hidden>
-											<p>Propel Aero is advancing hybrid electric air travel for regional transport.</p>
-											<p>Electric air travel technology has a direct impact on plane emissions, resulting in lower emissions for direct oil use and passenger transport when viewed through different lenses.</p>
-										</div>
-									</a>
-									<a class="portfolio-businesses__link" href="#electric-hydrogen" data-business-link="electric-hydrogen" aria-expanded="false" aria-controls="business-panel-electric-hydrogen" aria-current="false">
-										<span>Electric Hydrogen</span>
-										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
-										<div id="business-panel-electric-hydrogen" class="portfolio-businesses__panel" data-business-panel="electric-hydrogen" hidden>
-											<p>Electric Hydrogen is scaling cost-competitive green hydrogen production.</p>
-											<p>Green hydrogen has a direct impact on chemical emissions, although future applications of the technology may impact emissions from passenger transport, freight, and industrial activities like iron and steel.</p>
-										</div>
-									</a>
-									<a class="portfolio-businesses__link" href="#redwood-materials" data-business-link="redwood-materials" aria-expanded="false" aria-controls="business-panel-redwood-materials" aria-current="false">
-										<span>Redwood Materials</span>
-										<span class="portfolio-businesses__dot" aria-hidden="true"></span>
-										<div id="business-panel-redwood-materials" class="portfolio-businesses__panel" data-business-panel="redwood-materials" hidden>
-											<p>Redwood Materials is advancing the circular economy through technologies for battery repurposing and recycling.</p>
-											<p>Battery repurposing has a direct impact on emissions from other industries, which includes battery manufacturing.</p>
-										</div>
-									</a>
-								</nav>
+							<div class="portfolio-businesses__detail">
+								<div id="business-panel-fervo" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="fervo" aria-labelledby="company-fervo">
+									<img class="portfolio-businesses__logo" src="logos/fervo.svg" alt="Fervo Energy" onerror="this.remove()">
+									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Fervo Energy</span> is scaling next-generation geothermal power.</h3>
+									<p class="portfolio-businesses__desc">Geothermal power has a direct impact on electricity and heat emissions, where low-carbon baseload energy can help reduce dependence on fossil fuel generation across the economy.</p>
+								</div>
+								<div id="business-panel-propel-aero" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="propel-aero" aria-labelledby="company-propel-aero" hidden>
+									<img class="portfolio-businesses__logo" src="logos/propel-aero.svg" alt="Propel Aero" onerror="this.remove()">
+									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Propel Aero</span> is advancing hybrid electric air travel for regional transport.</h3>
+									<p class="portfolio-businesses__desc">Electric air travel technology has a direct impact on plane emissions, resulting in lower emissions for direct oil use and passenger transport when viewed through different lenses.</p>
+								</div>
+								<div id="business-panel-electric-hydrogen" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="electric-hydrogen" aria-labelledby="company-electric-hydrogen" hidden>
+									<img class="portfolio-businesses__logo" src="logos/electric-hydrogen.svg" alt="Electric Hydrogen" onerror="this.remove()">
+									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Electric Hydrogen</span> is scaling cost-competitive green hydrogen production.</h3>
+									<p class="portfolio-businesses__desc">Green hydrogen has a direct impact on chemical emissions, although future applications of the technology may impact emissions from passenger transport, freight, and industrial activities like iron and steel.</p>
+								</div>
+								<div id="business-panel-redwood-materials" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="redwood-materials" aria-labelledby="company-redwood-materials" hidden>
+									<img class="portfolio-businesses__logo" src="logos/redwood-materials.svg" alt="Redwood Materials" onerror="this.remove()">
+									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Redwood Materials</span> is advancing the circular economy through technologies for battery repurposing and recycling.</h3>
+									<p class="portfolio-businesses__desc">Battery repurposing has a direct impact on emissions from other industries, which includes battery manufacturing.</p>
+								</div>
 							</div>
 
-							<div class="portfolio-businesses__steps" aria-hidden="true">
-								<div id="fervo" class="portfolio-businesses__step" data-business-step="fervo"></div>
-								<div id="propel-aero" class="portfolio-businesses__step" data-business-step="propel-aero"></div>
-								<div id="electric-hydrogen" class="portfolio-businesses__step" data-business-step="electric-hydrogen"></div>
-								<div id="redwood-materials" class="portfolio-businesses__step" data-business-step="redwood-materials"></div>
+							<hr class="portfolio-businesses__divider" aria-hidden="true">
+
+							<div class="portfolio-businesses__list" role="tablist" aria-label="Portfolio companies">
+								<button class="portfolio-businesses__company" role="tab" id="company-fervo" data-business-tab="fervo" aria-controls="business-panel-fervo" aria-selected="true" tabindex="0">Fervo Energy</button>
+								<button class="portfolio-businesses__company" role="tab" id="company-propel-aero" data-business-tab="propel-aero" aria-controls="business-panel-propel-aero" aria-selected="false" tabindex="-1" disabled aria-disabled="true">Propel Aero</button>
+								<button class="portfolio-businesses__company" role="tab" id="company-electric-hydrogen" data-business-tab="electric-hydrogen" aria-controls="business-panel-electric-hydrogen" aria-selected="false" tabindex="-1" disabled aria-disabled="true">Electric Hydrogen</button>
+								<button class="portfolio-businesses__company" role="tab" id="company-redwood-materials" data-business-tab="redwood-materials" aria-controls="business-panel-redwood-materials" aria-selected="false" tabindex="-1" disabled aria-disabled="true">Redwood Materials</button>
 							</div>
 						</section>
-
-
 					</div>
 					<div class="portfolio-layout__visual" aria-hidden="true">
 						<svg id="portfolio-sankey-chart" role="img" aria-label="Portfolio full sankey context"></svg>
@@ -219,7 +209,11 @@
 				</div>
 			</section>
 
-			<section id="2040-scenarios" class="section-placeholder" aria-label="2040 Scenarios" data-nav-theme="energy"></section>
+			<section id="2040-scenarios" aria-label="2040 Scenarios" data-nav-theme="energy">
+				<div class="scenarios-intro" data-nav-theme="energy">
+					<p class="scenarios-intro__body" data-animation="word-reveal">The emissions landscape today shows not only the scale of the climate challenge, but also where the greatest opportunities for decarbonization may lie. To understand the potential impact of these technologies as they scale, we first need to see how emissions flow through the global economy, and how those flows could change over time.</p>
+				</div>
+			</section>
 			<section id="climate-impacts" class="section-placeholder" aria-label="Climate Impacts"></section>
 			<section id="system-level-themes" class="section-placeholder" aria-label="System-Level Themes"></section>
 			<section id="acknowledgements-citations" class="section-placeholder" aria-label="Acknowledgements and Citations"></section>
@@ -362,14 +356,14 @@
 			if (portfolioNavRoot) {
 				const navToggle = portfolioNavRoot.querySelector(".portfolio-top-nav__toggle");
 				const navLinks = Array.from(portfolioNavRoot.querySelectorAll("a[data-nav-target]"));
-				const businessLinks = Array.from(document.querySelectorAll("[data-business-link]"));
+				const businessTabs = Array.from(document.querySelectorAll("[data-business-tab]"));
+				const selectableTabs = businessTabs.filter((tab) => !tab.disabled);
 				const businessPanels = Array.from(document.querySelectorAll("[data-business-panel]"));
-				const businessSteps = Array.from(document.querySelectorAll("[data-business-step]"));
 				const portfolioSection = document.getElementById("tif-tgif-portfolio");
 				const themeMarkers = Array.from(document.querySelectorAll("[data-nav-theme]"));
 				const mobileMq = window.matchMedia("(max-width: 900px)");
 				const themeClassNames = ["nav-theme-dark", "nav-theme-highlight", "nav-theme-energy"];
-				let activeBusinessId = businessLinks[0]?.dataset.businessLink || "";
+				let activeBusinessId = selectableTabs[0]?.dataset.businessTab || "";
 
 				const closeMobileNav = () => {
 					portfolioNavRoot.classList.remove("is-open");
@@ -408,6 +402,11 @@
 						return;
 					}
 
+					// Ignore companies without data (dimmed / disabled in the list).
+					if (!selectableTabs.some((tab) => tab.dataset.businessTab === businessId)) {
+						return;
+					}
+
 					const { syncHash = false } = options;
 
 					activeBusinessId = businessId;
@@ -418,11 +417,11 @@
 						})
 					);
 
-					businessLinks.forEach((link) => {
-						const isActive = link.dataset.businessLink === businessId;
-						link.classList.toggle("is-active", isActive);
-						link.setAttribute("aria-expanded", isActive ? "true" : "false");
-						link.setAttribute("aria-current", isActive ? "true" : "false");
+					businessTabs.forEach((tab) => {
+						const isActive = tab.dataset.businessTab === businessId;
+						tab.classList.toggle("is-active", isActive);
+						tab.setAttribute("aria-selected", isActive ? "true" : "false");
+						tab.setAttribute("tabindex", isActive ? "0" : "-1");
 					});
 
 					businessPanels.forEach((panel) => {
@@ -434,43 +433,30 @@
 					}
 				};
 
-				const updateActiveBusinessByScroll = () => {
-					if (!businessSteps.length || mobileMq.matches) {
-						return;
-					}
-
-					const threshold = window.innerHeight * 0.4;
-					let nextBusinessId = businessSteps[0]?.dataset.businessStep || "";
-
-					businessSteps.forEach((step) => {
-						if (step.getBoundingClientRect().top <= threshold) {
-							nextBusinessId = step.dataset.businessStep || nextBusinessId;
-						}
-					});
-
-					if (nextBusinessId && nextBusinessId !== activeBusinessId) {
-						setActiveBusiness(nextBusinessId, { syncHash: true });
-					}
-				};
-
-				businessLinks.forEach((link) => {
-					link.addEventListener("click", (event) => {
-						event.preventDefault();
-
-						const businessId = link.dataset.businessLink;
-						const targetStep = businessId ? document.getElementById(businessId) : null;
-
-						if (!businessId || !targetStep) {
-							return;
-						}
-
-						setActiveBusiness(businessId, { syncHash: true });
-						targetStep.scrollIntoView({
-							behavior: prefersReducedMotion ? "auto" : "smooth",
-							block: "start"
-						});
+				businessTabs.forEach((tab) => {
+					tab.addEventListener("click", () => {
+						setActiveBusiness(tab.dataset.businessTab, { syncHash: true });
 					});
 				});
+
+				const tablistEl = document.querySelector(".portfolio-businesses__list");
+				if (tablistEl) {
+					tablistEl.addEventListener("keydown", (event) => {
+						const count = selectableTabs.length;
+						if (!count) return;
+						const currentIdx = selectableTabs.findIndex((t) => t === document.activeElement);
+						if (currentIdx === -1) return;
+						let nextIdx = currentIdx;
+						if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIdx = (currentIdx + 1) % count;
+						else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIdx = (currentIdx - 1 + count) % count;
+						else if (event.key === "Home") nextIdx = 0;
+						else if (event.key === "End") nextIdx = count - 1;
+						else return;
+						event.preventDefault();
+						setActiveBusiness(selectableTabs[nextIdx].dataset.businessTab, { syncHash: true });
+						selectableTabs[nextIdx].focus();
+					});
+				}
 
 				const updateActiveNav = () => {
 					const threshold = window.innerHeight * 0.4;
@@ -530,7 +516,6 @@
 					navRaf = requestAnimationFrame(() => {
 						updateNavVisibilityAndTheme();
 						updateActiveNav();
-						updateActiveBusinessByScroll();
 						navRaf = null;
 					});
 				};
@@ -544,7 +529,7 @@
 				});
 
 				const hashBusinessId = window.location.hash.replace("#", "");
-				if (hashBusinessId && businessLinks.some((link) => link.dataset.businessLink === hashBusinessId)) {
+				if (hashBusinessId && selectableTabs.some((tab) => tab.dataset.businessTab === hashBusinessId)) {
 					setActiveBusiness(hashBusinessId, { syncHash: false });
 				} else {
 					setActiveBusiness(activeBusinessId, { syncHash: false });

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx --no-install playwright --version)",
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('playwright module: OK'\\)}catch\\(e\\){try{require.resolve\\('playwright-core'\\);console.log\\('playwright-core: OK'\\)}catch\\(e2\\){console.log\\('no module resolvable from cwd'\\)}}\")",
+      "Bash(node -e \"const p=require\\('child_process'\\).execSync\\('npm root -g'\\).toString\\(\\).trim\\(\\); console.log\\('global root:', p\\); try{require\\(p+'/playwright'\\); console.log\\('global playwright: OK'\\)}catch\\(e\\){console.log\\('global playwright load err:', e.message.split\\('\\\\n'\\)[0]\\)}\")",
+      "Bash(find ~/.npm/_npx -maxdepth 4 -name \"playwright\" -type d 2>/dev/null | head; echo \"--- npx cache cli.js ---\"; find ~/.npm/_npx -maxdepth 5 -path \"*playwright*/package.json\" 2>/dev/null | head; echo \"--- browsers installed ---\"; ls ~/Library/Caches/ms-playwright 2>/dev/null || echo \"no ms-playwright cache\")",
+      "Read(//Users/opuscule/.npm/_npx/**)",
+      "Read(//Users/opuscule/Library/Caches/ms-playwright/**)",
+      "Bash(node -e ' *)",
+      "Bash(echo \"server pid $!\")",
+      "Bash(curl -s -o /dev/null -w \"index.html -> %{http_code}\\\\n\" http://localhost:8791/)",
+      "Bash(curl -s -o /dev/null -w \"main.js -> %{http_code}\\\\n\" http://localhost:8791/main.js)",
+      "Bash(curl -s -o /dev/null -w \"init.json -> %{http_code}\\\\n\" http://localhost:8791/init.json)",
+      "Bash(PLAYWRIGHT_BROWSERS_PATH=/Users/opuscule/Library/Caches/ms-playwright node /private/tmp/claude-501/-Users-opuscule-Documents-Claude-Projects-Capricorn-sankey/ff1996f6-9657-4101-a7b4-f73cd5ef25f5/scratchpad/verify.js)",
+      "Bash(pkill -f \"listen\\(8791\")",
+      "Bash(lsof -ti:8791)",
+      "Bash(xargs kill)"
+    ]
+  }
+}

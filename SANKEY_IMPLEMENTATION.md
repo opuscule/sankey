@@ -52,7 +52,7 @@ All loaded via `<script>` tags at the bottom of `index.html`:
 
 #app (main)
   #sankey-narrative   — Scroll-driven narrative + Sankey section
-                        (min-height = --sankey-scroll-distance, currently 11000px)
+                        (min-height = --sankey-scroll-distance, currently 13000px)
     .sankey-layout    — CSS grid: copy column | chart (sticky, top:0, 100vh)
       .sankey-copy    — Left column: 11 scroll-paced beats, EMPTY in HTML
                         (rendered from SCENES in main.js)
@@ -83,13 +83,19 @@ All loaded via `<script>` tags at the bottom of `index.html`:
 
 Because both layers read the same windows, copy and visuals cannot drift.
 
+Scene windows map onto the first `ANIM_SPAN = 1 - HOLD_TAIL` (85%) of the
+section scroll: both `drawMaster` and the beat fader divide section progress by
+`ANIM_SPAN` (clamped). The final `HOLD_TAIL` (15%, ~2000px) is a pinned hold on
+the finished interactive chart — the user keeps scrolling but nothing moves,
+emphasizing that the Sankey is explorable before the page releases.
+
 | # | phase | window | Graphic |
 |---|---|---|---|
 | 1 | `one-bar` | 0–9 | Emissions photo bar grows in at its card slot |
-| 2 | `origin-hold` | 9–15 | Bar holds |
-| 3 | `seven-bars` | 15–21 | Other 6 photo bars grow in, staggered left→right |
-| 4 | `final-services` | 21–29 | 7 photo bars hold |
-| 5 | `title-reveal` | 29–43 | Photos swipe **up** (staggered via `WIPE_JITTER`) revealing colour bar + vector wordmark |
+| 2 | `fan-out` | 9–17 | Other 6 photo bars fan out **leftward** from behind the emissions bar (whole-card group translate) |
+| 3 | `wipe-reveal` | 17–27 | Photos swipe **up** (staggered via `WIPE_JITTER`) revealing colour bar + vector wordmark |
+| 4 | `hold-services` | 27–34 | 7 title cards hold |
+| 5 | `hold-lenses` | 34–43 | Title cards hold (copy lists the lenses) |
 | 6 | `collapse` | 43–52 | Wordmarks fade; bars slide right into adjacent stripes at the Emissions x, then merge into one bar |
 | 7 | `unstack` | 52–64 | Columns peel **leftward** to packed positions; per-gap ribbons + headers fade in |
 | 8 | `expand` | 64–77 | Packed → expanded vertical spread; Final Service labels at the tail |
@@ -210,7 +216,7 @@ Opacity driven per-frame by `drawMaster`.
 Uses `ScrollTrigger.matchMedia()`:
 
 - **Desktop (min-width: 901px)**: GSAP tween scrubs `motionState.progress` 0→1
-  (`ease: power2.inOut`, `scrub: 0.8`) with a scrollTrigger on
+  (`ease: "none"`, `scrub: 0.8`) with a scrollTrigger on
   `#sankey-narrative` (`start: top top`, `end: bottom bottom`); `onUpdate` calls
   `drawMaster`. `#full-sankey` is CSS-sticky. `setupNarrativeBeats()` fades the
   copy beats on the same scroll span.
@@ -262,8 +268,10 @@ makes headless screenshots work:
   --virtual-time-budget=15000 --screenshot=out.png "http://localhost:5500/?p=0.62"
 ```
 
-Useful checkpoints vs the mock-up PDF: `p=0.05`→p.6, `0.18`→p.8, `0.42`→p.10,
-`0.515`→p.12, `0.62`→p.13, `0.765`→p.15, `0.80`→p.16, `0.90`→p.17, `1.0`→p.19.
+`?p=` is **section** progress; the animation spans 0–0.85 and 0.85–1.0 is the
+hold. Useful checkpoints vs the mock-up PDF: `p=0.04`→p.6, `0.10`→fan mid,
+`0.19`→p.9 (wipe), `0.26`→p.10, `0.44`→p.12, `0.53`→p.13, `0.65`→p.15,
+`0.68`→p.16, `0.77`→p.17, `0.85`–`1.0`→p.19 (hold, interactive).
 
 Harmless in production (no `?p` → no hook), but can be stripped for the demo.
 
@@ -298,6 +306,10 @@ starfield via the `--page-bg-shift` custom property.
 - **Opacity ownership**: during the narrative, `drawMaster` sets inline
   opacities every frame; after `INTERACTION_START` they are nulled so CSS
   rules take over. Don't add CSS opacity rules that fight the inline phase.
+- **The scrub tween must stay `ease: "none"`** — the copy beats fade on raw
+  scroll position, so any ease on the graphics tween desynchronizes visuals
+  from copy (this once made everything run a beat late). Scenes do their own
+  smoothstep easing internally.
 - **`.sankey-copy` grid column must stay `minmax(0, 1fr)`** — an auto track
   sizes to the widest snippet's max-content and blows out the layout.
 - **`.sankey-snippet` must be `display: block`** — flex turns each coloured
@@ -330,8 +342,9 @@ starfield via the `--page-bg-shift` custom property.
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `NARRATIVE_SCROLL_DISTANCE` | 11000 | section scroll height, px (module scope) |
-| `SCENES[].start/end` | see table above | every scene window, copy + graphics |
+| `NARRATIVE_SCROLL_DISTANCE` | 13000 | section scroll height, px (module scope) |
+| `HOLD_TAIL` | 0.15 | end-of-section pinned hold on the interactive chart (module scope) |
+| `SCENES[].start/end` | see table above | every scene window, copy + graphics (within `ANIM_SPAN`) |
 | `LINK_PEAK_OPACITY` | 0.6 | ribbon opacity during the reveal/expand |
 | `FAINT_LINK_OPACITY` | 0.16 | resting faint ribbons (final state) |
 | `CHAIN_LINK_OPACITY` | 0.9 | highlighted cars-example chain |
