@@ -1,6 +1,7 @@
 (function () {
 	const initPath = "init.json";
 	const baselinesPath = "baselines.json";
+	const nodeDetailsPath = "node_details.json";
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
@@ -318,6 +319,8 @@
 		sankeyInteractive: false,
 		portfolioRendered: null,
 		portfolioBusinessNodeMap: new Map(),
+		portfolioNodeDetails: null,
+		portfolioNodeDetailsPromise: null,
 		introAssets: null
 	};
 
@@ -698,7 +701,9 @@
 			graph
 		};
 
-		applyPortfolioBusinessHighlight(window.currentPortfolioBusinessId || "fervo");
+		// Start fully illuminated with no company isolated. If the user has
+		// already picked a company before a re-render (e.g. resize), re-apply it.
+		applyPortfolioBusinessHighlight(window.currentPortfolioBusinessId || "");
 	}
 
 	function setupPortfolioBusinessSync() {
@@ -746,6 +751,7 @@
 		ScrollTrigger.matchMedia({
 			"(min-width: 901px)": () => {
 				stageEl.classList.add("is-pinned");
+				if (businessesEl) businessesEl.classList.add("is-held");
 				gsap.set(leadEls, { autoAlpha: 0 });
 
 				const stageST = ScrollTrigger.create({
@@ -786,11 +792,71 @@
 						businessTween.kill();
 					}
 					stageEl.classList.remove("is-pinned");
+					if (businessesEl) businessesEl.classList.remove("is-held");
 					gsap.set(leadEls, { clearProps: "opacity,visibility" });
 					if (businessesEl) gsap.set(businessesEl, { clearProps: "opacity,visibility" });
 				};
 			},
 		});
+	}
+
+	// Clears every isolation class → the full chart is illuminated again.
+	function clearPortfolioHighlight(linkSelection, nodeSelection) {
+		linkSelection
+			.classed("portfolio-is-highlight", false)
+			.classed("portfolio-is-muted", false);
+		nodeSelection
+			.classed("portfolio-is-highlight", false)
+			.classed("portfolio-is-muted", false);
+	}
+
+	// Fallback isolation: keep the node itself plus the ribbons directly touching
+	// it. Used until node_details.json is loaded, or for a node whose full chain
+	// has not been generated yet.
+	function applyPortfolioDirectHighlight(nodeId, linkSelection, nodeSelection, graph) {
+		const isConnected = (link) => link.source.id === nodeId || link.target.id === nodeId;
+		const connectedNodeIds = new Set([nodeId]);
+		graph.links.forEach((link) => {
+			if (isConnected(link)) {
+				connectedNodeIds.add(link.source.id);
+				connectedNodeIds.add(link.target.id);
+			}
+		});
+
+		linkSelection
+			.classed("portfolio-is-highlight", isConnected)
+			.classed("portfolio-is-muted", (link) => !isConnected(link));
+		nodeSelection
+			.classed("portfolio-is-highlight", (node) => connectedNodeIds.has(node.id))
+			.classed("portfolio-is-muted", (node) => !connectedNodeIds.has(node.id));
+	}
+
+	// node_details.json holds each node's full layer-1→7 flow chain. It is large
+	// once populated, so fetch it lazily on the first company selection and cache
+	// the parsed result (an empty object is cached on failure so we don't refetch).
+	function ensurePortfolioNodeDetails() {
+		if (state.portfolioNodeDetails) {
+			return Promise.resolve(state.portfolioNodeDetails);
+		}
+		if (!state.portfolioNodeDetailsPromise) {
+			state.portfolioNodeDetailsPromise = fetch(nodeDetailsPath)
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+					return response.json();
+				})
+				.then((data) => {
+					state.portfolioNodeDetails = data || {};
+					return state.portfolioNodeDetails;
+				})
+				.catch((err) => {
+					console.warn(`[Sankey] Could not load ${nodeDetailsPath}:`, err);
+					state.portfolioNodeDetails = {};
+					return state.portfolioNodeDetails;
+				});
+		}
+		return state.portfolioNodeDetailsPromise;
 	}
 
 	function applyPortfolioBusinessHighlight(rawBusinessId) {
@@ -799,43 +865,57 @@
 		}
 
 		const businessId = normalizeBusinessSlug(rawBusinessId);
-		if (!supportedPortfolioBusinesses.has(businessId)) {
+		const { nodeSelection, linkSelection, graph } = state.portfolioRendered;
+
+		// No / unsupported selection → full illuminated chart.
+		if (!businessId || !supportedPortfolioBusinesses.has(businessId)) {
+			clearPortfolioHighlight(linkSelection, nodeSelection);
 			return;
 		}
 
 		const nodeId = state.portfolioBusinessNodeMap.get(businessId);
-		const { nodeSelection, linkSelection, graph } = state.portfolioRendered;
-
 		if (!nodeId) {
-			linkSelection
-				.classed("portfolio-is-highlight", false)
-				.classed("portfolio-is-muted", false);
-			nodeSelection
-				.classed("portfolio-is-highlight", false)
-				.classed("portfolio-is-muted", false);
+			clearPortfolioHighlight(linkSelection, nodeSelection);
 			return;
 		}
 
-		const connectedLinks = graph.links.filter(
-			(link) => link.source.id === nodeId || link.target.id === nodeId
-		);
-		const connectedNodeIds = new Set([nodeId]);
-		for (const link of connectedLinks) {
-			connectedNodeIds.add(link.source.id);
-			connectedNodeIds.add(link.target.id);
+		// Full-chain isolation needs node_details.json. Until it has loaded, show
+		// the direct-connected fallback, then re-run once the data is available
+		// (only if this company is still the active selection).
+		if (!state.portfolioNodeDetails) {
+			applyPortfolioDirectHighlight(nodeId, linkSelection, nodeSelection, graph);
+			ensurePortfolioNodeDetails().then(() => {
+				if (normalizeBusinessSlug(window.currentPortfolioBusinessId) === businessId) {
+					applyPortfolioBusinessHighlight(businessId);
+				}
+			});
+			return;
 		}
 
-		linkSelection
-			.classed("portfolio-is-highlight", (link) =>
-				link.source.id === nodeId || link.target.id === nodeId
-			)
-			.classed("portfolio-is-muted", (link) =>
-				!(link.source.id === nodeId || link.target.id === nodeId)
-			);
+		const chainLinks = Array.isArray(state.portfolioNodeDetails[nodeId]?.links)
+			? state.portfolioNodeDetails[nodeId].links
+			: [];
 
+		// Node's chain not generated yet → direct-connected fallback.
+		if (!chainLinks.length) {
+			applyPortfolioDirectHighlight(nodeId, linkSelection, nodeSelection, graph);
+			return;
+		}
+
+		const chainPairs = new Set(chainLinks.map((link) => `${link.source}|${link.target}`));
+		const chainNodeIds = new Set([nodeId]);
+		for (const link of chainLinks) {
+			chainNodeIds.add(link.source);
+			chainNodeIds.add(link.target);
+		}
+		const inChain = (link) => chainPairs.has(`${link.source.id}|${link.target.id}`);
+
+		linkSelection
+			.classed("portfolio-is-highlight", inChain)
+			.classed("portfolio-is-muted", (link) => !inChain(link));
 		nodeSelection
-			.classed("portfolio-is-highlight", (node) => connectedNodeIds.has(node.id))
-			.classed("portfolio-is-muted", (node) => !connectedNodeIds.has(node.id));
+			.classed("portfolio-is-highlight", (node) => chainNodeIds.has(node.id))
+			.classed("portfolio-is-muted", (node) => !chainNodeIds.has(node.id));
 	}
 
 	function buildGraph(initData, baselinesData, requestedScenario) {

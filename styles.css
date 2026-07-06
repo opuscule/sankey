@@ -34,7 +34,7 @@
 			:root {
 				color-scheme: light;
 				--color-hero-highlight: #F2FB37;
-				--max-copy-width: 54ch;
+				--max-copy-width: 768px;
 				--color-final-service: #F27A83;
 				--color-sector: #E22950;
 				--color-equipment: #F55D2B;
@@ -42,6 +42,7 @@
 				--color-final-energy: #2FD7A4;
 				--color-fuel: #A8DFE6;
 				--color-emissions: #0159C3;
+				--color-dark: #000;
 			}
 
 			* {
@@ -58,7 +59,7 @@
 				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 				line-height: 1.4;
 				letter-spacing: -0.02em;
-				background: #000;
+				background: var(--color-dark);
 				overflow-x: hidden;
 				position: relative;
 				--page-bg-shift: 0px;
@@ -82,7 +83,7 @@
 
 			#hero-intro {
 				background:
-					linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0) 70%);
+					linear-gradient(180deg, var(--color-dark) 0%, rgb(0 0 0 / 0) 70%);
 				color: var(--color-hero-highlight);
 				position: relative;
 				text-transform: uppercase;
@@ -111,9 +112,9 @@
 				left: 50%;
 				opacity: 0;
 				position: absolute;
-				top: clamp(1.4rem, 4.4vh, 3rem);
+				top: 20vh;
 				transform: translateX(-50%);
-				width: min(350px, 80vw);
+				width: 250px;
 				will-change: transform, opacity;
 				z-index: 4;
 			}
@@ -139,16 +140,22 @@
 
 			.hero-headline {
 				color: var(--color-hero-highlight);
+				font-family: "Archivo Black", "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: clamp(2.2rem, 9vw, 8.1rem);
-				font-weight: 860;
+				font-weight: 400;
+				left: 0;
 				letter-spacing: -0.02em;
 				line-height: 0.88;
 				margin: 0;
 				opacity: 0;
+				position: absolute;
+				right: 0;
 				text-align: center;
 				text-transform: uppercase;
 				text-wrap: balance;
+				top: 30vh;
 				will-change: transform, opacity;
+				z-index: 5;
 			}
 
 			.hero-subtitle {
@@ -207,7 +214,7 @@
 			}
 
 			#emissions-landscape {
-				background: radial-gradient(120% 90% at 55% 52%, rgba(255, 172, 34, 0.14), transparent 54%), #010101;
+				background: radial-gradient(120% 90% at 55% 52%, rgba(255, 172, 34, 0.14), transparent 54%), var(--color-dark);
 				color: #fff;
 				overflow: clip;
 				padding: 0;
@@ -475,7 +482,7 @@
 
 			.portfolio-top-nav {
 				background: transparent;
-				color: #000;
+				color: var(--color-dark);
 				left: 0;
 				opacity: 0;
 				pointer-events: none;
@@ -495,7 +502,7 @@
 			}
 
 			.portfolio-top-nav.nav-theme-dark {
-				color: #000;
+				color: var(--color-dark);
 			}
 
 			.portfolio-top-nav.nav-theme-highlight {
@@ -516,13 +523,14 @@
 
 			.portfolio-top-nav__brand {
 				color: inherit;
-				font-size: 1.1rem;
-				font-weight: 800;
-				letter-spacing: -0.01em;
-				line-height: 0.95;
-				max-width: 14ch;
+				display: inline-flex;
 				text-decoration: none;
-				text-transform: uppercase;
+			}
+
+			.portfolio-top-nav__brand-logo {
+				display: block;
+				height: auto;
+				width: 140px;
 			}
 
 			.portfolio-top-nav__toggle {
@@ -566,11 +574,12 @@
 
 			.portfolio-intro {
 				background: var(--color-hero-highlight);
-				color: #000;
-				min-height: 68vh;
+				color: var(--color-dark);
+				min-height: 100vh;
 				display: grid;
 				align-items: center;
 				padding: clamp(4rem, 8vh, 7rem) 6vw;
+				justify-content: center;
 			}
 
 			.portfolio-intro__headline {
@@ -583,9 +592,10 @@
 			}
 
 			.portfolio-layout {
+				--portfolio-hold: 260vh; /* length of the pinned company "hold" scroll (desktop) */
 				display: grid;
 				gap: 4vw;
-				grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+				grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
 				align-items: start;
 				padding: 12vh 5vw 16vh;
 			}
@@ -628,6 +638,23 @@
 
 			.portfolio-businesses {
 				margin-top: 8vh;
+			}
+
+			/* Long "hold": pin the company list in view for an extended scroll so the
+			   user can click/focus companies before the columns unstick. Desktop only —
+			   .is-held is added by setupLeadFades in the same matchMedia branch as the
+			   lead-stage pin. */
+			.portfolio-businesses.is-held {
+				height: var(--portfolio-hold, 260vh);
+				margin-top: 0;
+			}
+
+			.portfolio-businesses.is-held .portfolio-businesses__pin {
+				align-content: center;
+				display: grid;
+				min-height: 100vh;
+				position: sticky;
+				top: 0;
 			}
 
 			/* Selected-company detail block — dark treatment on the section's dark bg. */
@@ -742,13 +769,14 @@
 				width: 100%;
 			}
 
+			/* Resting state (no company selected): the full chart is illuminated. */
 			#portfolio-sankey-chart .sankey-link {
-				opacity: 0.3;
+				opacity: 0.9;
 				transition: opacity 180ms ease, stroke-width 180ms ease;
 			}
 
 			#portfolio-sankey-chart .sankey-node {
-				opacity: 0.55;
+				opacity: 1;
 				transition: opacity 180ms ease;
 			}
 
@@ -771,20 +799,37 @@
 
 			.scenarios-intro {
 				background: var(--color-final-energy);
-				color: #000;
+				color: var(--color-dark);
 				min-height: 100vh;
 				display: grid;
-				align-items: center;
-				padding: clamp(4rem, 8vh, 7rem) 6vw;
+				gap: 1.25rem;
+				padding: 12vh 6vw;
+				place-content: center;
+				place-items: center;
 			}
 
 			.scenarios-intro__body {
-				font-size: clamp(1.5rem, 3.2vw, 3rem);
+				font-size: clamp(1.25rem, 2.4vw, 1.9rem);
+				font-weight: 700;
+				letter-spacing: inherit;
+				line-height: 1.35;
+				margin: 0 auto;
+				max-width: var(--max-copy-width);
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.scenarios-intro__body span {
+				color: var(--color-hero-highlight);
+			}
+
+			.scenarios-intro > p {
+				font-size: clamp(1rem, 1.55vw, 1.2rem);
 				font-weight: 400;
-				line-height: 1.18;
-				letter-spacing: -0.03em;
-				margin: 0;
-				max-width: 36ch;
+				letter-spacing: inherit;
+				line-height: 1.55;
+				margin: 0 auto;
+				max-width: var(--max-copy-width);
+				width: min(100%, var(--max-copy-width));
 			}
 
 			#sankey-chart .sankey-stage-label {
@@ -880,9 +925,8 @@
 					padding: 0.75rem 1rem;
 				}
 
-				.portfolio-top-nav__brand {
-					font-size: 0.95rem;
-					max-width: 18ch;
+				.portfolio-top-nav__brand-logo {
+					width: 120px;
 				}
 
 				.portfolio-top-nav__toggle {
@@ -935,15 +979,11 @@
 
 				.portfolio-intro__headline {
 					font-size: clamp(1.5rem, 8vw, 2.5rem);
-					max-width: 18ch;
+					max-width: var(--max-copy-width);
 				}
 
 				.scenarios-intro {
 					padding: 3.5rem 1rem;
-				}
-
-				.scenarios-intro__body {
-					font-size: clamp(1.25rem, 6vw, 2rem);
 				}
 
 				.portfolio-layout {
@@ -974,7 +1014,7 @@
 
 				.portfolio-businesses__heading,
 				.portfolio-businesses__desc {
-					max-width: none;
+					max-width: var(--max-copy-width);
 				}
 
 				.portfolio-layout__visual {

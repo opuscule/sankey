@@ -15,7 +15,14 @@
       "Bash(PLAYWRIGHT_BROWSERS_PATH=/Users/opuscule/Library/Caches/ms-playwright node /private/tmp/claude-501/-Users-opuscule-Documents-Claude-Projects-Capricorn-sankey/ff1996f6-9657-4101-a7b4-f73cd5ef25f5/scratchpad/verify.js)",
       "Bash(pkill -f \"listen\\(8791\")",
       "Bash(lsof -ti:8791)",
-      "Bash(xargs kill)"
+      "Bash(xargs kill)",
+      "Bash(PLAYWRIGHT_BROWSERS_PATH=/Users/opuscule/Library/Caches/ms-playwright node /private/tmp/claude-501/-Users-opuscule-Documents-Claude-Projects-Capricorn-sankey/ff1996f6-9657-4101-a7b4-f73cd5ef25f5/scratchpad/verify-logo.js)",
+      "Bash(node --check main.js)",
+      "Bash(command -v playwright)",
+      "Read(//Users/opuscule/.cache/**)",
+      "Read(//Applications/Google Chrome.app/Contents/MacOS/**)",
+      "Bash(NODE_PATH=\"/Users/opuscule/.npm/_npx/e41f203b7505f1fb/node_modules\" node verify.js)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

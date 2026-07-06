@@ -1,5 +1,5 @@
 {
-  "_comment": "Metadata required for initial Sankey render. Two top-level keys: nodes (node metadata) and intervention (company placements).",
+  "_comment": "Metadata required for initial Sankey render. Two top-level keys: nodes (node metadata) and intervention (company placements). `node` is a single node id (backward-compatible with the single-node template contract; null for multi-node flow locations). `location` is additive: {type: 'node'|'flow'|null, nodes: [...]}; 'flow' locations list 2+ node ids across adjacent levels, e.g. a sector->equipment edge.",
   "nodes": {
     "nodes": [
       {
@@ -915,15 +915,16 @@
         ]
       },
       {
-        "id": "4_Computing Infrastructure",
+        "id": "4_Cooler",
         "layer": 4,
-        "order": 25,
-        "group": 2,
-        "description": "Data centers, crytocurrencies, and AI.",
+        "order": 6,
+        "group": 3,
+        "description": "AC/DC induction motor (excl. Refrigeration)",
         "keywords": [
-          "data centers",
-          "crytocurrencies",
-          "ai"
+          "motor excl refrigeration",
+          "induction motor excl",
+          "dc induction motor",
+          "ac dc induction"
         ]
       },
       {
@@ -935,19 +936,6 @@
         "keywords": [
           "televisions portable",
           "computers televisions"
-        ]
-      },
-      {
-        "id": "4_Cooler",
-        "layer": 4,
-        "order": 6,
-        "group": 3,
-        "description": "AC/DC induction motor (excl. Refrigeration)",
-        "keywords": [
-          "motor excl refrigeration",
-          "induction motor excl",
-          "dc induction motor",
-          "ac dc induction"
         ]
       },
       {
@@ -1203,6 +1191,18 @@
         ]
       },
       {
+        "id": "4_Computing Infrastructure",
+        "layer": 4,
+        "order": 25,
+        "group": 2,
+        "description": "Data centers, crytocurrencies, and AI.",
+        "keywords": [
+          "data centers",
+          "crytocurrencies",
+          "ai"
+        ]
+      },
+      {
         "id": "5_Direct oil use",
         "layer": 5,
         "order": 1,
@@ -1322,7 +1322,7 @@
         ]
       },
       {
-        "id": "5_Chemical use",
+        "id": "5_(Chemical use)",
         "layer": 5,
         "order": 9,
         "group": 8,
@@ -1335,7 +1335,7 @@
         ]
       },
       {
-        "id": "5_Cement Kiln",
+        "id": "5_(Cement kiln)",
         "layer": 5,
         "order": 10,
         "group": 8,
@@ -1435,19 +1435,7 @@
         ]
       },
       {
-        "id": "5_Waste incineration",
-        "layer": 5,
-        "order": 19,
-        "group": 11,
-        "description": "Emissions from burning solid waste in incineration facilities.",
-        "keywords": [
-          "waste incineration facilities",
-          "solid waste incineration",
-          "burning solid waste"
-        ]
-      },
-      {
-        "id": "5_Waste",
+        "id": "5_(Waste)",
         "layer": 5,
         "order": 29,
         "group": 11,
@@ -1521,12 +1509,12 @@
         "layer": 6,
         "order": 6,
         "group": 6,
-        "description": "Process emissions released when limestone (calcium carbonate) is heated in cement production, breaking down into lime and releasing CO\u2082",
+        "description": "Process emissions released when limestone (calcium carbonate) is heated in cement production, breaking down into lime and releasing CO₂",
         "keywords": [
           "released limestone",
           "carbonate heated cement",
           "limestone calcium carbonate",
-          "lime releasing co\u2082",
+          "lime releasing co₂",
           "cement production",
           "process released",
           "calcium carbonate heated"
@@ -1621,38 +1609,6 @@
         "keywords": [
           "fluorinated gas"
         ]
-      },
-      {
-        "id": "4_Other Engine (LPG, gas, coal)",
-        "layer": 4,
-        "order": 999,
-        "group": 0,
-        "description": "",
-        "keywords": []
-      },
-      {
-        "id": "5_(Cement kiln)",
-        "layer": 5,
-        "order": 999,
-        "group": 0,
-        "description": "",
-        "keywords": []
-      },
-      {
-        "id": "5_(Chemical use)",
-        "layer": 5,
-        "order": 999,
-        "group": 0,
-        "description": "",
-        "keywords": []
-      },
-      {
-        "id": "5_(Waste)",
-        "layer": 5,
-        "order": 999,
-        "group": 0,
-        "description": "",
-        "keywords": []
       }
     ]
   },
@@ -1663,42 +1619,70 @@
         "company_label": "Fervo Energy",
         "technology": "geothermal power",
         "node": "5_Electricity and heat",
+        "location": {
+          "type": "node",
+          "nodes": [
+            "5_Electricity and heat"
+          ]
+        },
         "view": "Full",
         "par1": "Fervo Energy is helping expand access to next-generation geothermal power systems.",
         "par2": "Within the emissions model, Fervo's technology is most active in the electricity and heat pathway, where lower-carbon baseload energy can help reduce dependence on fossil fuel generation across multiple sectors of the economy."
       },
       {
-        "company": "CompanyB",
-        "company_label": "Company B",
-        "technology": null,
-        "node": null,
-        "view": null,
-        "par1": null,
-        "par2": null
+        "company": "ElectricHydrogen",
+        "company_label": "Electric Hydrogen",
+        "technology": "green hydrogen",
+        "node": "2_Chemical",
+        "location": {
+          "type": "node",
+          "nodes": [
+            "2_Chemical"
+          ]
+        },
+        "view": "Full",
+        "par1": "Electric Hydrogen is scaling cost-competitive green hydrogen production.",
+        "par2": "Green hydrogen has a direct impact on chemical emissions, although future applications of the technology may impact emissions from passenger transport, freight, and industrial activities like iron and steel."
       },
       {
-        "company": "CompanyC",
-        "company_label": "Company C",
-        "technology": null,
-        "node": null,
-        "view": null,
-        "par1": null,
-        "par2": null
+        "company": "PropelAero",
+        "company_label": "Propel Aero",
+        "technology": "electric air travel",
+        "node": "3_Plane",
+        "location": {
+          "type": "node",
+          "nodes": [
+            "3_Plane"
+          ]
+        },
+        "view": "Full",
+        "par1": "Propel Aero is advancing hybrid electric air travel for regional transport.",
+        "par2": "Electric air travel technology has a direct impact on plane emissions, resulting in lower emissions for direct oil use and passenger transport when viewed through different lenses."
       },
       {
-        "company": "CompanyD",
-        "company_label": "Company D",
-        "technology": null,
-        "node": null,
-        "view": null,
-        "par1": null,
-        "par2": null
+        "company": "RedwoodMaterials",
+        "company_label": "Redwood Materials",
+        "technology": "battery repurposing and recycling",
+        "node": "2_Other industry",
+        "location": {
+          "type": "node",
+          "nodes": [
+            "2_Other industry"
+          ]
+        },
+        "view": "Full",
+        "par1": "Redwood Materials is advancing the circular economy through technologies for battery repurposing and recycling.",
+        "par2": "Battery repurposing and recycling has a direct impact on emissions from other industries, which includes battery manufacturing."
       },
       {
         "company": "CompanyE",
         "company_label": "Company E",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1708,6 +1692,10 @@
         "company_label": "Company F",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1717,6 +1705,10 @@
         "company_label": "Company G",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1726,6 +1718,10 @@
         "company_label": "Company H",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1735,6 +1731,10 @@
         "company_label": "Company I",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1744,6 +1744,10 @@
         "company_label": "Company J",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1753,6 +1757,10 @@
         "company_label": "Company K",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1762,6 +1770,10 @@
         "company_label": "Company L",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1771,6 +1783,10 @@
         "company_label": "Company M",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1780,6 +1796,10 @@
         "company_label": "Company N",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1789,6 +1809,10 @@
         "company_label": "Company O",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1798,6 +1822,10 @@
         "company_label": "Company P",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1807,6 +1835,10 @@
         "company_label": "Company Q",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1816,6 +1848,10 @@
         "company_label": "Company R",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1825,6 +1861,10 @@
         "company_label": "Company S",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
@@ -1834,6 +1874,10 @@
         "company_label": "Company T",
         "technology": null,
         "node": null,
+        "location": {
+          "type": null,
+          "nodes": []
+        },
         "view": null,
         "par1": null,
         "par2": null
