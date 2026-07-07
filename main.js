@@ -2,10 +2,12 @@
 	const initPath = "init.json";
 	const baselinesPath = "baselines.json";
 	const nodeDetailsPath = "node_details.json";
+	const avoidedPath = "avoided.json";
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
+	const impactsChart = document.getElementById("impacts-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 
 	// --- Shared math helpers --------------------------------------------------
@@ -340,6 +342,10 @@
 		sankeyInteractive: false,
 		portfolioRendered: null,
 		scenarioRendered: null,
+		impactsRendered: null,
+		impactsActive: false,
+		avoidedData: null,
+		avoidedPromise: null,
 		portfolioBusinessNodeMap: new Map(),
 		nodeDetails: null,
 		nodeDetailsPromise: null,
@@ -370,6 +376,16 @@
 		"high-ai-electricity-demand": "2040C"
 	};
 	const warnedMissingScenarioKeys = new Set();
+
+	// --- Climate Impacts (avoided emissions) ---------------------------------
+	// The isolated one-hop view zooms to a single focal node (a portfolio
+	// company's intervention node) plus its immediate stage-1 sources and
+	// stage+1 targets. The "after" state re-tints the baseline ribbons that
+	// match that company's avoided-emissions links for IMPACTS_SCENARIO_KEY and
+	// dims the rest. Company -> node comes from init.intervention.companies;
+	// avoided link values come from avoided.json. Both are configurable here.
+	const IMPACTS_FOCAL_COMPANY = "ElectricHydrogen";
+	const IMPACTS_SCENARIO_KEY = "2040A";
 
 	function resolveScenarioRequest(rawScenarioId) {
 		const scenarioId = Object.prototype.hasOwnProperty.call(scenarioKeyById, rawScenarioId)
@@ -572,10 +588,12 @@
 		render();
 		renderPortfolioSankey();
 		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
+		renderImpactsSankey();
 		setupPortfolioBusinessSync();
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
+		setupImpactsScroll();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -639,6 +657,94 @@
 		return map;
 	}
 
+	// Derive a sensible label cap from the actual column spacing so labels never
+	// run into the neighbouring column. minGap is the horizontal distance between
+	// adjacent columns; we subtract the node width plus a little breathing room.
+	function computeLabelMaxWidth(graph, fallback = 180) {
+		const xs = Array.from(new Set(graph.nodes.map((n) => Math.round(n.x0)))).sort((a, b) => a - b);
+		let minGap = Infinity;
+		for (let i = 1; i < xs.length; i += 1) {
+			minGap = Math.min(minGap, xs[i] - xs[i - 1]);
+		}
+		if (!Number.isFinite(minGap)) {
+			return fallback;
+		}
+		return Math.max(72, minGap - 32);
+	}
+
+	// Column x-extents per stage (all nodes in a stage share the same x0/x1).
+	// Used to anchor link gradients in user space instead of the referencing
+	// path's bounding box — a perfectly horizontal link has a zero-height bbox,
+	// and objectBoundingBox gradients are not painted on a zero-area box (so the
+	// top-line links would silently disappear).
+	function stageXBounds(graph) {
+		const map = new Map();
+		graph.nodes.forEach((node) => {
+			if (!map.has(node.stage)) {
+				map.set(node.stage, { x0: node.x0, x1: node.x1 });
+			}
+		});
+		return map;
+	}
+
+	// SVG <text> has no max-width / text-wrap, so wrap long labels into multiple
+	// <tspan> lines. We measure with getComputedTextLength() and re-flow toward a
+	// balanced line width (emulating CSS `text-wrap: balance`). Vertical centering
+	// is done with a negative dy on the first line so the block stays centred on
+	// the node even as the layout animates (text `y` is updated elsewhere).
+	function wrapNodeLabels(textSelection, maxWidth) {
+		const lineHeightEm = 1.05;
+		textSelection.each(function () {
+			const text = d3.select(this);
+			const label = text.text();
+			const words = label.split(/\s+/).filter(Boolean);
+			if (words.length < 2) {
+				return;
+			}
+			const anchorX = text.attr("x") || 0;
+
+			const buildLines = (targetWidth) => {
+				text.text(null);
+				const probe = text.append("tspan").attr("x", anchorX);
+				const lines = [];
+				let current = [];
+				for (const word of words) {
+					current.push(word);
+					probe.text(current.join(" "));
+					if (probe.node().getComputedTextLength() > targetWidth && current.length > 1) {
+						current.pop();
+						lines.push(current.join(" "));
+						current = [word];
+					}
+				}
+				lines.push(current.join(" "));
+				return lines;
+			};
+
+			let lines = buildLines(maxWidth);
+			if (lines.length > 1) {
+				text.text(null);
+				const probe = text.append("tspan").attr("x", anchorX).text(label);
+				const fullWidth = probe.node().getComputedTextLength();
+				const balancedTarget = Math.min(maxWidth, Math.ceil(fullWidth / lines.length) + 2);
+				const balanced = buildLines(balancedTarget);
+				if (balanced.length === lines.length) {
+					lines = balanced;
+				}
+			}
+
+			text.text(null);
+			const startDy = -((lines.length - 1) / 2) * lineHeightEm;
+			lines.forEach((lineText, index) => {
+				text
+					.append("tspan")
+					.attr("x", anchorX)
+					.attr("dy", `${index === 0 ? startDy : lineHeightEm}em`)
+					.text(lineText);
+			});
+		});
+	}
+
 	function renderPortfolioSankey() {
 		if (!portfolioChart || !state.nodes.length || !state.links.length) {
 			return;
@@ -674,6 +780,7 @@
 			.iterations(64)(graph);
 
 		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
 			new Set(
 				graph.links.map(
@@ -693,13 +800,16 @@
 				return;
 			}
 
+			const sourceX = stageBounds.get(sourceStage)?.x1 ?? 0;
+			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
 			const gradient = defs
 				.append("linearGradient")
 				.attr("id", portfolioLinkGradientId(sourceStage, targetStage))
-				.attr("x1", "0%")
-				.attr("y1", "0%")
-				.attr("x2", "100%")
-				.attr("y2", "0%");
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", sourceX)
+				.attr("y1", 0)
+				.attr("x2", targetX)
+				.attr("y2", 0);
 
 			gradient
 				.append("stop")
@@ -754,11 +864,13 @@
 
 		nodeSelection
 			.append("text")
-			.attr("x", (d) => (d.x0 < width / 2 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
+			.attr("x", (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
 			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
 			.attr("dy", "0.35em")
-			.attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
 			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
 
 		state.portfolioRendered = {
 			nodeSelection,
@@ -825,6 +937,7 @@
 			.iterations(64)(graph);
 
 		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
 			new Set(
 				graph.links.map(
@@ -844,13 +957,16 @@
 				return;
 			}
 
+			const sourceX = stageBounds.get(sourceStage)?.x1 ?? 0;
+			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
 			const gradient = defs
 				.append("linearGradient")
 				.attr("id", `scenario-link-gradient-${sourceStage}-${targetStage}`)
-				.attr("x1", "0%")
-				.attr("y1", "0%")
-				.attr("x2", "100%")
-				.attr("y2", "0%");
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", sourceX)
+				.attr("y1", 0)
+				.attr("x2", targetX)
+				.attr("y2", 0);
 
 			gradient
 				.append("stop")
@@ -905,11 +1021,13 @@
 
 		nodeSelection
 			.append("text")
-			.attr("x", (d) => (d.x0 < width / 2 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
+			.attr("x", (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
 			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
 			.attr("dy", "0.35em")
-			.attr("text-anchor", (d) => (d.x0 < width / 2 ? "start" : "end"))
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
 			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
 
 		state.scenarioRendered = {
 			nodeSelection,
@@ -997,6 +1115,385 @@
 		nodeSelection
 			.classed("scenario-is-highlight", (node) => relevantNodes.has(node.id))
 			.classed("scenario-is-muted", (node) => !relevantNodes.has(node.id));
+	}
+
+	// avoided.json is large; fetch it lazily (only the Climate Impacts "after"
+	// highlight needs it) and cache the parsed result. Empty object cached on
+	// failure so we don't refetch.
+	function ensureAvoidedData() {
+		if (state.avoidedData) {
+			return Promise.resolve(state.avoidedData);
+		}
+		if (!state.avoidedPromise) {
+			state.avoidedPromise = fetch(avoidedPath)
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+					return response.json();
+				})
+				.then((data) => {
+					state.avoidedData = data || {};
+					return state.avoidedData;
+				})
+				.catch((err) => {
+					console.warn(`[Sankey] Could not load ${avoidedPath}:`, err);
+					state.avoidedData = {};
+					return state.avoidedData;
+				});
+		}
+		return state.avoidedPromise;
+	}
+
+	// Resolve the focal node id for the impacts view from the configured company
+	// via init.intervention.companies (company -> single-node location).
+	function getImpactsFocalNodeId() {
+		const companies = state.initData?.intervention?.companies;
+		if (!Array.isArray(companies)) {
+			return null;
+		}
+		const match = companies.find((company) => company?.company === IMPACTS_FOCAL_COMPANY);
+		const nodeId = String(match?.node || "").trim();
+		return nodeId || null;
+	}
+
+	// Set of "source|target" pairs the focal company avoids under
+	// IMPACTS_SCENARIO_KEY (positive values only), normalized onto the rendered
+	// node ids so they match the baseline ribbons.
+	function avoidedPairsForCompany(nodeById) {
+		const company = state.avoidedData?.[IMPACTS_FOCAL_COMPANY];
+		const rawLinks = Array.isArray(company?.links) ? company.links : [];
+		const pairs = new Set();
+		for (const link of rawLinks) {
+			const value = toFiniteNumber(link?.[IMPACTS_SCENARIO_KEY]?.value, 0);
+			if (value <= 0) {
+				continue;
+			}
+			const sourceId = normalizeNodeId(link?.source, nodeById);
+			const targetId = normalizeNodeId(link?.target, nodeById);
+			if (!nodeById.has(sourceId) || !nodeById.has(targetId)) {
+				continue;
+			}
+			pairs.add(`${sourceId}|${targetId}`);
+		}
+		return pairs;
+	}
+
+	// Builds the isolated one-hop Sankey around the focal node: the focal node,
+	// its stage-1 source neighbors and stage+1 target neighbors, and only the
+	// links that directly touch the focal node (truncated - no chain beyond).
+	function renderImpactsSankey() {
+		if (!impactsChart || !state.initData || !state.baselinesData) {
+			return;
+		}
+
+		const focalId = getImpactsFocalNodeId();
+		if (!focalId) {
+			console.warn(
+				`[Sankey] Impacts focal company "${IMPACTS_FOCAL_COMPANY}" has no intervention node; impacts chart skipped.`
+			);
+			return;
+		}
+
+		// Baseline flows for the impacts scenario (falls back to an available key).
+		let scenarioKey = IMPACTS_SCENARIO_KEY;
+		const availableScenarios = Array.isArray(state.baselinesData?.scenarios)
+			? state.baselinesData.scenarios
+			: [];
+		if (!availableScenarios.includes(scenarioKey) && availableScenarios.length) {
+			scenarioKey = availableScenarios.includes("2040A") ? "2040A" : availableScenarios[0];
+		}
+
+		const fullGraph = buildGraph(state.initData, state.baselinesData, scenarioKey);
+		const nodeById = new Map(fullGraph.nodes.map((node) => [node.id, node]));
+		if (!nodeById.has(focalId)) {
+			console.warn(`[Sankey] Impacts focal node "${focalId}" not found in baseline graph.`);
+			return;
+		}
+
+		// Only links directly touching the focal node (one hop each side).
+		const touchingLinks = fullGraph.links.filter(
+			(link) => link.source === focalId || link.target === focalId
+		);
+		const subNodeIds = new Set([focalId]);
+		for (const link of touchingLinks) {
+			subNodeIds.add(link.source);
+			subNodeIds.add(link.target);
+		}
+
+		const subNodes = Array.from(subNodeIds)
+			.map((id) => nodeById.get(id))
+			.filter(Boolean)
+			.map((node) => ({ ...node }));
+		const subLinks = touchingLinks.map((link) => ({ ...link }));
+
+		const bounds = impactsChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(480, Math.floor(bounds.height));
+
+		d3.select(impactsChart).selectAll("*").remove();
+
+		const svg = d3
+			.select(impactsChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+
+		const graph = {
+			nodes: subNodes.map((node) => ({ ...node })),
+			links: subLinks.map((link) => ({ ...link }))
+		};
+
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(20)
+			.nodePadding(14)
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[140, 60],
+				[width - 140, height - 60]
+			])
+			.iterations(64)(graph);
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
+		const stagePairs = Array.from(
+			new Set(
+				graph.links.map(
+					(link) => `${link.source?.stage ?? "unknown"}-${link.target?.stage ?? "unknown"}`
+				)
+			)
+		);
+
+		stagePairs.forEach((pair) => {
+			const [sourceStageRaw, targetStageRaw] = pair.split("-");
+			const sourceStage = Number.parseInt(sourceStageRaw, 10);
+			const targetStage = Number.parseInt(targetStageRaw, 10);
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+
+			const sourceX = stageBounds.get(sourceStage)?.x1 ?? 0;
+			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `impacts-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", sourceX)
+				.attr("y1", 0)
+				.attr("x2", targetX)
+				.attr("y2", 0);
+
+			gradient
+				.append("stop")
+				.attr("offset", "0%")
+				.style("stop-color", `var(${sourceColorVar})`)
+				.attr("stop-opacity", 0.4);
+			gradient
+				.append("stop")
+				.attr("offset", "100%")
+				.style("stop-color", `var(${targetColorVar})`)
+				.attr("stop-opacity", 0.4);
+		});
+
+		const linksGroup = svg
+			.append("g")
+			.attr("fill", "none")
+			.attr("stroke-opacity", 1)
+			.attr("class", "sankey-links");
+
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(graph.links, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", (link) => {
+				const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+				const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+				if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+					return `url(#impacts-link-gradient-${sourceStage}-${targetStage})`;
+				}
+				return "rgba(208, 222, 235, 0.38)";
+			})
+			.attr("d", d3.sankeyLinkHorizontal())
+			.attr("stroke-width", (d) => Math.max(1.5, d.width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 8 : -8))
+			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
+
+		state.impactsRendered = {
+			nodeSelection,
+			linkSelection,
+			graph,
+			focalId,
+			scenarioKey
+		};
+
+		applyImpactsHighlight(state.impactsActive);
+	}
+
+	// "before" (active=false): whole isolated view fully lit. "after"
+	// (active=true): re-tint the baseline ribbons matching the focal company's
+	// avoided links (dim the rest). Needs avoided.json; fetches it lazily and
+	// re-applies when it resolves.
+	function applyImpactsHighlight(active) {
+		state.impactsActive = active;
+		if (!state.impactsRendered) {
+			return;
+		}
+
+		const { nodeSelection, linkSelection, graph, focalId } = state.impactsRendered;
+
+		if (!active) {
+			linkSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
+			nodeSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
+			return;
+		}
+
+		if (!state.avoidedData) {
+			// Show the full view until avoided data arrives, then re-apply.
+			linkSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
+			nodeSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
+			ensureAvoidedData().then(() => {
+				if (state.impactsActive) {
+					applyImpactsHighlight(true);
+				}
+			});
+			return;
+		}
+
+		const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+		let avoidedPairs = avoidedPairsForCompany(nodeById);
+		// In-frame avoided pairs only (links touching the focal node).
+		let relevantPairs = new Set(
+			graph.links
+				.map((link) => `${link.source.id}|${link.target.id}`)
+				.filter((pair) => avoidedPairs.has(pair))
+		);
+
+		// Fallback: if no avoided edge falls inside the isolated frame, highlight
+		// every in-frame link so the "after" state still reads as meaningful.
+		if (!relevantPairs.size) {
+			console.warn(
+				`[Sankey] No in-frame avoided links for "${IMPACTS_FOCAL_COMPANY}" (${IMPACTS_SCENARIO_KEY}); highlighting all focal links.`
+			);
+			relevantPairs = new Set(graph.links.map((link) => `${link.source.id}|${link.target.id}`));
+		}
+
+		const relevantNodes = new Set([focalId]);
+		for (const pair of relevantPairs) {
+			const [sourceId, targetId] = pair.split("|");
+			relevantNodes.add(sourceId);
+			relevantNodes.add(targetId);
+		}
+
+		const isRelevant = (link) => relevantPairs.has(`${link.source.id}|${link.target.id}`);
+		linkSelection
+			.classed("impacts-is-highlight", isRelevant)
+			.classed("impacts-is-muted", (link) => !isRelevant(link));
+		nodeSelection
+			.classed("impacts-is-highlight", (node) => relevantNodes.has(node.id))
+			.classed("impacts-is-muted", (node) => !relevantNodes.has(node.id));
+	}
+
+	// Scroll choreography for Climate Impacts: two lead beats crossfade in a
+	// pinned cell while the isolated chart switches from the "before" (fully
+	// lit) to the "after" (avoided highlighted) state as the second beat takes
+	// over.
+	function setupImpactsScroll() {
+		const stageEl = document.querySelector(".impacts-layout__lead-stage");
+		const leadEls = Array.from(document.querySelectorAll(".impacts-layout__lead"));
+		if (!stageEl || !leadEls.length) {
+			return;
+		}
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+			// Jump to the final "after" state with both beats visible.
+			leadEls.forEach((el) => {
+				el.style.opacity = "";
+				el.style.visibility = "";
+			});
+			applyImpactsHighlight(true);
+			return;
+		}
+
+		const seg = (p, a, b, c, d) => {
+			if (p <= a || p >= d) return 0;
+			if (p < b) return (p - a) / (b - a);
+			if (p <= c) return 1;
+			return (d - p) / (d - c);
+		};
+
+		const applyProgress = (progress) => {
+			const n = leadEls.length;
+			const slot = 1 / n;
+			const fade = slot * 0.26;
+			leadEls.forEach((el, i) => {
+				const start = i * slot;
+				const end = (i + 1) * slot;
+				const opacity = i === n - 1
+					? seg(progress, start, start + fade, 1, 1.05)
+					: seg(progress, start, start + fade, end - fade, end);
+				gsap.set(el, { autoAlpha: Math.max(0, Math.min(1, opacity)) });
+			});
+			// Switch to the "after" highlight once the second beat leads.
+			applyImpactsHighlight(progress >= 0.5);
+		};
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				stageEl.classList.add("is-pinned");
+				gsap.set(leadEls, { autoAlpha: 0 });
+
+				const stageST = ScrollTrigger.create({
+					trigger: stageEl,
+					start: "top top",
+					end: "bottom bottom",
+					scrub: 0.55,
+					invalidateOnRefresh: true,
+					onRefresh: (self) => applyProgress(self.progress),
+					onUpdate: (self) => applyProgress(self.progress)
+				});
+
+				applyProgress(0);
+
+				return () => {
+					stageST.kill();
+					stageEl.classList.remove("is-pinned");
+					gsap.set(leadEls, { clearProps: "opacity,visibility" });
+					applyImpactsHighlight(false);
+				};
+			}
+		});
 	}
 
 	function setupScenarioLeadFades() {
@@ -1649,6 +2146,7 @@
 		);
 
 		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(expandedGraph);
 		const stagePairs = Array.from(
 			new Set(
 				expandedGraph.links
@@ -1667,13 +2165,16 @@
 				return;
 			}
 
+			const sourceX = stageBounds.get(sourceStage)?.x1 ?? 0;
+			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
 			const gradient = defs
 				.append("linearGradient")
 				.attr("id", linkGradientId(sourceStage, targetStage))
-				.attr("x1", "0%")
-				.attr("y1", "0%")
-				.attr("x2", "100%")
-				.attr("y2", "0%");
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", sourceX)
+				.attr("y1", 0)
+				.attr("x2", targetX)
+				.attr("y2", 0);
 
 			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${sourceColorVar})`).attr("stop-opacity", 0.3);
 			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`).attr("stop-opacity", 0.3);
@@ -1769,6 +2270,11 @@
 			.attr("dy", "0.35em")
 			.attr("text-anchor", "start")
 			.text((d) => d.label);
+
+		wrapNodeLabels(
+			nodeSelection.selectAll("text"),
+			Math.max(78, (width - 76) / 6 - 32)
+		);
 
 		svg.on("click", () => {
 			if (!state.sankeyInteractive) {
@@ -1945,16 +2451,18 @@
 				const y1 = lerp(startNode.y1, endNode.y1, t);
 				const nodeWidth = Math.max(1, x1 - x0);
 				const nodeHeight = Math.max(3, y1 - y0);
-				const anchorStart = opts.forceStartAnchor || x0 < width / 2;
+				const anchorStart = opts.forceStartAnchor || nodeDatum.stage !== 7;
 
 				const nodeGroup = d3.select(this);
 				nodeGroup.attr("transform", `translate(${x0},${y0})`);
 				nodeGroup.select("rect").attr("width", nodeWidth).attr("height", nodeHeight);
-				nodeGroup
-					.select("text")
-					.attr("x", anchorStart ? nodeWidth + 7 : -7)
+				const labelX = anchorStart ? nodeWidth + 7 : -7;
+				const textSel = nodeGroup.select("text");
+				textSel
+					.attr("x", labelX)
 					.attr("y", nodeHeight / 2)
 					.attr("text-anchor", anchorStart ? "start" : "end");
+				textSel.selectAll("tspan").attr("x", labelX);
 			});
 
 			linkPaths.each(function (linkDatum) {
@@ -2476,6 +2984,7 @@
 				render();
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
+				renderImpactsSankey();
 				frameId = null;
 			});
 		};

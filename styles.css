@@ -175,8 +175,8 @@
 			.hero-copy-2,
 			.hero-copy-3 {
 				display: grid;
-				min-height: 110vh;
-				padding: 12vh 6vw;
+				min-height: 75vh;
+				padding: 1vh 6vw;
 				place-content: center;
 				place-items: center;
 				text-transform: none;
@@ -1006,6 +1006,126 @@
 				opacity: 0.08;
 			}
 
+			.impacts-intro {
+				background: var(--color-device);
+				color: var(--color-dark);
+				min-height: 100vh;
+				display: grid;
+				gap: 1.25rem;
+				padding: 12vh 6vw;
+				place-content: center;
+				place-items: center;
+			}
+
+			.impacts-intro__body {
+				font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+				font-weight: 800;
+				letter-spacing: -0.01em;
+				line-height: 1.25;
+				margin: 0 auto;
+				max-width: var(--max-copy-width);
+				text-align: left;
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.impacts-intro__body span {
+				font-family: "Archivo Black", "Helvetica Neue", Helvetica, Arial, sans-serif;
+			}
+
+			.impacts-layout {
+				--impacts-hold: 240vh;
+				display: grid;
+				gap: 4vw;
+				grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
+				align-items: start;
+				padding: 12vh 5vw 16vh;
+			}
+
+			.impacts-layout__copy {
+				display: grid;
+				padding: 8vh 0 12vh;
+			}
+
+			.impacts-layout__lead-stage {
+				position: relative;
+			}
+
+			.impacts-layout__lead-stage.is-pinned {
+				height: var(--impacts-hold, 240vh);
+			}
+
+			.impacts-layout__lead-stage.is-pinned .impacts-layout__lead-pin {
+				display: grid;
+				height: 100vh;
+				place-items: center;
+				position: sticky;
+				top: 0;
+			}
+
+			.impacts-layout__lead-stage.is-pinned .impacts-layout__lead {
+				grid-area: 1 / 1;
+			}
+
+			.impacts-layout__lead {
+				color: #fff;
+				font-size: clamp(1.12rem, 1.75vw, 1.55rem);
+				font-weight: 600;
+				line-height: 1.26;
+				margin: 0;
+				max-width: 26ch;
+				text-wrap: balance;
+			}
+
+			.impacts-layout__lead strong {
+				color: var(--color-device);
+			}
+
+			.impacts-layout__visual {
+				background: transparent;
+				border: 0;
+				display: grid;
+				place-items: center;
+				height: 100vh;
+				min-height: 100vh;
+				overflow: hidden;
+				position: sticky;
+				top: 0;
+			}
+
+			#impacts-sankey-chart {
+				display: block;
+				height: 100%;
+				max-height: 74vh;
+				pointer-events: none;
+				width: 100%;
+			}
+
+			#impacts-sankey-chart .sankey-link {
+				opacity: 0.9;
+				transition: opacity 220ms ease, stroke-width 220ms ease;
+			}
+
+			#impacts-sankey-chart .sankey-node {
+				opacity: 1;
+				transition: opacity 220ms ease;
+			}
+
+			#impacts-sankey-chart .sankey-link.impacts-is-highlight {
+				opacity: 0.95;
+			}
+
+			#impacts-sankey-chart .sankey-node.impacts-is-highlight {
+				opacity: 1;
+			}
+
+			#impacts-sankey-chart .sankey-link.impacts-is-muted {
+				opacity: 0.12;
+			}
+
+			#impacts-sankey-chart .sankey-node.impacts-is-muted {
+				opacity: 0.28;
+			}
+
 			#sankey-chart .sankey-stage-label {
 				display: none;
 			}
@@ -1067,7 +1187,7 @@
 			}
 
 			#sankey-chart.is-interactive .sankey-link {
-				opacity: 0.16;
+				opacity: 0.8;
 			}
 
 			#sankey-chart.is-interactive .sankey-link.is-active {
@@ -1183,6 +1303,16 @@
 					padding: 3.8rem 1rem 5rem;
 				}
 
+				.impacts-intro {
+					padding: 3.5rem 1rem;
+				}
+
+				.impacts-layout {
+					gap: 1rem;
+					grid-template-columns: 1fr;
+					padding: 3.8rem 1rem 5rem;
+				}
+
 				.portfolio-layout__copy {
 					padding: 0;
 				}
@@ -1191,11 +1321,19 @@
 					padding: 0;
 				}
 
+				.impacts-layout__copy {
+					padding: 0;
+				}
+
 				.portfolio-layout__lead {
 					max-width: none;
 				}
 
 				.scenario-layout__lead {
+					max-width: none;
+				}
+
+				.impacts-layout__lead {
 					max-width: none;
 				}
 
@@ -1241,11 +1379,21 @@
 					position: relative;
 				}
 
+				.impacts-layout__visual {
+					height: auto;
+					min-height: 58vh;
+					position: relative;
+				}
+
 				#portfolio-sankey-chart {
 					max-height: 65vh;
 				}
 
 				#scenario-sankey-chart {
+					max-height: 65vh;
+				}
+
+				#impacts-sankey-chart {
 					max-height: 65vh;
 				}
 				.hero-globe {
