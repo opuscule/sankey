@@ -377,6 +377,27 @@
 	};
 	const warnedMissingScenarioKeys = new Set();
 
+	// Total 2040 emissions (GT) per scenario, matching the on-page copy. Drives
+	// the scenario Sankey's vertical scale: the tallest scenario (60 GT) fills the
+	// full chart height and lower-total scenarios shrink proportionally, so column
+	// height reads as an absolute GT quantity instead of always filling the frame.
+	// `null` = not yet defined (renders at full height as a neutral fallback).
+	const scenarioTotalsGt = {
+		"enacted-policies": 60,
+		"stated-commitments": 46,
+		"high-ai-electricity-demand": null
+	};
+	const SCENARIO_MAX_GT = 60;
+
+	function scenarioGtFor(scenarioId) {
+		const gt = scenarioTotalsGt[scenarioId];
+		return Number.isFinite(gt) ? gt : null;
+	}
+
+	// Previous-render link geometry (per link id) so scenario switches can tween
+	// the ribbon paths (SVG path `d` strings don't interpolate on their own).
+	let scenarioLinkGeom = new Map();
+
 	// --- Climate Impacts (avoided emissions) ---------------------------------
 	// The isolated one-hop view zooms to a single focal node (a portfolio
 	// company's intervention node) plus its immediate stage-1 sources and
@@ -687,6 +708,17 @@
 		return map;
 	}
 
+	// Select the first matching child of `sel`, appending it (with `cls`) if it
+	// does not exist yet. Lets the scenario chart keep persistent groups/elements
+	// across re-renders so their geometry can be transitioned instead of torn down.
+	function ensureChild(sel, selector, tag, cls) {
+		let child = sel.select(selector);
+		if (child.empty()) {
+			child = sel.append(tag).attr("class", cls);
+		}
+		return child;
+	}
+
 	// SVG <text> has no max-width / text-wrap, so wrap long labels into multiple
 	// <tspan> lines. We measure with getComputedTextLength() and re-flow toward a
 	// balanced line width (emulating CSS `text-wrap: balance`). Vertical centering
@@ -894,6 +926,10 @@
 			return;
 		}
 
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const duration = reduceMotion ? 0 : 720;
+		const ease = d3.easeCubicInOut;
+
 		const scenarioRequest = resolveScenarioRequest(rawScenarioId);
 
 		const scenarioGraph = buildGraph(
@@ -911,32 +947,68 @@
 		const width = Math.max(820, Math.floor(bounds.width));
 		const height = Math.max(560, Math.floor(bounds.height));
 
-		d3.select(scenarioChart).selectAll("*").remove();
+		const graph = {
+			nodes: scenarioGraph.nodes.map((node) => ({ ...node })),
+			links: scenarioGraph.links.map((link) => ({ ...link }))
+		};
 
+		// Vertical scale: the full inner band maps 0 GT (bottom) -> SCENARIO_MAX_GT
+		// (top). The layout extent is bottom-anchored to this scenario's GT total so
+		// a 46 GT scenario physically occupies 46/60 of the height, leaving a visible
+		// gap above it that reads as the emissions avoided vs the 60 GT case.
+		const axisX = 18;
+		const axisTop = 44; // y for SCENARIO_MAX_GT (full height)
+		const axisBottom = height - 34; // y for 0 GT
+		const gtToY = (gt) => {
+			const clamped = Math.max(0, Math.min(SCENARIO_MAX_GT, gt));
+			return axisBottom - (axisBottom - axisTop) * (clamped / SCENARIO_MAX_GT);
+		};
+		const activeGt = scenarioGtFor(scenarioRequest.scenarioId);
+		const layoutGt = activeGt == null ? SCENARIO_MAX_GT : activeGt;
+		const scaleFactor = layoutGt / SCENARIO_MAX_GT;
+
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(20)
+			.nodePadding(Math.max(4, 9 * scaleFactor))
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[28, gtToY(layoutGt)],
+				[width - 28, axisBottom]
+			])
+			.iterations(64)(graph);
+
+		// Persistent layer groups so scenario switches can tween geometry instead of
+		// tearing the chart down and rebuilding it from scratch each time.
 		const svg = d3
 			.select(scenarioChart)
 			.attr("viewBox", `0 0 ${width} ${height}`)
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("pointer-events", "none");
 
-		const graph = {
-			nodes: scenarioGraph.nodes.map((node) => ({ ...node })),
-			links: scenarioGraph.links.map((link) => ({ ...link }))
-		};
+		let layers = state.scenarioLayers;
+		if (!layers || svg.select("defs").empty()) {
+			svg.selectAll("*").remove();
+			scenarioLinkGeom = new Map();
+			layers = {
+				defs: svg.append("defs"),
+				markerGroup: svg.append("g").attr("class", "scenario-marker"),
+				linksGroup: svg
+					.append("g")
+					.attr("class", "sankey-links")
+					.attr("fill", "none")
+					.attr("stroke-opacity", 1),
+				nodesGroup: svg.append("g").attr("class", "sankey-nodes"),
+				axisGroup: svg.append("g").attr("class", "scenario-axis")
+			};
+			state.scenarioLayers = layers;
+		}
+		const { defs, markerGroup, linksGroup, nodesGroup, axisGroup } = layers;
 
-		d3
-			.sankey()
-			.nodeId((d) => d.id)
-			.nodeWidth(20)
-			.nodePadding(9)
-			.nodeAlign(d3.sankeyJustify)
-			.extent([
-				[28, 44],
-				[width - 28, height - 34]
-			])
-			.iterations(64)(graph);
-
-		const defs = svg.append("defs");
+		// Link gradients depend on stage x-positions (and chart width), so rebuild
+		// them on every render — they are cheap and never animated.
+		defs.selectAll("*").remove();
 		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
 			new Set(
@@ -980,54 +1052,188 @@
 				.attr("stop-opacity", 0.35);
 		});
 
-		const linksGroup = svg
-			.append("g")
-			.attr("fill", "none")
-			.attr("stroke-opacity", 1)
-			.attr("class", "sankey-links");
+		// --- Links (tween the ribbon `d` between renders) ---------------------
+		const linkGen = d3.sankeyLinkHorizontal();
+		const linkPathFromGeom = (g) =>
+			linkGen({ source: { x1: g.sx }, target: { x0: g.tx }, y0: g.y0, y1: g.y1 });
+		const geomFor = (d) => ({ sx: d.source.x1, tx: d.target.x0, y0: d.y0, y1: d.y1 });
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#scenario-link-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+		const prevGeom = scenarioLinkGeom;
 
 		const linkSelection = linksGroup
-			.selectAll("path")
+			.selectAll("path.sankey-link")
 			.data(graph.links, (d) => d.id)
-			.join("path")
-			.attr("class", "sankey-link")
-			.style("stroke", (link) => {
-				const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
-				const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
-				if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
-					return `url(#scenario-link-gradient-${sourceStage}-${targetStage})`;
-				}
-				return "rgba(208, 222, 235, 0.38)";
-			})
-			.attr("d", d3.sankeyLinkHorizontal())
-			.attr("stroke-width", (d) => Math.max(1, d.width));
+			.join(
+				(enter) =>
+					enter
+						.append("path")
+						.attr("class", "sankey-link")
+						.style("stroke", linkStroke)
+						.attr("d", (d) => linkGen(d))
+						.attr("stroke-width", (d) => Math.max(1, d.width))
+						.style("opacity", 0)
+						.call((sel) =>
+							sel
+								.transition()
+								.duration(duration)
+								.ease(ease)
+								.style("opacity", 1)
+								.on("end", function () {
+									d3.select(this).style("opacity", null);
+								})
+						),
+				(update) =>
+					update
+						.style("stroke", linkStroke)
+						.call((sel) =>
+							sel
+								.transition()
+								.duration(duration)
+								.ease(ease)
+								.attr("stroke-width", (d) => Math.max(1, d.width))
+								.attrTween("d", function (d) {
+									const start = prevGeom.get(d.id) || geomFor(d);
+									const end = geomFor(d);
+									const iy0 = d3.interpolateNumber(start.y0, end.y0);
+									const iy1 = d3.interpolateNumber(start.y1, end.y1);
+									const isx = d3.interpolateNumber(start.sx, end.sx);
+									const itx = d3.interpolateNumber(start.tx, end.tx);
+									return (t) =>
+										linkPathFromGeom({ sx: isx(t), tx: itx(t), y0: iy0(t), y1: iy1(t) });
+								})
+						),
+				(exit) =>
+					exit.call((sel) =>
+						sel.transition().duration(duration).ease(ease).style("opacity", 0).remove()
+					)
+			);
 
-		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nextGeom = new Map();
+		graph.links.forEach((d) => nextGeom.set(d.id, geomFor(d)));
+		scenarioLinkGeom = nextGeom;
+
+		// --- Nodes (tween height/position between renders) --------------------
+		const labelMaxWidth = computeLabelMaxWidth(graph);
+		const nodeHeight = (d) => Math.max(3, d.y1 - d.y0);
+		const nodeTextX = (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 7 : -7);
+
 		const nodeSelection = nodesGroup
-			.selectAll("g")
+			.selectAll("g.sankey-node")
 			.data(graph.nodes, (d) => d.id)
-			.join("g")
-			.attr("class", (d) => `sankey-node stage-${d.stage}`)
-			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+			.join(
+				(enter) => {
+					const group = enter
+						.append("g")
+						.attr("class", (d) => `sankey-node stage-${d.stage}`)
+						.attr("transform", (d) => `translate(${d.x0},${d.y0})`)
+						.style("opacity", 0);
+					group
+						.append("rect")
+						.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+						.attr("height", nodeHeight);
+					group
+						.append("title")
+						.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+					group
+						.append("text")
+						.attr("x", nodeTextX)
+						.attr("y", (d) => nodeHeight(d) / 2)
+						.attr("dy", "0.35em")
+						.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+						.text((d) => d.label);
+					group.each(function () {
+						wrapNodeLabels(d3.select(this).selectAll("text"), labelMaxWidth);
+					});
+					group
+						.transition()
+						.duration(duration)
+						.ease(ease)
+						.style("opacity", 1)
+						.on("end", function () {
+							d3.select(this).style("opacity", null);
+						});
+					return group;
+				},
+				(update) => {
+					update
+						.select("rect")
+						.transition()
+						.duration(duration)
+						.ease(ease)
+						.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+						.attr("height", nodeHeight);
+					update
+						.select("text")
+						.transition()
+						.duration(duration)
+						.ease(ease)
+						.attr("y", (d) => nodeHeight(d) / 2);
+					update
+						.transition()
+						.duration(duration)
+						.ease(ease)
+						.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+					return update;
+				},
+				(exit) =>
+					exit.call((sel) =>
+						sel.transition().duration(duration).ease(ease).style("opacity", 0).remove()
+					)
+			);
 
-		nodeSelection
-			.append("rect")
-			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
-			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+		// --- Left reference axis + moving GT marker ---------------------------
+		ensureChild(axisGroup, "line.scenario-axis__line", "line", "scenario-axis__line")
+			.attr("x1", axisX)
+			.attr("x2", axisX)
+			.attr("y1", gtToY(0))
+			.attr("y2", gtToY(SCENARIO_MAX_GT));
 
-		nodeSelection
-			.append("title")
-			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+		const tickData = Object.values(scenarioTotalsGt).filter((gt) => Number.isFinite(gt));
+		const ticks = axisGroup
+			.selectAll("g.scenario-axis__tick")
+			.data(tickData, (d) => d)
+			.join((enter) => {
+				const group = enter.append("g").attr("class", "scenario-axis__tick");
+				group
+					.append("line")
+					.attr("class", "scenario-axis__tick-dash")
+					.attr("x1", axisX)
+					.attr("x2", axisX + 8);
+				group
+					.append("text")
+					.attr("class", "scenario-axis__tick-label")
+					.attr("x", axisX + 12)
+					.attr("dy", "0.32em")
+					.attr("text-anchor", "start")
+					.text((d) => `${d}GT`);
+				group.attr("transform", (d) => `translate(0,${gtToY(d)})`);
+				return group;
+			});
+		ticks.classed(
+			"is-active",
+			(d) => activeGt != null && Math.abs(d - activeGt) < 0.5
+		);
+		ticks
+			.transition()
+			.duration(duration)
+			.ease(ease)
+			.attr("transform", (d) => `translate(0,${gtToY(d)})`);
 
-		nodeSelection
-			.append("text")
-			.attr("x", (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
-			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
-			.attr("dy", "0.35em")
-			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
-			.text((d) => d.label);
-
-		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
+		ensureChild(markerGroup, "line.scenario-marker__line", "line", "scenario-marker__line")
+			.attr("x1", axisX)
+			.attr("x2", width - 28)
+			.transition()
+			.duration(duration)
+			.ease(ease)
+			.attr("y1", gtToY(layoutGt))
+			.attr("y2", gtToY(layoutGt));
 
 		state.scenarioRendered = {
 			nodeSelection,
