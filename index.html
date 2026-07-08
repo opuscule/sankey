@@ -294,10 +294,25 @@
 								</p>
 							</div>
 						</div>
+
+						<div class="impacts-businesses" role="tablist" aria-label="Portfolio companies">
+							<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="fervo" aria-selected="false" tabindex="0">Fervo Energy</button>
+							<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="propel-aero" aria-selected="false" tabindex="-1">Propel Aero</button>
+							<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="electric-hydrogen" aria-selected="false" tabindex="-1">Electric Hydrogen</button>
+							<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="redwood-materials" aria-selected="false" tabindex="-1">Redwood Materials</button>
+						</div>
 					</div>
 
-					<div class="impacts-layout__visual" aria-hidden="true">
-						<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
+					<div class="impacts-layout__visual">
+						<div class="impacts-layout__visual-shell">
+							<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
+
+							<div class="impacts-scenario-controls" role="group" aria-label="Climate impacts scenarios">
+								<button class="impacts-scenario-controls__button is-active" type="button" data-impacts-scenario-tab="enacted-policies" aria-pressed="true">Enacted Policies</button>
+								<button class="impacts-scenario-controls__button" type="button" data-impacts-scenario-tab="stated-commitments" aria-pressed="false">Stated Commitments</button>
+								<button class="impacts-scenario-controls__button" type="button" data-impacts-scenario-tab="high-ai-electricity-demand" aria-pressed="false">High AI Electricity Demand</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</section>

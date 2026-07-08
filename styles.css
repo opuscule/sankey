@@ -1009,17 +1009,20 @@
 			/* Left GT reference axis + the horizontal marker that slides to the
 			   active scenario's total. Together they show that a lower-GT scenario
 			   physically occupies less of the chart height. */
-			#scenario-sankey-chart .scenario-axis__line {
+			#scenario-sankey-chart .scenario-axis__line,
+			#impacts-sankey-chart .scenario-axis__line {
 				stroke: rgba(238, 245, 255, 0.35);
 				stroke-width: 1;
 			}
 
-			#scenario-sankey-chart .scenario-axis__tick-dash {
+			#scenario-sankey-chart .scenario-axis__tick-dash,
+			#impacts-sankey-chart .scenario-axis__tick-dash {
 				stroke: rgba(238, 245, 255, 0.45);
 				stroke-width: 1;
 			}
 
-			#scenario-sankey-chart .scenario-axis__tick-label {
+			#scenario-sankey-chart .scenario-axis__tick-label,
+			#impacts-sankey-chart .scenario-axis__tick-label {
 				fill: rgba(238, 245, 255, 0.6);
 				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: 11px;
@@ -1028,17 +1031,20 @@
 				transition: fill 220ms ease;
 			}
 
-			#scenario-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-dash {
+			#scenario-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-dash,
+			#impacts-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-dash {
 				stroke: var(--color-hero-highlight);
 				stroke-width: 1.5;
 			}
 
-			#scenario-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-label {
+			#scenario-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-label,
+			#impacts-sankey-chart .scenario-axis__tick.is-active .scenario-axis__tick-label {
 				fill: var(--color-hero-highlight);
 				font-weight: 700;
 			}
 
-			#scenario-sankey-chart .scenario-marker__line {
+			#scenario-sankey-chart .scenario-marker__line,
+			#impacts-sankey-chart .scenario-marker__line {
 				stroke: var(--color-hero-highlight);
 				stroke-dasharray: 3 5;
 				stroke-opacity: 0.55;
@@ -1132,12 +1138,144 @@
 				top: 0;
 			}
 
+			.impacts-layout__visual-shell {
+				display: grid;
+				gap: 1.5rem;
+				justify-items: stretch;
+				width: min(100%, 1100px);
+			}
+
 			#impacts-sankey-chart {
 				display: block;
 				height: 100%;
 				max-height: 74vh;
 				pointer-events: none;
 				width: 100%;
+			}
+
+			.impacts-scenario-controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.85rem 1.2rem;
+				justify-content: center;
+				padding-left: 2rem;
+			}
+
+			.impacts-scenario-controls__button {
+				appearance: none;
+				background: transparent;
+				border: 0;
+				color: rgba(255, 255, 255, 0.78);
+				cursor: pointer;
+				font-family: inherit;
+				font-size: clamp(0.98rem, 1vw, 1.15rem);
+				font-weight: 600;
+				letter-spacing: -0.01em;
+				padding: 0.2rem 0;
+				position: relative;
+				text-align: center;
+				transition: color 160ms ease;
+			}
+
+			.impacts-scenario-controls__button::after {
+				background: var(--color-hero-highlight);
+				bottom: -0.18rem;
+				content: "";
+				height: 2px;
+				left: 0;
+				opacity: 0;
+				position: absolute;
+				right: 0;
+				transform: scaleX(0.72);
+				transform-origin: center;
+				transition: opacity 160ms ease, transform 160ms ease;
+			}
+
+			.impacts-scenario-controls__button:hover,
+			.impacts-scenario-controls__button:focus-visible {
+				color: #fff;
+			}
+
+			.impacts-scenario-controls__button.is-active {
+				color: var(--color-hero-highlight);
+			}
+
+			.impacts-scenario-controls__button.is-active::after {
+				opacity: 1;
+				transform: scaleX(1);
+			}
+
+			.impacts-scenario-controls__button.is-disabled,
+			.impacts-scenario-controls__button:disabled {
+				color: rgba(255, 255, 255, 0.28);
+				cursor: not-allowed;
+			}
+
+			.impacts-scenario-controls__button.is-disabled::after,
+			.impacts-scenario-controls__button:disabled::after {
+				opacity: 0;
+			}
+
+			.impacts-businesses {
+				display: flex;
+				flex-direction: column;
+				gap: 0.35rem;
+				margin-top: 2.4rem;
+			}
+
+			.impacts-businesses__company {
+				appearance: none;
+				background: transparent;
+				border: 0;
+				color: rgba(255, 255, 255, 0.82);
+				cursor: pointer;
+				font-family: inherit;
+				font-size: clamp(1rem, 1.1vw, 1.25rem);
+				font-weight: 600;
+				letter-spacing: -0.01em;
+				padding: 0.35rem 0;
+				text-align: left;
+				transition: color 160ms ease;
+				width: 100%;
+			}
+
+			.impacts-businesses__company:hover,
+			.impacts-businesses__company:focus-visible {
+				color: #fff;
+			}
+
+			.impacts-businesses__company.is-active {
+				color: var(--color-hero-highlight);
+			}
+
+			/* Carved "empty" avoided regions: no fill, 1px border. Remaining regions
+			   keep the normal stage fill (nodes) or gradient fill (ribbons). */
+			#impacts-sankey-chart .impacts-node-avoided {
+				fill: none;
+				stroke: rgba(238, 245, 255, 0.9);
+				stroke-width: 1;
+			}
+
+			#impacts-sankey-chart .impacts-link-remaining {
+				stroke: none;
+			}
+
+			#impacts-sankey-chart .impacts-link-avoided {
+				fill: none;
+				stroke: rgba(238, 245, 255, 0.85);
+				stroke-width: 1;
+			}
+
+			/* Intervention node: full-height outline marking the company's
+			   placement, mirroring a click-selected node in the main chart. */
+			#impacts-sankey-chart .impacts-node-intervention {
+				fill: none;
+				stroke: #d4ecff;
+				stroke-width: 1.6;
+			}
+
+			#impacts-sankey-chart .impacts-link {
+				opacity: 0.9;
 			}
 
 			#impacts-sankey-chart .sankey-link {
@@ -1435,6 +1573,11 @@
 
 				#impacts-sankey-chart {
 					max-height: 65vh;
+				}
+
+				.impacts-scenario-controls {
+					justify-content: flex-start;
+					padding-left: 0;
 				}
 				.hero-globe {
 					max-width: 160vw;

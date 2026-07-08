@@ -73,7 +73,7 @@
 			phase: "unstack",
 			start: 52,
 			end: 64,
-			copy: "Emissions can be <strong>traced between domains</strong> as they <strong>flow through the global economy</strong>."
+			copy: "Emissions can be <strong>traced between lenses</strong> as they <strong>flow through the global economy</strong>."
 		},
 		{
 			id: "beat-8",
@@ -343,7 +343,8 @@
 		portfolioRendered: null,
 		scenarioRendered: null,
 		impactsRendered: null,
-		impactsActive: false,
+		impactsScenarioId: "enacted-policies",
+		impactsBusinessId: "",
 		avoidedData: null,
 		avoidedPromise: null,
 		portfolioBusinessNodeMap: new Map(),
@@ -399,14 +400,64 @@
 	let scenarioLinkGeom = new Map();
 
 	// --- Climate Impacts (avoided emissions) ---------------------------------
-	// The isolated one-hop view zooms to a single focal node (a portfolio
-	// company's intervention node) plus its immediate stage-1 sources and
-	// stage+1 targets. The "after" state re-tints the baseline ribbons that
-	// match that company's avoided-emissions links for IMPACTS_SCENARIO_KEY and
-	// dims the rest. Company -> node comes from init.intervention.companies;
-	// avoided link values come from avoided.json. Both are configurable here.
-	const IMPACTS_FOCAL_COMPANY = "ElectricHydrogen";
-	const IMPACTS_SCENARIO_KEY = "2040A";
+	// The impacts view starts on the full baseline graph. Selecting a portfolio
+	// business narrows the chart to that company's connected subgraph (only the
+	// edges it has avoided-emissions data for) and carves the avoided amount out
+	// of each node and ribbon as an empty, 1px-bordered region. Company selection
+	// forces scenario 2040B ("Stated Commitments"); 2040C has no avoided data.
+	// Business -> avoided company key is resolved via normalizeBusinessSlug over
+	// the avoided.json company keys; avoided link values come from avoided.json.
+	const IMPACTS_DEFAULT_SCENARIO_ID = "stated-commitments";
+
+	// Resolve the avoided.json company key (e.g. "FervoEnergy") for a normalized
+	// business slug (e.g. "fervo"). Returns null until avoided.json has loaded.
+	function avoidedCompanyKeyForBusiness(businessId) {
+		const data = state.avoidedData;
+		if (!data || !businessId) {
+			return null;
+		}
+		for (const key of Object.keys(data)) {
+			if (normalizeBusinessSlug(key) === businessId) {
+				return key;
+			}
+		}
+		return null;
+	}
+
+	// Map of "sourceId|targetId" -> avoided value for the company under
+	// scenarioKey (positive values only), normalized onto the rendered node ids.
+	function avoidedValueMapForCompany(companyKey, scenarioKey, nodeById) {
+		const company = state.avoidedData?.[companyKey];
+		const rawLinks = Array.isArray(company?.links) ? company.links : [];
+		const map = new Map();
+		for (const link of rawLinks) {
+			const value = toFiniteNumber(link?.[scenarioKey]?.value, 0);
+			if (value <= 0) {
+				continue;
+			}
+			const sourceId = normalizeNodeId(link?.source, nodeById);
+			const targetId = normalizeNodeId(link?.target, nodeById);
+			if (!nodeById.has(sourceId) || !nodeById.has(targetId)) {
+				continue;
+			}
+			map.set(`${sourceId}|${targetId}`, value);
+		}
+		return map;
+	}
+
+	// Builds a closed area path for a ribbon band between a top and bottom edge,
+	// matching d3-sankey's horizontal cubic curve. Lets us fill the "remaining"
+	// band and outline the "avoided" band (a stroke-only empty region).
+	function impactsRibbonArea(sx, tx, sTop, sBot, tTop, tBot) {
+		const mx = (sx + tx) / 2;
+		return (
+			`M${sx},${sTop}` +
+			`C${mx},${sTop} ${mx},${tTop} ${tx},${tTop}` +
+			`L${tx},${tBot}` +
+			`C${mx},${tBot} ${mx},${sBot} ${sx},${sBot}` +
+			`Z`
+		);
+	}
 
 	function resolveScenarioRequest(rawScenarioId) {
 		const scenarioId = Object.prototype.hasOwnProperty.call(scenarioKeyById, rawScenarioId)
@@ -609,7 +660,9 @@
 		render();
 		renderPortfolioSankey();
 		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
-		renderImpactsSankey();
+		setupImpactsScenarioSync();
+		setupImpactsBusinessSync();
+		renderImpactsSankey(window.currentImpactsScenarioId || state.impactsScenarioId);
 		setupPortfolioBusinessSync();
 		setupScenarioSync();
 		setupLeadFades();
@@ -717,6 +770,76 @@
 			child = sel.append(tag).attr("class", cls);
 		}
 		return child;
+	}
+
+	function createGtScale(height, scenarioId) {
+		const axisX = 18;
+		const axisTop = 44;
+		const axisBottom = height - 34;
+		const activeGt = scenarioGtFor(scenarioId);
+		const layoutGt = activeGt == null ? SCENARIO_MAX_GT : activeGt;
+		const scaleFactor = layoutGt / SCENARIO_MAX_GT;
+		const gtToY = (gt) => {
+			const clamped = Math.max(0, Math.min(SCENARIO_MAX_GT, gt));
+			return axisBottom - (axisBottom - axisTop) * (clamped / SCENARIO_MAX_GT);
+		};
+
+		return {
+			axisX,
+			axisBottom,
+			activeGt,
+			layoutGt,
+			scaleFactor,
+			gtToY
+		};
+	}
+
+	function renderGtReferenceAxis({ axisGroup, markerGroup, width, height, scenarioId, duration = 0, ease = d3.easeCubicInOut }) {
+		const { axisX, activeGt, layoutGt, gtToY } = createGtScale(height, scenarioId);
+
+		ensureChild(axisGroup, "line.scenario-axis__line", "line", "scenario-axis__line")
+			.attr("x1", axisX)
+			.attr("x2", axisX)
+			.attr("y1", gtToY(0))
+			.attr("y2", gtToY(SCENARIO_MAX_GT));
+
+		const tickData = Object.values(scenarioTotalsGt).filter((gt) => Number.isFinite(gt));
+		const ticks = axisGroup
+			.selectAll("g.scenario-axis__tick")
+			.data(tickData, (d) => d)
+			.join((enter) => {
+				const group = enter.append("g").attr("class", "scenario-axis__tick");
+				group
+					.append("line")
+					.attr("class", "scenario-axis__tick-dash")
+					.attr("x1", axisX)
+					.attr("x2", axisX + 8);
+				group
+					.append("text")
+					.attr("class", "scenario-axis__tick-label")
+					.attr("x", axisX + 12)
+					.attr("dy", "0.32em")
+					.attr("text-anchor", "start")
+					.text((d) => `${d}GT`);
+				group.attr("transform", (d) => `translate(0,${gtToY(d)})`);
+				return group;
+			});
+
+		ticks.classed("is-active", (d) => activeGt != null && Math.abs(d - activeGt) < 0.5);
+		ticks
+			.transition()
+			.duration(duration)
+			.ease(ease)
+			.attr("transform", (d) => `translate(0,${gtToY(d)})`);
+
+		ensureChild(markerGroup, "line.scenario-marker__line", "line", "scenario-marker__line")
+			.attr("x1", axisX)
+			.attr("x2", width - 28)
+			.transition()
+			.duration(duration)
+			.ease(ease)
+			.attr("y1", gtToY(layoutGt))
+			.attr("y2", gtToY(layoutGt));
 	}
 
 	// SVG <text> has no max-width / text-wrap, so wrap long labels into multiple
@@ -956,16 +1079,10 @@
 		// (top). The layout extent is bottom-anchored to this scenario's GT total so
 		// a 46 GT scenario physically occupies 46/60 of the height, leaving a visible
 		// gap above it that reads as the emissions avoided vs the 60 GT case.
-		const axisX = 18;
-		const axisTop = 44; // y for SCENARIO_MAX_GT (full height)
-		const axisBottom = height - 34; // y for 0 GT
-		const gtToY = (gt) => {
-			const clamped = Math.max(0, Math.min(SCENARIO_MAX_GT, gt));
-			return axisBottom - (axisBottom - axisTop) * (clamped / SCENARIO_MAX_GT);
-		};
-		const activeGt = scenarioGtFor(scenarioRequest.scenarioId);
-		const layoutGt = activeGt == null ? SCENARIO_MAX_GT : activeGt;
-		const scaleFactor = layoutGt / SCENARIO_MAX_GT;
+		const { axisBottom, gtToY, layoutGt, scaleFactor } = createGtScale(
+			height,
+			scenarioRequest.scenarioId
+		);
 
 		d3
 			.sankey()
@@ -1189,51 +1306,15 @@
 			);
 
 		// --- Left reference axis + moving GT marker ---------------------------
-		ensureChild(axisGroup, "line.scenario-axis__line", "line", "scenario-axis__line")
-			.attr("x1", axisX)
-			.attr("x2", axisX)
-			.attr("y1", gtToY(0))
-			.attr("y2", gtToY(SCENARIO_MAX_GT));
-
-		const tickData = Object.values(scenarioTotalsGt).filter((gt) => Number.isFinite(gt));
-		const ticks = axisGroup
-			.selectAll("g.scenario-axis__tick")
-			.data(tickData, (d) => d)
-			.join((enter) => {
-				const group = enter.append("g").attr("class", "scenario-axis__tick");
-				group
-					.append("line")
-					.attr("class", "scenario-axis__tick-dash")
-					.attr("x1", axisX)
-					.attr("x2", axisX + 8);
-				group
-					.append("text")
-					.attr("class", "scenario-axis__tick-label")
-					.attr("x", axisX + 12)
-					.attr("dy", "0.32em")
-					.attr("text-anchor", "start")
-					.text((d) => `${d}GT`);
-				group.attr("transform", (d) => `translate(0,${gtToY(d)})`);
-				return group;
-			});
-		ticks.classed(
-			"is-active",
-			(d) => activeGt != null && Math.abs(d - activeGt) < 0.5
-		);
-		ticks
-			.transition()
-			.duration(duration)
-			.ease(ease)
-			.attr("transform", (d) => `translate(0,${gtToY(d)})`);
-
-		ensureChild(markerGroup, "line.scenario-marker__line", "line", "scenario-marker__line")
-			.attr("x1", axisX)
-			.attr("x2", width - 28)
-			.transition()
-			.duration(duration)
-			.ease(ease)
-			.attr("y1", gtToY(layoutGt))
-			.attr("y2", gtToY(layoutGt));
+		renderGtReferenceAxis({
+			axisGroup,
+			markerGroup,
+			width,
+			height,
+			scenarioId: scenarioRequest.scenarioId,
+			duration,
+			ease
+		});
 
 		state.scenarioRendered = {
 			nodeSelection,
@@ -1351,91 +1432,82 @@
 		return state.avoidedPromise;
 	}
 
-	// Resolve the focal node id for the impacts view from the configured company
-	// via init.intervention.companies (company -> single-node location).
-	function getImpactsFocalNodeId() {
-		const companies = state.initData?.intervention?.companies;
-		if (!Array.isArray(companies)) {
-			return null;
-		}
-		const match = companies.find((company) => company?.company === IMPACTS_FOCAL_COMPANY);
-		const nodeId = String(match?.node || "").trim();
-		return nodeId || null;
-	}
-
-	// Set of "source|target" pairs the focal company avoids under
-	// IMPACTS_SCENARIO_KEY (positive values only), normalized onto the rendered
-	// node ids so they match the baseline ribbons.
-	function avoidedPairsForCompany(nodeById) {
-		const company = state.avoidedData?.[IMPACTS_FOCAL_COMPANY];
-		const rawLinks = Array.isArray(company?.links) ? company.links : [];
-		const pairs = new Set();
-		for (const link of rawLinks) {
-			const value = toFiniteNumber(link?.[IMPACTS_SCENARIO_KEY]?.value, 0);
-			if (value <= 0) {
-				continue;
-			}
-			const sourceId = normalizeNodeId(link?.source, nodeById);
-			const targetId = normalizeNodeId(link?.target, nodeById);
-			if (!nodeById.has(sourceId) || !nodeById.has(targetId)) {
-				continue;
-			}
-			pairs.add(`${sourceId}|${targetId}`);
-		}
-		return pairs;
-	}
-
-	// Builds the isolated one-hop Sankey around the focal node: the focal node,
-	// its stage-1 source neighbors and stage+1 target neighbors, and only the
-	// links that directly touch the focal node (truncated - no chain beyond).
-	function renderImpactsSankey() {
+	// Renders the Climate Impacts Sankey. With no business selected it shows the
+	// full baseline graph for the active scenario. When a portfolio business is
+	// selected it narrows to that company's connected subgraph (only edges with
+	// avoided-emissions data) and carves the avoided amount out of each node and
+	// ribbon as an empty, 1px-bordered region (remaining flow stays filled below).
+	function renderImpactsSankey(rawScenarioId = state.impactsScenarioId) {
 		if (!impactsChart || !state.initData || !state.baselinesData) {
 			return;
 		}
 
-		const focalId = getImpactsFocalNodeId();
-		if (!focalId) {
-			console.warn(
-				`[Sankey] Impacts focal company "${IMPACTS_FOCAL_COMPANY}" has no intervention node; impacts chart skipped.`
-			);
-			return;
-		}
+		const scenarioRequest = resolveScenarioRequest(rawScenarioId);
+		state.impactsScenarioId = scenarioRequest.scenarioId;
 
-		// Baseline flows for the impacts scenario (falls back to an available key).
-		let scenarioKey = IMPACTS_SCENARIO_KEY;
-		const availableScenarios = Array.isArray(state.baselinesData?.scenarios)
-			? state.baselinesData.scenarios
-			: [];
-		if (!availableScenarios.includes(scenarioKey) && availableScenarios.length) {
-			scenarioKey = availableScenarios.includes("2040A") ? "2040A" : availableScenarios[0];
-		}
+		const businessId = state.impactsBusinessId;
+		const companySelected = !!businessId;
 
-		const fullGraph = buildGraph(state.initData, state.baselinesData, scenarioKey);
-		const nodeById = new Map(fullGraph.nodes.map((node) => [node.id, node]));
-		if (!nodeById.has(focalId)) {
-			console.warn(`[Sankey] Impacts focal node "${focalId}" not found in baseline graph.`);
-			return;
-		}
-
-		// Only links directly touching the focal node (one hop each side).
-		const touchingLinks = fullGraph.links.filter(
-			(link) => link.source === focalId || link.target === focalId
+		const fullGraph = buildGraph(
+			state.initData,
+			state.baselinesData,
+			scenarioRequest.resolvedScenarioKey
 		);
-		const subNodeIds = new Set([focalId]);
-		for (const link of touchingLinks) {
-			subNodeIds.add(link.source);
-			subNodeIds.add(link.target);
+		const baselineNodeById = new Map(fullGraph.nodes.map((node) => [node.id, node]));
+
+		// Resolve the company's avoided edges for the active scenario. When avoided
+		// data has not loaded yet, kick off the fetch and re-render once ready.
+		let avoidedMap = new Map();
+		if (companySelected) {
+			if (!state.avoidedData) {
+				ensureAvoidedData().then(() => {
+					if (state.impactsBusinessId === businessId) {
+						renderImpactsSankey(scenarioRequest.scenarioId);
+					}
+				});
+			} else {
+				const companyKey = avoidedCompanyKeyForBusiness(businessId);
+				if (companyKey) {
+					avoidedMap = avoidedValueMapForCompany(
+						companyKey,
+						scenarioRequest.resolvedScenarioKey,
+						baselineNodeById
+					);
+				}
+			}
 		}
 
-		const subNodes = Array.from(subNodeIds)
-			.map((id) => nodeById.get(id))
-			.filter(Boolean)
-			.map((node) => ({ ...node }));
-		const subLinks = touchingLinks.map((link) => ({ ...link }));
+		const carve = companySelected && avoidedMap.size > 0;
+
+		// The company's intervention node (from init.intervention.companies) gets a
+		// highlight border, mirroring a click-selected node in the main chart.
+		const interventionNodeId = companySelected
+			? state.portfolioBusinessNodeMap.get(businessId) || null
+			: null;
+
+		// Subgraph = only the edges the company avoids (plus their endpoint nodes).
+		let graphNodes = fullGraph.nodes;
+		let graphLinks = fullGraph.links;
+		if (carve) {
+			const subLinks = fullGraph.links.filter((link) =>
+				avoidedMap.has(`${link.source}|${link.target}`)
+			);
+			const subNodeIds = new Set();
+			subLinks.forEach((link) => {
+				subNodeIds.add(link.source);
+				subNodeIds.add(link.target);
+			});
+			graphLinks = subLinks;
+			graphNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
+		}
 
 		const bounds = impactsChart.getBoundingClientRect();
 		const width = Math.max(820, Math.floor(bounds.width));
 		const height = Math.max(480, Math.floor(bounds.height));
+		const { axisBottom, gtToY, layoutGt, scaleFactor } = createGtScale(
+			height,
+			scenarioRequest.scenarioId
+		);
 
 		d3.select(impactsChart).selectAll("*").remove();
 
@@ -1446,23 +1518,50 @@
 			.style("pointer-events", "none");
 
 		const graph = {
-			nodes: subNodes.map((node) => ({ ...node })),
-			links: subLinks.map((link) => ({ ...link }))
+			nodes: graphNodes.map((node) => ({ ...node })),
+			links: graphLinks.map((link) => ({
+				...link,
+				avoided: avoidedMap.get(`${link.source}|${link.target}`) || 0
+			}))
 		};
 
 		d3
 			.sankey()
 			.nodeId((d) => d.id)
 			.nodeWidth(20)
-			.nodePadding(14)
+			.nodePadding(Math.max(4, 9 * scaleFactor))
 			.nodeAlign(d3.sankeyJustify)
 			.extent([
-				[140, 60],
-				[width - 140, height - 60]
+				[28, gtToY(layoutGt)],
+				[width - 28, axisBottom]
 			])
 			.iterations(64)(graph);
 
+		// Per-node avoided amount, summed on the node's height-defining side so it
+		// aligns with the carved ribbons entering/leaving that side.
+		if (carve) {
+			graph.nodes.forEach((node) => {
+				let inBase = 0;
+				let outBase = 0;
+				let inAvoided = 0;
+				let outAvoided = 0;
+				graph.links.forEach((link) => {
+					if (link.target === node) {
+						inBase += link.value;
+						inAvoided += link.avoided || 0;
+					}
+					if (link.source === node) {
+						outBase += link.value;
+						outAvoided += link.avoided || 0;
+					}
+				});
+				node.avoided = inBase >= outBase ? inAvoided : outAvoided;
+			});
+		}
+
 		const defs = svg.append("defs");
+		const markerGroup = svg.append("g").attr("class", "scenario-marker");
+		const axisGroup = svg.append("g").attr("class", "scenario-axis");
 		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
 			new Set(
@@ -1506,40 +1605,120 @@
 				.attr("stop-opacity", 0.4);
 		});
 
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#impacts-link-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
 		const linksGroup = svg
 			.append("g")
 			.attr("fill", "none")
 			.attr("stroke-opacity", 1)
 			.attr("class", "sankey-links");
 
-		const linkSelection = linksGroup
-			.selectAll("path")
-			.data(graph.links, (d) => d.id)
-			.join("path")
-			.attr("class", "sankey-link")
-			.style("stroke", (link) => {
-				const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
-				const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
-				if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
-					return `url(#impacts-link-gradient-${sourceStage}-${targetStage})`;
+		let linkSelection;
+		if (carve) {
+			// Filled "remaining" band + outlined "avoided" band (avoided at top).
+			linkSelection = linksGroup
+				.selectAll("g.impacts-link")
+				.data(graph.links, (d) => d.id)
+				.join("g")
+				.attr("class", "impacts-link");
+
+			linkSelection.each(function (link) {
+				const group = d3.select(this);
+				const w = Math.max(1, link.width);
+				const ratio = link.value > 0 ? Math.min(1, (link.avoided || 0) / link.value) : 0;
+				const avoidedW = w * ratio;
+				const sx = link.source.x1;
+				const tx = link.target.x0;
+				const sTop = link.y0 - w / 2;
+				const tTop = link.y1 - w / 2;
+
+				group
+					.append("path")
+					.attr("class", "impacts-link-remaining")
+					.attr(
+						"d",
+						impactsRibbonArea(sx, tx, sTop + avoidedW, sTop + w, tTop + avoidedW, tTop + w)
+					)
+					.style("fill", linkStroke(link));
+
+				if (avoidedW > 0.25) {
+					group
+						.append("path")
+						.attr("class", "impacts-link-avoided")
+						.attr(
+							"d",
+							impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW)
+						);
 				}
-				return "rgba(208, 222, 235, 0.38)";
-			})
-			.attr("d", d3.sankeyLinkHorizontal())
-			.attr("stroke-width", (d) => Math.max(1.5, d.width));
+			});
+		} else {
+			linkSelection = linksGroup
+				.selectAll("path")
+				.data(graph.links, (d) => d.id)
+				.join("path")
+				.attr("class", "sankey-link")
+				.style("stroke", linkStroke)
+				.attr("d", d3.sankeyLinkHorizontal())
+				.attr("stroke-width", (d) => Math.max(1.5, d.width));
+		}
 
 		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
 		const nodeSelection = nodesGroup
 			.selectAll("g")
 			.data(graph.nodes, (d) => d.id)
 			.join("g")
-			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("class", (d) => {
+				const isIntervention = interventionNodeId && d.id === interventionNodeId;
+				return `sankey-node stage-${d.stage}${isIntervention ? " impacts-is-intervention" : ""}`;
+			})
 			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
 
-		nodeSelection
-			.append("rect")
-			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
-			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+		// Node body: a filled "remaining" rect, and (when carving) an empty
+		// 1px-bordered "avoided" rect stacked on top.
+		nodeSelection.each(function (node) {
+			const group = d3.select(this);
+			const nodeW = Math.max(1, node.x1 - node.x0);
+			const nodeH = Math.max(3, node.y1 - node.y0);
+			const ratio = carve && node.value > 0 ? Math.min(1, (node.avoided || 0) / node.value) : 0;
+			const avoidedH = nodeH * ratio;
+
+			if (avoidedH > 0.5) {
+				group
+					.append("rect")
+					.attr("class", "impacts-node-avoided")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", nodeW)
+					.attr("height", avoidedH);
+			}
+
+			group
+				.append("rect")
+				.attr("class", "impacts-node-remaining")
+				.attr("x", 0)
+				.attr("y", avoidedH)
+				.attr("width", nodeW)
+				.attr("height", Math.max(0, nodeH - avoidedH));
+
+			// Intervention node: a full-height outline marking the company's
+			// placement, mirroring a click-selected node in the main chart.
+			if (interventionNodeId && node.id === interventionNodeId) {
+				group
+					.append("rect")
+					.attr("class", "impacts-node-intervention")
+					.attr("x", 0)
+					.attr("y", 0)
+					.attr("width", nodeW)
+					.attr("height", nodeH);
+			}
+		});
 
 		nodeSelection
 			.append("title")
@@ -1555,85 +1734,116 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
 
+		renderGtReferenceAxis({
+			axisGroup,
+			markerGroup,
+			width,
+			height,
+			scenarioId: scenarioRequest.scenarioId
+		});
+
 		state.impactsRendered = {
 			nodeSelection,
 			linkSelection,
 			graph,
-			focalId,
-			scenarioKey
+			scenarioId: scenarioRequest.scenarioId,
+			scenarioKey: scenarioRequest.resolvedScenarioKey
 		};
-
-		applyImpactsHighlight(state.impactsActive);
 	}
 
-	// "before" (active=false): whole isolated view fully lit. "after"
-	// (active=true): re-tint the baseline ribbons matching the focal company's
-	// avoided links (dim the rest). Needs avoided.json; fetches it lazily and
-	// re-applies when it resolves.
-	function applyImpactsHighlight(active) {
-		state.impactsActive = active;
-		if (!state.impactsRendered) {
+	function syncImpactsScenarioButtons(activeScenarioId) {
+		const companySelected = !!state.impactsBusinessId;
+		const buttons = Array.from(document.querySelectorAll("[data-impacts-scenario-tab]"));
+		buttons.forEach((button) => {
+			const scenarioId = button.dataset.impactsScenarioTab;
+			const isActive = scenarioId === activeScenarioId;
+			// 2040C has no avoided data, so it can't be carved for a company.
+			const isDisabled = companySelected && scenarioId === "high-ai-electricity-demand";
+			button.classList.toggle("is-active", isActive);
+			button.setAttribute("aria-pressed", isActive ? "true" : "false");
+			button.disabled = isDisabled;
+			button.classList.toggle("is-disabled", isDisabled);
+		});
+	}
+
+	function setActiveImpactsScenario(scenarioId) {
+		if (!Object.prototype.hasOwnProperty.call(scenarioKeyById, scenarioId)) {
+			return;
+		}
+		// Block the disabled scenario while a company is selected.
+		if (state.impactsBusinessId && scenarioId === "high-ai-electricity-demand") {
+			return;
+		}
+		state.impactsScenarioId = scenarioId;
+		window.currentImpactsScenarioId = scenarioId;
+		syncImpactsScenarioButtons(scenarioId);
+		renderImpactsSankey(scenarioId);
+	}
+
+	function setupImpactsScenarioSync() {
+		const buttons = Array.from(document.querySelectorAll("[data-impacts-scenario-tab]"));
+		if (!buttons.length) {
 			return;
 		}
 
-		const { nodeSelection, linkSelection, graph, focalId } = state.impactsRendered;
-
-		if (!active) {
-			linkSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
-			nodeSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
-			return;
-		}
-
-		if (!state.avoidedData) {
-			// Show the full view until avoided data arrives, then re-apply.
-			linkSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
-			nodeSelection.classed("impacts-is-highlight", false).classed("impacts-is-muted", false);
-			ensureAvoidedData().then(() => {
-				if (state.impactsActive) {
-					applyImpactsHighlight(true);
-				}
+		buttons.forEach((button) => {
+			button.addEventListener("click", () => {
+				setActiveImpactsScenario(button.dataset.impactsScenarioTab || "enacted-policies");
 			});
+		});
+
+		syncImpactsScenarioButtons(state.impactsScenarioId);
+	}
+
+	function syncImpactsBusinessButtons(activeBusinessId) {
+		const buttons = Array.from(document.querySelectorAll("[data-impacts-business-tab]"));
+		buttons.forEach((button) => {
+			const isActive = button.dataset.impactsBusinessTab === activeBusinessId;
+			button.classList.toggle("is-active", isActive);
+			button.setAttribute("aria-selected", isActive ? "true" : "false");
+			button.setAttribute("tabindex", isActive ? "0" : "-1");
+		});
+	}
+
+	function setActiveImpactsBusiness(rawBusinessId) {
+		const businessId = normalizeBusinessSlug(rawBusinessId);
+		if (!supportedPortfolioBusinesses.has(businessId)) {
 			return;
 		}
 
-		const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
-		let avoidedPairs = avoidedPairsForCompany(nodeById);
-		// In-frame avoided pairs only (links touching the focal node).
-		let relevantPairs = new Set(
-			graph.links
-				.map((link) => `${link.source.id}|${link.target.id}`)
-				.filter((pair) => avoidedPairs.has(pair))
-		);
+		// Toggle off if the active company is clicked again -> back to baseline.
+		const nextBusinessId = state.impactsBusinessId === businessId ? "" : businessId;
+		state.impactsBusinessId = nextBusinessId;
+		window.currentImpactsBusinessId = nextBusinessId;
+		syncImpactsBusinessButtons(nextBusinessId);
 
-		// Fallback: if no avoided edge falls inside the isolated frame, highlight
-		// every in-frame link so the "after" state still reads as meaningful.
-		if (!relevantPairs.size) {
-			console.warn(
-				`[Sankey] No in-frame avoided links for "${IMPACTS_FOCAL_COMPANY}" (${IMPACTS_SCENARIO_KEY}); highlighting all focal links.`
-			);
-			relevantPairs = new Set(graph.links.map((link) => `${link.source.id}|${link.target.id}`));
-		}
-
-		const relevantNodes = new Set([focalId]);
-		for (const pair of relevantPairs) {
-			const [sourceId, targetId] = pair.split("|");
-			relevantNodes.add(sourceId);
-			relevantNodes.add(targetId);
-		}
-
-		const isRelevant = (link) => relevantPairs.has(`${link.source.id}|${link.target.id}`);
-		linkSelection
-			.classed("impacts-is-highlight", isRelevant)
-			.classed("impacts-is-muted", (link) => !isRelevant(link));
-		nodeSelection
-			.classed("impacts-is-highlight", (node) => relevantNodes.has(node.id))
-			.classed("impacts-is-muted", (node) => !relevantNodes.has(node.id));
+		// Selecting a company starts on Stated Commitments (2040B); clearing the
+		// selection keeps the current scenario but re-enables all buttons.
+		const scenarioId = nextBusinessId ? IMPACTS_DEFAULT_SCENARIO_ID : state.impactsScenarioId;
+		state.impactsScenarioId = scenarioId;
+		window.currentImpactsScenarioId = scenarioId;
+		syncImpactsScenarioButtons(scenarioId);
+		renderImpactsSankey(scenarioId);
 	}
 
-	// Scroll choreography for Climate Impacts: two lead beats crossfade in a
-	// pinned cell while the isolated chart switches from the "before" (fully
-	// lit) to the "after" (avoided highlighted) state as the second beat takes
-	// over.
+	function setupImpactsBusinessSync() {
+		const buttons = Array.from(document.querySelectorAll("[data-impacts-business-tab]"));
+		if (!buttons.length) {
+			return;
+		}
+
+		buttons.forEach((button) => {
+			button.addEventListener("click", () => {
+				setActiveImpactsBusiness(button.dataset.impactsBusinessTab || "");
+			});
+		});
+
+		syncImpactsBusinessButtons(state.impactsBusinessId);
+	}
+
+	// Scroll choreography for Climate Impacts: the two lead beats crossfade in a
+	// pinned cell. The chart itself is driven by the business/scenario selectors,
+	// not by scroll.
 	function setupImpactsScroll() {
 		const stageEl = document.querySelector(".impacts-layout__lead-stage");
 		const leadEls = Array.from(document.querySelectorAll(".impacts-layout__lead"));
@@ -1643,12 +1853,10 @@
 
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
-			// Jump to the final "after" state with both beats visible.
 			leadEls.forEach((el) => {
 				el.style.opacity = "";
 				el.style.visibility = "";
 			});
-			applyImpactsHighlight(true);
 			return;
 		}
 
@@ -1671,8 +1879,6 @@
 					: seg(progress, start, start + fade, end - fade, end);
 				gsap.set(el, { autoAlpha: Math.max(0, Math.min(1, opacity)) });
 			});
-			// Switch to the "after" highlight once the second beat leads.
-			applyImpactsHighlight(progress >= 0.5);
 		};
 
 		ScrollTrigger.matchMedia({
@@ -1696,7 +1902,6 @@
 					stageST.kill();
 					stageEl.classList.remove("is-pinned");
 					gsap.set(leadEls, { clearProps: "opacity,visibility" });
-					applyImpactsHighlight(false);
 				};
 			}
 		});
@@ -3190,7 +3395,7 @@
 				render();
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
-				renderImpactsSankey();
+				renderImpactsSankey(window.currentImpactsScenarioId || state.impactsScenarioId);
 				frameId = null;
 			});
 		};
