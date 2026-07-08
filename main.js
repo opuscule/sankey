@@ -1889,6 +1889,7 @@
 	function setupImpactsScroll() {
 		const stageEl = document.querySelector(".impacts-layout__lead-stage");
 		const leadEls = Array.from(document.querySelectorAll(".impacts-layout__lead"));
+		const businessesEl = document.querySelector(".impacts-businesses");
 		if (!stageEl || !leadEls.length) {
 			return;
 		}
@@ -1926,6 +1927,9 @@
 		ScrollTrigger.matchMedia({
 			"(min-width: 901px)": () => {
 				stageEl.classList.add("is-pinned");
+				if (businessesEl) {
+					businessesEl.classList.add("is-held");
+				}
 				gsap.set(leadEls, { autoAlpha: 0 });
 
 				const stageST = ScrollTrigger.create({
@@ -1940,9 +1944,37 @@
 
 				applyProgress(0);
 
+				let businessTween = null;
+				if (businessesEl) {
+					businessTween = gsap.fromTo(
+						businessesEl,
+						{ autoAlpha: 0, y: 34 },
+						{
+							autoAlpha: 1,
+							y: 0,
+							ease: "none",
+							scrollTrigger: {
+								trigger: businessesEl,
+								start: "top 85%",
+								end: "top 56%",
+								scrub: 0.55,
+								invalidateOnRefresh: true
+							}
+						}
+					);
+				}
+
 				return () => {
 					stageST.kill();
+					if (businessTween) {
+						businessTween.scrollTrigger && businessTween.scrollTrigger.kill();
+						businessTween.kill();
+					}
 					stageEl.classList.remove("is-pinned");
+					if (businessesEl) {
+						businessesEl.classList.remove("is-held");
+						gsap.set(businessesEl, { clearProps: "opacity,visibility,transform" });
+					}
 					gsap.set(leadEls, { clearProps: "opacity,visibility" });
 				};
 			}

@@ -802,6 +802,127 @@
 				min-height: 24vh;
 			}
 
+			.system-themes-intro {
+				background: var(--color-sector);
+				color: #fff;
+				min-height: 100vh;
+				display: grid;
+				padding: 12vh 6vw;
+				place-content: center;
+				place-items: center;
+			}
+
+			.system-themes-intro__body {
+				font-size: clamp(1.45rem, 2.8vw, 2.3rem);
+				font-weight: 750;
+				letter-spacing: -0.02em;
+				line-height: 1.2;
+				margin: 0 auto;
+				max-width: var(--max-copy-width);
+				text-wrap: balance;
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.system-themes-visual {
+				display: grid;
+				padding: 10vh 5vw 16vh;
+				place-items: center;
+			}
+
+			.system-themes-visual__image {
+				display: block;
+				height: auto;
+				max-width: 1100px;
+				object-fit: contain;
+				width: 100%;
+			}
+
+			.acknowledgements-intro {
+				background: var(--color-fuel);
+				color: var(--color-dark);
+				min-height: 100vh;
+				display: grid;
+				padding: 12vh 6vw;
+				place-content: center;
+				place-items: center;
+			}
+
+			.acknowledgements-intro__body {
+				font-size: clamp(1.9rem, 4.2vw, 3.4rem);
+				font-weight: 760;
+				letter-spacing: -0.03em;
+				line-height: 0.98;
+				margin: 0;
+				max-width: 20ch;
+				text-align: left;
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.acknowledgements-layout {
+				display: grid;
+				padding: 12vh 5vw 16vh;
+				place-items: center;
+			}
+
+			.acknowledgements-layout__copy {
+				color: #fff;
+				display: grid;
+				gap: 0.85rem;
+				max-width: 58ch;
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.acknowledgements-layout__lead {
+				font-size: clamp(1.15rem, 1.8vw, 1.55rem);
+				font-weight: 600;
+				line-height: 1.32;
+				margin: 0;
+			}
+
+			.acknowledgements-layout__meta {
+				color: rgba(255, 255, 255, 0.86);
+				font-size: clamp(0.98rem, 1.2vw, 1.14rem);
+				font-weight: 500;
+				line-height: 1.35;
+				margin: 0;
+			}
+
+			.acknowledgements-layout__subhead {
+				color: var(--color-fuel);
+				font-size: clamp(1.1rem, 1.45vw, 1.35rem);
+				font-weight: 700;
+				letter-spacing: -0.01em;
+				line-height: 1.2;
+				margin: 1.7rem 0 0;
+			}
+
+			.acknowledgements-layout__partners {
+				display: grid;
+				gap: 0.7rem;
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			.acknowledgements-layout__partners li {
+				align-items: baseline;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.45rem 0.8rem;
+			}
+
+			.acknowledgements-layout__partners span {
+				color: rgba(255, 255, 255, 0.76);
+				font-size: clamp(0.95rem, 1.1vw, 1.08rem);
+				font-weight: 500;
+			}
+
+			.acknowledgements-layout__partners strong {
+				color: #fff;
+				font-size: clamp(1rem, 1.2vw, 1.16rem);
+				font-weight: 700;
+			}
+
 			.scenarios-intro {
 				background: var(--color-final-energy);
 				color: var(--color-dark);
@@ -824,7 +945,8 @@
 			}
 
 			.scenarios-intro__body span {
-				color: var(--color-hero-highlight);
+				font-family: "Archivo Black", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-weight: 800;
 			}
 
 			.scenarios-intro > p {
@@ -1084,7 +1206,7 @@
 			}
 
 			.impacts-layout {
-				--impacts-hold: 240vh;
+				--impacts-hold: 300vh;
 				display: grid;
 				gap: 4vw;
 				grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
@@ -1222,10 +1344,27 @@
 			}
 
 			.impacts-businesses {
+				margin-top: 2.4rem;
+			}
+
+			.impacts-businesses__pin {
 				display: flex;
 				flex-direction: column;
 				gap: 0.35rem;
-				margin-top: 2.4rem;
+			}
+
+			.impacts-businesses.is-held {
+				height: var(--impacts-hold, 300vh);
+				margin-top: 0;
+			}
+
+			.impacts-businesses.is-held .impacts-businesses__pin {
+				align-content: center;
+				display: grid;
+				gap: 0.35rem;
+				min-height: 100vh;
+				position: sticky;
+				top: 0;
 			}
 
 			.impacts-businesses__company {
@@ -1474,6 +1613,19 @@
 					padding: 3.5rem 1rem;
 				}
 
+				.system-themes-intro {
+					min-height: 52vh;
+					padding: 3.5rem 1rem;
+				}
+
+				.system-themes-intro__body {
+					font-size: clamp(1.3rem, 7.2vw, 2.1rem);
+				}
+
+				.system-themes-visual {
+					padding: 3.5rem 1rem 5rem;
+				}
+
 				.portfolio-layout {
 					gap: 1rem;
 					grid-template-columns: 1fr;
@@ -1488,6 +1640,30 @@
 
 				.impacts-intro {
 					padding: 3.5rem 1rem;
+				}
+
+				.acknowledgements-intro {
+					min-height: 52vh;
+					padding: 3.5rem 1rem;
+				}
+
+				.acknowledgements-intro__body {
+					font-size: clamp(1.5rem, 8vw, 2.5rem);
+					max-width: var(--max-copy-width);
+				}
+
+				.acknowledgements-layout {
+					padding: 3.8rem 1rem 5rem;
+				}
+
+				.acknowledgements-layout__copy {
+					max-width: var(--max-copy-width);
+				}
+
+				.acknowledgements-layout__partners li {
+					align-items: flex-start;
+					flex-direction: column;
+					gap: 0.25rem;
 				}
 
 				.impacts-layout {
