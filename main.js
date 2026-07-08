@@ -761,6 +761,27 @@
 		return map;
 	}
 
+	// Draws the horizontal per-stage column labels (`.stage-header`) into `group`,
+	// centered over each stage's column. Joins by stage so it can be re-run on
+	// re-render without tearing the labels down. Mirrors the portfolio chart's
+	// `.sankey-stage-headers`.
+	function renderStageHeaders(group, graph, headerY) {
+		const columns = Array.from(stageXBounds(graph).entries())
+			.filter(([stage]) => STAGE_META[stage])
+			.map(([stage, bounds]) => ({ stage, cx: (bounds.x0 + bounds.x1) / 2 }));
+
+		return group
+			.selectAll("text.stage-header")
+			.data(columns, (d) => d.stage)
+			.join("text")
+			.attr("class", "stage-header")
+			.attr("x", (d) => Math.max(d.cx, 58))
+			.attr("y", headerY)
+			.attr("text-anchor", "middle")
+			.attr("fill", (d) => `var(${stageColorVars[d.stage]})`)
+			.text((d) => STAGE_META[d.stage].label);
+	}
+
 	// Select the first matching child of `sel`, appending it (with `cls`) if it
 	// does not exist yet. Lets the scenario chart keep persistent groups/elements
 	// across re-renders so their geometry can be transitioned instead of torn down.
@@ -1027,6 +1048,9 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
 
+		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
+		renderStageHeaders(headersGroup, graph, 24);
+
 		state.portfolioRendered = {
 			nodeSelection,
 			linkSelection,
@@ -1117,11 +1141,12 @@
 					.attr("fill", "none")
 					.attr("stroke-opacity", 1),
 				nodesGroup: svg.append("g").attr("class", "sankey-nodes"),
-				axisGroup: svg.append("g").attr("class", "scenario-axis")
+				axisGroup: svg.append("g").attr("class", "scenario-axis"),
+				headersGroup: svg.append("g").attr("class", "sankey-stage-headers")
 			};
 			state.scenarioLayers = layers;
 		}
-		const { defs, markerGroup, linksGroup, nodesGroup, axisGroup } = layers;
+		const { defs, markerGroup, linksGroup, nodesGroup, axisGroup, headersGroup } = layers;
 
 		// Link gradients depend on stage x-positions (and chart width), so rebuild
 		// them on every render — they are cheap and never animated.
@@ -1315,6 +1340,8 @@
 			duration,
 			ease
 		});
+
+		renderStageHeaders(headersGroup, graph, 24);
 
 		state.scenarioRendered = {
 			nodeSelection,
@@ -1655,7 +1682,13 @@
 						.attr(
 							"d",
 							impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW)
-						);
+						)
+						.style("stroke", () => {
+							// Border takes the colour of the node the ribbon comes from
+							// (the upstream / final-service side of the flow).
+							const colorVar = stageColorVars[link.source?.stage];
+							return colorVar ? `var(${colorVar})` : null;
+						});
 				}
 			});
 		} else {
@@ -1681,7 +1714,11 @@
 			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
 
 		// Node body: a filled "remaining" rect, and (when carving) an empty
-		// 1px-bordered "avoided" rect stacked on top.
+		// bordered "avoided" rect stacked on top. The avoided border is inset by
+		// half its stroke width so it sits inside the node footprint (flush with the
+		// remaining rect) instead of extending past it, and is drawn in the node's
+		// own stage colour to match the remaining fill.
+		const avoidedStrokeInset = 0.5;
 		nodeSelection.each(function (node) {
 			const group = d3.select(this);
 			const nodeW = Math.max(1, node.x1 - node.x0);
@@ -1690,13 +1727,15 @@
 			const avoidedH = nodeH * ratio;
 
 			if (avoidedH > 0.5) {
+				const stageColorVar = stageColorVars[node.stage];
 				group
 					.append("rect")
 					.attr("class", "impacts-node-avoided")
-					.attr("x", 0)
-					.attr("y", 0)
-					.attr("width", nodeW)
-					.attr("height", avoidedH);
+					.attr("x", avoidedStrokeInset)
+					.attr("y", avoidedStrokeInset)
+					.attr("width", Math.max(0, nodeW - avoidedStrokeInset * 2))
+					.attr("height", Math.max(0, avoidedH - avoidedStrokeInset))
+					.style("stroke", stageColorVar ? `var(${stageColorVar})` : null);
 			}
 
 			group
@@ -1741,6 +1780,9 @@
 			height,
 			scenarioId: scenarioRequest.scenarioId
 		});
+
+		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
+		renderStageHeaders(headersGroup, graph, 24);
 
 		state.impactsRendered = {
 			nodeSelection,

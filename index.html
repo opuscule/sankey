@@ -35,6 +35,16 @@
 		<link rel="preload" as="image" href="emissions.webp" />
 	</head>
 	<body>
+		<div id="site-bg" aria-hidden="true">
+			<iframe
+				id="night-sky-bg-frame"
+				title="Animated night sky background"
+				src="night-sky-bg.html"
+				loading="eager"
+				tabindex="-1"
+				sandbox="allow-scripts allow-same-origin"
+			></iframe>
+		</div>
 		<div id="introduction" class="section-anchor" aria-hidden="true"></div>
 		 
 		<section id="hero-intro" aria-label="Opening hero scene">
@@ -316,7 +326,11 @@
 					</div>
 				</div>
 			</section>
-			<section id="system-level-themes" class="section-placeholder" aria-label="System-Level Themes"></section>
+			<section id="system-level-themes" class="section-placeholder" aria-label="System-Level Themes">
+				<div>
+					<h2>The re</h2>
+				</div>
+			</section>
 			<section id="acknowledgements-citations" class="section-placeholder" aria-label="Acknowledgements and Citations"></section>
 
 
@@ -341,19 +355,42 @@
 			const heroLogo = document.querySelector(".hero-logo");
 			const heroHeadline = document.querySelector(".hero-headline");
 			const heroSubtitle = document.querySelector(".hero-subtitle");
+			const backgroundFrame = document.querySelector("#night-sky-bg-frame");
 
-			if (!prefersReducedMotion) {
-				gsap.to(document.body, {
-					"--page-bg-shift": "-140px",
-					ease: "none",
-					scrollTrigger: {
-						trigger: document.body,
-						start: "top top",
-						end: () => ScrollTrigger.maxScroll(window) || 1,
-						scrub: true,
-						invalidateOnRefresh: true
+			const updateBackgroundShift = () => {
+				if (!backgroundFrame) {
+					return;
+				}
+
+				if (prefersReducedMotion) {
+					document.body.style.setProperty("--site-bg-shift", "0px");
+					return;
+				}
+
+				const maxScroll = ScrollTrigger.maxScroll(window) || 1;
+				const progress = Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
+				const shiftPx = (-140 * progress).toFixed(2);
+				document.body.style.setProperty("--site-bg-shift", `${shiftPx}px`);
+			};
+
+			if (backgroundFrame) {
+				let rafPending = false;
+				const scheduleBackgroundShift = () => {
+					if (rafPending) {
+						return;
 					}
-				});
+					rafPending = true;
+					requestAnimationFrame(() => {
+						rafPending = false;
+						updateBackgroundShift();
+					});
+				};
+
+				window.addEventListener("scroll", scheduleBackgroundShift, { passive: true });
+				window.addEventListener("resize", scheduleBackgroundShift);
+				backgroundFrame.addEventListener("load", updateBackgroundShift, { once: true });
+				ScrollTrigger.addEventListener("refresh", updateBackgroundShift);
+				updateBackgroundShift();
 			}
 
 			if (heroIntro && heroStage && heroGlobe && heroLogo && heroHeadline && heroSubtitle) {

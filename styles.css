@@ -62,23 +62,28 @@
 				background: var(--color-dark);
 				overflow-x: hidden;
 				position: relative;
-				--page-bg-shift: 0px;
+				--site-bg-shift: 0px;
 				text-wrap: pretty;
 			}
 
-			body::before {
-				content: "";
+			#site-bg {
 				position: fixed;
 				inset: -12vh 0 0;
-				background-image: url("starry-night-sky-v2.jpg");
-				background-position: center center;
-				background-repeat: no-repeat;
-				background-size: cover;
+				overflow: hidden;
 				pointer-events: none;
-				transform: translate3d(0, var(--page-bg-shift), 0) scale(1.05);
-				transform-origin: center top;
-				will-change: transform;
 				z-index: -1;
+			}
+
+			#night-sky-bg-frame {
+				border: 0;
+				height: 124vh;
+				left: 0;
+				position: absolute;
+				top: 0;
+				transform: translate3d(0, var(--site-bg-shift), 0) scale(1.05);
+				transform-origin: center top;
+				width: 100vw;
+				will-change: transform;
 			}
 
 			#hero-intro {
