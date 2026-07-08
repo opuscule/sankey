@@ -1233,6 +1233,8 @@
 						),
 				(update) =>
 					update
+						.interrupt()
+						.style("opacity", null)
 						.style("stroke", linkStroke)
 						.call((sel) =>
 							sel
@@ -1304,6 +1306,7 @@
 					return group;
 				},
 				(update) => {
+					update.interrupt().style("opacity", null);
 					update
 						.select("rect")
 						.transition()
