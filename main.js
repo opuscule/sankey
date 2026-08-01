@@ -3,11 +3,13 @@
 	const baselinesPath = "baselines.json";
 	const nodeDetailsPath = "node_details.json";
 	const avoidedPath = "avoided.json";
+	const themesDataPath = "init-demo.json";
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const impactsChart = document.getElementById("impacts-sankey-chart");
+	const themesChart = document.getElementById("themes-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 
 	// --- Shared math helpers --------------------------------------------------
@@ -293,6 +295,70 @@
 		});
 	}
 
+	// --- Selected-node info panel (left copy column) ----------------------
+	function getNodePanel() {
+		if (state.nodePanel) {
+			return state.nodePanel;
+		}
+		const copy = document.querySelector("#sankey-narrative .sankey-copy");
+		if (!copy) {
+			return null;
+		}
+		const root = document.createElement("div");
+		root.className = "sankey-node-panel";
+		root.setAttribute("aria-live", "polite");
+		root.innerHTML =
+			'<h3 class="node-panel__title">' +
+			'<span class="node-panel__stage"></span>' +
+			'<span class="node-panel__sep"> / </span>' +
+			'<span class="node-panel__name"></span>' +
+			"</h3>" +
+			'<p class="node-panel__desc"></p>' +
+			'<div class="node-panel__callout">' +
+			'<div class="node-panel__throughput"></div>' +
+			'<div class="node-panel__share"></div>' +
+			"</div>";
+		copy.appendChild(root);
+		state.nodePanel = {
+			root,
+			title: root.querySelector(".node-panel__title"),
+			stage: root.querySelector(".node-panel__stage"),
+			name: root.querySelector(".node-panel__name"),
+			desc: root.querySelector(".node-panel__desc"),
+			throughput: root.querySelector(".node-panel__throughput"),
+			share: root.querySelector(".node-panel__share")
+		};
+		return state.nodePanel;
+	}
+
+	function showNodePanel(info) {
+		const panel = getNodePanel();
+		if (!panel) {
+			return;
+		}
+		panel.stage.textContent = info.stageLabel;
+		panel.name.textContent = info.name;
+		panel.title.style.color = info.stageVar ? `var(${info.stageVar})` : "";
+		panel.desc.textContent = info.description || "";
+		panel.throughput.textContent = `${fmtMt(info.throughputMt / 1000)} Gt`;
+		panel.share.textContent = `${d3.format(".1f")(info.sharePct)}% of ${info.stageLabel}`;
+		panel.root.classList.add("is-visible");
+		const copy = document.querySelector("#sankey-narrative .sankey-copy");
+		if (copy) {
+			copy.classList.add("node-selected");
+		}
+	}
+
+	function hideNodePanel() {
+		if (state.nodePanel) {
+			state.nodePanel.root.classList.remove("is-visible");
+		}
+		const copy = document.querySelector("#sankey-narrative .sankey-copy");
+		if (copy) {
+			copy.classList.remove("node-selected");
+		}
+	}
+
 	setupNarrativeBeats();
 
 	if (!chart || !statusEl || !window.d3 || !d3.sankey) {
@@ -350,7 +416,16 @@
 		portfolioBusinessNodeMap: new Map(),
 		nodeDetails: null,
 		nodeDetailsPromise: null,
-		introAssets: null
+		introAssets: null,
+		nodePanel: null,
+		themesData: null,
+		themesPromise: null,
+		themesModel: null,
+		themesRendered: null,
+		themesProgress: 0,
+		themesLeadEl: null,
+		themesFinaleLeadEl: null,
+		finaleOrder: null
 	};
 
 	const fmtMt = d3.format(",.2f");
@@ -668,6 +743,7 @@
 		setupLeadFades();
 		setupScenarioLeadFades();
 		setupImpactsScroll();
+		initThemesSection();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -759,6 +835,48 @@
 			}
 		});
 		return map;
+	}
+
+	// Spread each stage's nodes to fill the vertical extent [top, bottom] so every
+	// column aligns top *and* bottom; node heights (value) stay the same, the
+	// slack is distributed as equal gaps between nodes. Mutates node/link y in
+	// place. Shared by any sankey that wants full-height, top/bottom-aligned columns.
+	function spreadStageHeights(graph, top, bottom) {
+		const extentHeight = bottom - top;
+		const deltaByNode = new Map();
+		d3.group(graph.nodes, (node) => node.stage).forEach((stageNodes) => {
+			const ordered = stageNodes.slice().sort((a, b) => a.y0 - b.y0);
+			const count = ordered.length;
+			const totalHeight = d3.sum(ordered, (node) => node.y1 - node.y0);
+			const slack = Math.max(0, extentHeight - totalHeight);
+
+			if (count === 1) {
+				const node = ordered[0];
+				const newY0 = top + slack / 2;
+				deltaByNode.set(node.id, newY0 - node.y0);
+				const nodeHeight = node.y1 - node.y0;
+				node.y0 = newY0;
+				node.y1 = newY0 + nodeHeight;
+				return;
+			}
+
+			const gap = slack / (count - 1);
+			let cursor = top;
+			ordered.forEach((node) => {
+				const nodeHeight = node.y1 - node.y0;
+				deltaByNode.set(node.id, cursor - node.y0);
+				node.y0 = cursor;
+				node.y1 = cursor + nodeHeight;
+				cursor += nodeHeight + gap;
+			});
+		});
+
+		graph.links.forEach((link) => {
+			link.y0 += deltaByNode.get(link.source.id) || 0;
+			link.y1 += deltaByNode.get(link.target.id) || 0;
+		});
+
+		return graph;
 	}
 
 	// Draws the horizontal per-stage column labels (`.stage-header`) into `group`,
@@ -955,6 +1073,9 @@
 			])
 			.iterations(64)(graph);
 
+		// Align every stage top *and* bottom so the expanded columns are equal height.
+		spreadStageHeights(graph, 44, height - 34);
+
 		const defs = svg.append("defs");
 		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
@@ -1119,6 +1240,10 @@
 				[width - 28, axisBottom]
 			])
 			.iterations(64)(graph);
+
+		// Align every stage top *and* bottom within the GT-scaled band so columns are
+		// equal height; the band's own top still encodes this scenario's GT total.
+		spreadStageHeights(graph, gtToY(layoutGt), axisBottom);
 
 		// Persistent layer groups so scenario switches can tween geometry instead of
 		// tearing the chart down and rebuilding it from scratch each time.
@@ -1566,6 +1691,12 @@
 				[width - 28, axisBottom]
 			])
 			.iterations(64)(graph);
+
+		// Align every stage top *and* bottom within the GT-scaled band so columns are
+		// equal height; run before the avoided sub-height math so ribbons stay aligned.
+		if (!carve) {
+			spreadStageHeights(graph, gtToY(layoutGt), axisBottom);
+		}
 
 		// Per-node avoided amount, summed on the node's height-defining side so it
 		// aligns with the carved ribbons entering/leaving that side.
@@ -2516,6 +2647,10 @@
 				])
 				.iterations(64)(layoutGraph);
 
+			// Spread each stage's nodes to fill the full vertical extent so every
+			// column aligns top *and* bottom (shared helper).
+			spreadStageHeights(layoutGraph, sankeyExtentTop, sankeyExtentBottom);
+
 			return layoutGraph;
 		};
 
@@ -3322,10 +3457,40 @@
 			linkSelection.classed("is-faded", false).classed("is-active", false);
 			nodeSelection.classed("is-faded", false).classed("is-selected", false);
 			statusEl.textContent = "Click a node to isolate direct flows";
+			hideNodePanel();
 			return;
 		}
 
 		const selectedId = state.selectedNodeId;
+
+		// Populate the left-column info panel for the selected node (shown in
+		// all selection modes, before chain data resolves).
+		{
+			const panelNode = graph.nodes.find((node) => node.id === selectedId);
+			if (panelNode) {
+				const inflowByNode = new Map();
+				const outflowByNode = new Map();
+				graph.links.forEach((link) => {
+					inflowByNode.set(link.target.id, (inflowByNode.get(link.target.id) || 0) + link.value);
+					outflowByNode.set(link.source.id, (outflowByNode.get(link.source.id) || 0) + link.value);
+				});
+				const throughputOf = (id) =>
+					(inflowByNode.get(id) || 0) > 0 ? inflowByNode.get(id) : outflowByNode.get(id) || 0;
+				const throughputMt = throughputOf(selectedId);
+				const stageTotal = d3.sum(
+					graph.nodes.filter((node) => node.stage === panelNode.stage),
+					(node) => throughputOf(node.id)
+				);
+				showNodePanel({
+					stageLabel: STAGE_META[panelNode.stage]?.label ?? `Stage ${panelNode.stage}`,
+					name: panelNode.label,
+					description: panelNode.description,
+					stageVar: stageColorVars[panelNode.stage],
+					throughputMt,
+					sharePct: stageTotal > 0 ? (throughputMt / stageTotal) * 100 : 0
+				});
+			}
+		}
 
 		// Full-chain isolation needs node_details.json; show the direct-neighbor
 		// fallback until it arrives, then upgrade in place if still selected.
@@ -3462,6 +3627,677 @@
 		statusEl.textContent = `${selectedNode.label}: ${formatMass(total)} total, top path ${topConnection.label} (${fmtPct((topConnection.value / total) * 100)}%)`;
 	}
 
+	// --- Portfolio Themes section --------------------------------------------
+	// A scroll-driven walk through the four portfolio themes. On entry the roster
+	// is dimmed and the themes Sankey is dark; each theme's scroll window lights
+	// its companies and their nodes, then resets before the next theme.
+	const THEME_ORDER = [
+		"IndustrialProcessesAndMaterials",
+		"Electrification",
+		"CleanEnergyGeneration",
+		"EnergyEfficiency"
+	];
+
+	// Scroll budget (vh) that composes #portfolio-themes min-height (1280vh in CSS).
+	// After the 4-theme walk the section keeps the layout pinned for a finale:
+	// fade the lead copy out, re-light every company/node, sweep the links in,
+	// then a plain hold before the sticky layout releases.
+	const THEMES_TRAVEL_VH = 780; // four-theme walk
+	const FINALE_LEAD_FADE_VH = 60; // "Consider four themes" fade-out
+	const FINALE_ANIM_VH = 240; // 0-100 finale timeline
+	const FINALE_HOLD_VH = 100; // pinned hold before unpin
+	const THEMES_SCROLL_VH =
+		THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH + FINALE_HOLD_VH;
+	const P_THEMES_END = THEMES_TRAVEL_VH / THEMES_SCROLL_VH;
+	const P_LEAD_END = (THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH) / THEMES_SCROLL_VH;
+	const P_FINALE_END =
+		(THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH) / THEMES_SCROLL_VH;
+
+	const THEME_BLURBS = {
+		IndustrialProcessesAndMaterials:
+			"Companies focused on industrial processes and materials tend to be concentrated within the industrial sectors of the global economy and are working to lower the emissions of producing essential materials like cement and steel.",
+		Electrification:
+			"Companies focused on electrification are concentrated within the transportation and building energy use parts of the global economy and are working to transition key equipment like planes, trucks, and residential heating and cooling systems to electric versions.",
+		CleanEnergyGeneration:
+			"Companies focused on clean energy generation are all concentrated within electricity and heat generation and are working to generate low emissions electricity and heat that flows through the global economy.",
+		EnergyEfficiency:
+			"Companies focused on energy efficiency tend to be concentrated within the digital parts of the global economy and are working to reduce the energy requirements of equipment like electronics, computing infrastructure, and the grid."
+	};
+
+	// init-demo.json is the demo roster (24 companies tagged by theme). It is only
+	// used by this section, so fetch it lazily and cache the parsed result.
+	function ensureThemesData() {
+		if (state.themesData) {
+			return Promise.resolve(state.themesData);
+		}
+		if (state.themesPromise) {
+			return state.themesPromise;
+		}
+		state.themesPromise = fetch(themesDataPath)
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`Failed to fetch ${themesDataPath}: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then((data) => {
+				state.themesData = data;
+				return data;
+			})
+			.catch((error) => {
+				state.themesPromise = null;
+				throw error;
+			});
+		return state.themesPromise;
+	}
+
+	// Group the demo companies by theme, preserving THEME_ORDER, and strip the
+	// leading "_" that marks fake companies from their display labels.
+	function buildThemesModel(data) {
+		const companies = data?.intervention?.companies;
+		if (!Array.isArray(companies)) {
+			return [];
+		}
+		const byTheme = new Map();
+		companies.forEach((company) => {
+			const slug = String(company?.theme || "").trim();
+			if (!slug) {
+				return;
+			}
+			if (!byTheme.has(slug)) {
+				byTheme.set(slug, {
+					slug,
+					label: String(company?.theme_label || slug).trim(),
+					companies: [],
+					nodeIds: new Set()
+				});
+			}
+			const theme = byTheme.get(slug);
+			const label = String(company?.company_label || company?.company || "")
+				.replace(/^_+/, "")
+				.trim();
+			const nodeId = String(company?.node || "").trim();
+			theme.companies.push({ label, nodeId });
+			if (nodeId) {
+				theme.nodeIds.add(nodeId);
+			}
+		});
+		const ordered = THEME_ORDER.filter((slug) => byTheme.has(slug)).concat(
+			Array.from(byTheme.keys()).filter((slug) => !THEME_ORDER.includes(slug))
+		);
+		return ordered.map((slug) => {
+			const theme = byTheme.get(slug);
+			theme.blurb = THEME_BLURBS[slug] || "";
+			return theme;
+		});
+	}
+
+	// Build the left-column info blocks and the four persistent roster columns,
+	// caching element references on the model for the scroll handler to toggle.
+	function renderThemesRoster(model) {
+		const infoWrap = document.querySelector(".themes-info");
+		const rosterWrap = document.querySelector(".themes-roster");
+		if (!infoWrap || !rosterWrap) {
+			return;
+		}
+		infoWrap.innerHTML = "";
+		rosterWrap.innerHTML = "";
+		model.forEach((theme) => {
+			const info = document.createElement("div");
+			info.className = "themes-info__block";
+			info.dataset.theme = theme.slug;
+			info.style.opacity = "0";
+			const infoTitle = document.createElement("h3");
+			infoTitle.className = "themes-info__title";
+			infoTitle.textContent = theme.label;
+			const infoBody = document.createElement("p");
+			infoBody.className = "themes-info__body";
+			infoBody.textContent = theme.blurb;
+			info.append(infoTitle, infoBody);
+			infoWrap.append(info);
+			theme.infoEl = info;
+
+			const col = document.createElement("div");
+			col.className = "themes-col";
+			col.dataset.theme = theme.slug;
+			const colTitle = document.createElement("h4");
+			colTitle.className = "themes-col__title";
+			colTitle.textContent = theme.label;
+			const list = document.createElement("ul");
+			list.className = "themes-col__list";
+			theme.companies.forEach((company) => {
+				const item = document.createElement("li");
+				item.className = "themes-company";
+				item.textContent = company.label;
+				list.append(item);
+				company.el = item;
+			});
+			col.append(colTitle, list);
+			rosterWrap.append(col);
+			theme.columnEl = col;
+		});
+	}
+
+	// Non-interactive full baseline Sankey for the themes section. Nodes start
+	// dark; drawThemes drives per-node opacity so only the active theme lights up.
+	function renderThemesSankey() {
+		if (!themesChart || !state.nodes.length || !state.links.length) {
+			return;
+		}
+
+		const bounds = themesChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(560, Math.floor(bounds.height));
+
+		d3.select(themesChart).selectAll("*").remove();
+
+		const svg = d3
+			.select(themesChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+
+		const graph = {
+			nodes: state.nodes.map((node) => ({ ...node })),
+			links: state.links.map((link) => ({ ...link }))
+		};
+
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(20)
+			.nodePadding(9)
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[28, 44],
+				[width - 28, height - 34]
+			])
+			.iterations(64)(graph);
+
+		// Align every stage top *and* bottom so the expanded columns are equal height.
+		spreadStageHeights(graph, 44, height - 34);
+
+		// Per-stage-pair link gradients (themes-specific ids, anchored in user
+		// space to this chart's columns) so each ribbon reads in its stage colors.
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
+		const stagePairs = Array.from(
+			new Set(
+				graph.links.map((link) => `${link.source?.stage ?? "?"}-${link.target?.stage ?? "?"}`)
+			)
+		);
+		stagePairs.forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map((v) => Number.parseInt(v, 10));
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `themes-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${sourceColorVar})`);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`);
+		});
+		const themesLinkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#themes-link-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
+		const linksGroup = svg.append("g").attr("fill", "none").attr("class", "sankey-links");
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(graph.links, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.attr("d", d3.sankeyLinkHorizontal())
+			.style("stroke", themesLinkStroke)
+			.attr("stroke-width", (d) => Math.max(1, d.width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
+			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => (d.stage !== 7 ? Math.max(1, d.x1 - d.x0) + 7 : -7))
+			.attr("y", (d) => Math.max(3, d.y1 - d.y0) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
+
+		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
+		renderStageHeaders(headersGroup, graph, 24);
+
+		state.themesRendered = { nodeSelection, linkSelection, graph };
+		drawThemes(state.themesProgress || 0);
+	}
+
+	// Split scroll progress into four equal theme windows. Within the active
+	// window: fade the theme copy in/out, brighten its roster column, and reveal
+	// its companies (and their nodes) in a staggered rapid-fire sequence. Non-
+	// active themes are fully reset, so only one theme is ever lit.
+	function drawThemesWalk(progress) {
+		const model = state.themesModel;
+		const rendered = state.themesRendered;
+		if (!model || !model.length) {
+			return;
+		}
+
+		const count = model.length;
+		const activeIdx = Math.min(count - 1, Math.floor(progress * count));
+		const local = clamp01(progress * count - activeIdx);
+
+		const fade = 0.12;
+		let presence = 1;
+		if (local < fade) {
+			presence = local / fade;
+		} else if (local > 1 - fade) {
+			presence = (1 - local) / fade;
+		}
+		presence = clamp01(presence);
+
+		const revealStart = 0.16;
+		const revealSpan = 0.52;
+		const perCompanyFade = 0.14;
+
+		model.forEach((theme, index) => {
+			const isActive = index === activeIdx;
+			if (theme.infoEl) {
+				theme.infoEl.style.opacity = String(isActive ? presence : 0);
+			}
+			if (theme.columnEl) {
+				theme.columnEl.classList.toggle("is-active", isActive && presence > 0.4);
+			}
+			if (!isActive) {
+				theme.companies.forEach((company) => {
+					if (company.el) {
+						company.el.classList.remove("is-lit");
+					}
+				});
+			}
+		});
+
+		const active = model[activeIdx];
+		const total = active.companies.length;
+		const stagger = total > 1 ? revealSpan / total : 0;
+		const nodeLit = new Map();
+		active.companies.forEach((company, index) => {
+			const startT = revealStart + index * stagger;
+			const lit = smoothstep(clamp01((local - startT) / perCompanyFade)) * presence;
+			if (company.el) {
+				company.el.classList.toggle("is-lit", lit > 0.45);
+			}
+			if (company.nodeId) {
+				nodeLit.set(company.nodeId, Math.max(nodeLit.get(company.nodeId) || 0, lit));
+			}
+		});
+
+		if (rendered && rendered.nodeSelection) {
+			rendered.nodeSelection.style("opacity", (d) => 0.05 + 0.95 * (nodeLit.get(d.id) || 0));
+		}
+	}
+
+	// A deterministic non-linear reveal order for the finale (seeded so scrubbing
+	// back and forth is stable, yet not the top-to-bottom order used per theme).
+	function getFinaleOrder() {
+		if (state.finaleOrder) {
+			return state.finaleOrder;
+		}
+		const flat = [];
+		(state.themesModel || []).forEach((theme) => {
+			theme.companies.forEach((company) => flat.push(company));
+		});
+		let seed = 0x9e3779b9;
+		const rand = () => {
+			seed |= 0;
+			seed = (seed + 0x6d2b79f5) | 0;
+			let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+		};
+		for (let i = flat.length - 1; i > 0; i--) {
+			const j = Math.floor(rand() * (i + 1));
+			[flat[i], flat[j]] = [flat[j], flat[i]];
+		}
+		state.finaleOrder = flat;
+		return flat;
+	}
+
+	// Precompute each company's FULL impact chain (all nodes/links it touches
+	// across the columns), reusing the same node_details.json chains as the
+	// portfolio-business highlight. Owners are stored by finale reveal index so
+	// the spider-web can time each link/node to when its company lights up.
+	// `ring` = column distance from the company's main node (concentric rings).
+	// Falls back to direct neighbours until node_details.json has loaded, and
+	// only caches once it has (so we never lock in the fallback).
+	function buildFinaleChains() {
+		if (state.finaleChains) {
+			return state.finaleChains;
+		}
+		const rendered = state.themesRendered;
+		const result = {
+			nodeOwners: new Map(),
+			linkOwners: new Map(),
+			mainNodeIndices: new Map()
+		};
+		if (!rendered || !rendered.graph) {
+			return result;
+		}
+		const nodeById = new Map(rendered.graph.nodes.map((node) => [node.id, node]));
+		const addNodeOwner = (nodeId, index) => {
+			let arr = result.nodeOwners.get(nodeId);
+			if (!arr) {
+				arr = [];
+				result.nodeOwners.set(nodeId, arr);
+			}
+			arr.push(index);
+		};
+		const addLinkOwner = (key, index, ring) => {
+			let arr = result.linkOwners.get(key);
+			if (!arr) {
+				arr = [];
+				result.linkOwners.set(key, arr);
+			}
+			arr.push({ companyIndex: index, ring });
+		};
+
+		getFinaleOrder().forEach((company, index) => {
+			const mainNodeId = company.nodeId;
+			if (!mainNodeId || !nodeById.has(mainNodeId)) {
+				return;
+			}
+			const mainStage = nodeById.get(mainNodeId).stage;
+			let mains = result.mainNodeIndices.get(mainNodeId);
+			if (!mains) {
+				mains = [];
+				result.mainNodeIndices.set(mainNodeId, mains);
+			}
+			mains.push(index);
+			addNodeOwner(mainNodeId, index);
+
+			// Only reach for the full chain once node_details.json is loaded, so we
+			// don't poison chainLinksFor's cache with a premature null.
+			const chainLinks = state.nodeDetails ? chainLinksFor(mainNodeId, nodeById) : null;
+			const pairs = chainLinks
+				? chainLinks.map((link) => [link.sourceId, link.targetId])
+				: rendered.graph.links
+						.filter((link) => link.source.id === mainNodeId || link.target.id === mainNodeId)
+						.map((link) => [link.source.id, link.target.id]);
+
+			pairs.forEach(([sourceId, targetId]) => {
+				addNodeOwner(sourceId, index);
+				addNodeOwner(targetId, index);
+				const sStage = nodeById.get(sourceId)?.stage ?? mainStage;
+				const tStage = nodeById.get(targetId)?.stage ?? mainStage;
+				const ring = Math.min(Math.abs(sStage - mainStage), Math.abs(tStage - mainStage));
+				addLinkOwner(`${sourceId}|${targetId}`, index, ring);
+			});
+		});
+
+		if (state.nodeDetails) {
+			state.finaleChains = result;
+		}
+		return result;
+	}
+
+	// Drive the whole section: the four-theme walk, then the pinned finale
+	// (lead crossfade -> re-light everything -> sweep links -> hold).
+	function drawThemes(progress) {
+		state.themesProgress = progress;
+		const model = state.themesModel;
+		if (!model || !model.length) {
+			return;
+		}
+
+		if (!state.themesLeadEl) {
+			state.themesLeadEl = document.querySelector(".themes-lead");
+			state.themesFinaleLeadEl = document.querySelector(".themes-finale-lead");
+		}
+
+		if (progress < P_THEMES_END) {
+			drawThemesWalk(clamp01(progress / P_THEMES_END));
+			if (state.themesLeadEl) {
+				state.themesLeadEl.style.opacity = "1";
+			}
+			if (state.themesFinaleLeadEl) {
+				state.themesFinaleLeadEl.style.opacity = "0";
+			}
+			drawFinale(0, true);
+			return;
+		}
+
+		// Beyond the walk the roster/nodes are driven entirely by the finale;
+		// the per-theme blurbs stay hidden so the finale sentence stands alone.
+		model.forEach((theme) => {
+			if (theme.infoEl) {
+				theme.infoEl.style.opacity = "0";
+			}
+		});
+
+		const leadT = clamp01((progress - P_THEMES_END) / (P_LEAD_END - P_THEMES_END));
+		if (state.themesLeadEl) {
+			state.themesLeadEl.style.opacity = String(1 - leadT);
+		}
+
+		const finaleLocal = clamp01((progress - P_LEAD_END) / (P_FINALE_END - P_LEAD_END));
+		drawFinale(finaleLocal * 100, false);
+	}
+
+	// Finale on a 0-100 timeline: 1-35 sentence fades in and holds; 10-50 every
+	// company (shuffled order) lights its FULL impact chain (all nodes it touches
+	// across the columns), main nodes get the white .is-selected border, and each
+	// company's links spider-web out from its main node (concentric rings, so
+	// closer columns light first). Non-chain links stay dark. Past 100 it holds.
+	function drawFinale(t, idle) {
+		const model = state.themesModel;
+		const rendered = state.themesRendered;
+		if (!model || !model.length) {
+			return;
+		}
+
+		if (idle) {
+			// The walk owns column/company/node opacity; the links and the selected
+			// border are finale-owned, so hold links faint and clear the border.
+			if (rendered && rendered.linkSelection) {
+				rendered.linkSelection.style("opacity", 0);
+			}
+			if (rendered && rendered.nodeSelection) {
+				rendered.nodeSelection.classed("is-selected", false);
+			}
+			return;
+		}
+
+		// #1 sentence
+		if (state.themesFinaleLeadEl) {
+			state.themesFinaleLeadEl.style.opacity = String(clamp01((t - 1) / 34));
+		}
+
+		// #2 companies: per-company lit value keyed by finale reveal index.
+		const order = getFinaleOrder();
+		const n = order.length;
+		const perFade = 8;
+		const stagger = n > 1 ? (40 - perFade) / (n - 1) : 0;
+		const startTFor = (index) => 10 + index * stagger;
+		const litByIndex = new Array(n);
+		const litCompanies = new Set();
+		order.forEach((company, index) => {
+			const lit = smoothstep(clamp01((t - startTFor(index)) / perFade));
+			litByIndex[index] = lit;
+			if (company.el) {
+				company.el.classList.toggle("is-lit", lit > 0.45);
+			}
+			if (lit > 0.45) {
+				litCompanies.add(company);
+			}
+		});
+
+		model.forEach((theme) => {
+			if (theme.columnEl) {
+				const anyLit = theme.companies.some((company) => litCompanies.has(company));
+				theme.columnEl.classList.toggle("is-active", anyLit);
+			}
+		});
+
+		const chains = buildFinaleChains();
+
+		// #3 nodes: every chain node lights to its brightest owning company; the
+		// company main nodes also get the white selected border.
+		if (rendered && rendered.nodeSelection) {
+			rendered.nodeSelection
+				.style("opacity", (d) => {
+					const owners = chains.nodeOwners.get(d.id);
+					let lit = 0;
+					if (owners) {
+						for (const oi of owners) {
+							if (litByIndex[oi] > lit) lit = litByIndex[oi];
+						}
+					}
+					return 0.05 + 0.95 * lit;
+				})
+				.classed("is-selected", (d) => {
+					const mains = chains.mainNodeIndices.get(d.id);
+					return mains ? mains.some((oi) => litByIndex[oi] > 0.45) : false;
+				});
+		}
+
+		// #4 links spider-web out from each company's main node.
+		if (rendered && rendered.linkSelection) {
+			const RING_DELAY = 6;
+			const gFade = 14;
+			rendered.linkSelection.style("opacity", (d) => {
+				const owners = chains.linkOwners.get(`${d.source.id}|${d.target.id}`);
+				if (!owners) {
+					return 0;
+				}
+				let startT = Infinity;
+				for (const o of owners) {
+					const s = startTFor(o.companyIndex) + RING_DELAY * o.ring;
+					if (s < startT) startT = s;
+				}
+				const p = clamp01((t - startT) / gFade);
+				const eased = 1 - (1 - p) * (1 - p);
+				return 0.35 * eased;
+			});
+		}
+	}
+
+	// Reduced-motion / no-GSAP fallback: show every theme's copy and roster lit
+	// and light all theme nodes, with no scroll dependency.
+	function applyThemesReducedMotion() {
+		const model = state.themesModel;
+		if (!model) {
+			return;
+		}
+		const lead = document.querySelector(".themes-lead");
+		const finaleLead = document.querySelector(".themes-finale-lead");
+		if (lead) {
+			lead.style.opacity = "0";
+		}
+		if (finaleLead) {
+			finaleLead.style.opacity = "1";
+		}
+		model.forEach((theme) => {
+			if (theme.infoEl) {
+				theme.infoEl.style.opacity = "0";
+			}
+			if (theme.columnEl) {
+				theme.columnEl.classList.add("is-active");
+			}
+			theme.companies.forEach((company) => {
+				if (company.el) {
+					company.el.classList.add("is-lit");
+				}
+			});
+		});
+		const chains = buildFinaleChains();
+		if (state.themesRendered && state.themesRendered.nodeSelection) {
+			state.themesRendered.nodeSelection
+				.style("opacity", (d) => (chains.nodeOwners.has(d.id) ? 1 : 0.05))
+				.classed("is-selected", (d) => chains.mainNodeIndices.has(d.id));
+		}
+		if (state.themesRendered && state.themesRendered.linkSelection) {
+			state.themesRendered.linkSelection.style("opacity", (d) =>
+				chains.linkOwners.has(`${d.source.id}|${d.target.id}`) ? 0.4 : 0
+			);
+		}
+	}
+
+	function setupThemesScroll() {
+		const section = document.getElementById("portfolio-themes");
+		if (!section) {
+			return;
+		}
+
+		// The walk/finale is scrubbed (driven by the user's own scroll), so it runs
+		// under reduced-motion too; only fall back when GSAP itself is unavailable.
+		if (!window.gsap || !window.ScrollTrigger) {
+			applyThemesReducedMotion();
+			return;
+		}
+
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawThemes(self.progress),
+			onRefresh: (self) => drawThemes(self.progress)
+		});
+		drawThemes(0);
+	}
+
+	async function initThemesSection() {
+		if (!themesChart) {
+			return;
+		}
+		try {
+			const data = await ensureThemesData();
+			state.themesModel = buildThemesModel(data);
+			renderThemesRoster(state.themesModel);
+			renderThemesSankey();
+			setupThemesScroll();
+			// Warm the full-chain data so the finale can spider-web the complete
+			// impact of each company, then re-apply the current state.
+			ensureNodeDetails().then(() => {
+				state.finaleChains = null;
+				buildFinaleChains();
+				if (!window.gsap || !window.ScrollTrigger) {
+					applyThemesReducedMotion();
+				} else {
+					drawThemes(state.themesProgress || 0);
+				}
+			});
+		} catch (error) {
+			console.warn("Themes section init failed:", error);
+		}
+	}
+
 	function setupResize() {
 		let frameId = null;
 		const schedule = () => {
@@ -3473,6 +4309,7 @@
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 				renderImpactsSankey(window.currentImpactsScenarioId || state.impactsScenarioId);
+				renderThemesSankey();
 				frameId = null;
 			});
 		};

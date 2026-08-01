@@ -373,6 +373,75 @@
 				font-weight: 800;
 			}
 
+			.sankey-node-panel {
+				align-self: center;
+				display: flex;
+				flex-direction: column;
+				gap: 1.1rem;
+				grid-area: 1 / 1;
+				max-width: 100%;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.35s ease;
+				visibility: hidden;
+				width: 100%;
+			}
+
+			.sankey-node-panel.is-visible {
+				opacity: 1;
+				visibility: visible;
+			}
+
+			.node-panel__title {
+				font-size: clamp(1.6rem, 2.3vw, 2.3rem);
+				font-weight: 300;
+				line-height: 1.15;
+				margin: 0;
+			}
+
+			.node-panel__name {
+				font-weight: 700;
+			}
+
+			.node-panel__desc {
+				color: #fff;
+				font-size: clamp(1rem, 1.25vw, 1.2rem);
+				font-weight: 400;
+				line-height: 1.45;
+				margin: 0;
+			}
+
+			.node-panel__callout {
+				align-items: baseline;
+				background: rgba(6, 20, 38, 0.55);
+				border: 1px solid rgba(120, 170, 220, 0.28);
+				border-radius: 14px;
+				column-gap: 0.9rem;
+				display: flex;
+				flex-wrap: wrap;
+				padding: 1rem 1.25rem;
+				row-gap: 0.35rem;
+			}
+
+			.node-panel__throughput {
+				color: #fff;
+				font-size: clamp(1.8rem, 2.6vw, 2.6rem);
+				font-weight: 700;
+				letter-spacing: -0.02em;
+				line-height: 1;
+			}
+
+			.node-panel__share {
+				color: rgba(229, 241, 255, 0.72);
+				font-size: clamp(0.85rem, 1vw, 1rem);
+				font-weight: 400;
+			}
+
+			.sankey-copy.node-selected .sankey-snippet {
+				opacity: 0 !important;
+				pointer-events: none;
+			}
+
 			#full-sankey {
 				display: grid;
 				height: 100vh;
@@ -796,6 +865,150 @@
 			#portfolio-sankey-chart .sankey-link.portfolio-is-muted,
 			#portfolio-sankey-chart .sankey-node.portfolio-is-muted {
 				opacity: 0.08;
+			}
+
+			/* --- Portfolio Themes section --- */
+			#portfolio-themes {
+				position: relative;
+				/* 100vh sticky + 780vh themes + 60vh lead fade + 240vh finale + 100vh hold */
+				min-height: 1280vh;
+			}
+
+			.themes-layout {
+				align-items: center;
+				display: grid;
+				gap: 5%;
+				grid-template-columns: minmax(300px, 34%) minmax(0, 62%);
+				height: 100vh;
+				justify-content: center;
+				padding: 0 4vw;
+				position: sticky;
+				top: 0;
+			}
+
+			.themes-copy {
+				display: flex;
+				flex-direction: column;
+				gap: 1.3rem;
+				height: 100%;
+				justify-content: center;
+				padding: 6vh 0;
+			}
+
+			.themes-caption {
+				display: none;
+			}
+
+			.themes-lead-stack {
+				display: grid;
+			}
+
+			.themes-lead,
+			.themes-finale-lead {
+				color: #fff;
+				font-size: clamp(1.05rem, 1.5vw, 1.5rem);
+				font-weight: 700;
+				grid-area: 1 / 1;
+				line-height: 1.25;
+				margin: 0;
+			}
+
+			.themes-finale-lead {
+				opacity: 0;
+			}
+
+			.themes-info {
+				display: grid;
+			}
+
+			.themes-info__block {
+				grid-area: 1 / 1;
+				margin: 0;
+				transition: opacity 320ms ease;
+			}
+
+			.themes-info__title {
+				color: #fff;
+				font-size: clamp(1rem, 1.3vw, 1.3rem);
+				font-weight: 700;
+				margin: 0 0 0.4rem;
+			}
+
+			.themes-info__body {
+				color: rgba(229, 241, 255, 0.82);
+				font-size: clamp(0.9rem, 1.1vw, 1.05rem);
+				line-height: 1.45;
+				margin: 0;
+				max-width: 46ch;
+			}
+
+			.themes-roster {
+				border-top: 1px solid rgba(255, 255, 255, 0.16);
+				display: grid;
+				gap: 1.2rem;
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+				padding-top: 1.2rem;
+			}
+
+			.themes-col__title {
+				color: rgba(255, 255, 255, 0.5);
+				font-size: 0.72rem;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+				margin: 0 0 0.6rem;
+				text-transform: lowercase;
+				transition: color 220ms ease;
+			}
+
+			.themes-col.is-active .themes-col__title {
+				color: #fff;
+			}
+
+			.themes-col__list {
+				display: flex;
+				flex-direction: column;
+				gap: 0.3rem;
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			.themes-company {
+				color: rgba(255, 255, 255, 0.28);
+				font-size: clamp(0.72rem, 0.85vw, 0.9rem);
+				line-height: 1.25;
+				transition: color 220ms ease;
+			}
+
+			.themes-company.is-lit {
+				color: #fff;
+				font-weight: 700;
+			}
+
+			.themes-visual {
+				display: grid;
+				height: 100vh;
+				place-items: center;
+			}
+
+			#themes-sankey-chart {
+				display: block;
+				height: 100%;
+				max-height: 74vh;
+				pointer-events: none;
+				width: 100%;
+			}
+
+			#themes-sankey-chart .sankey-link {
+				opacity: 0;
+			}
+
+			#themes-sankey-chart .sankey-node {
+				opacity: 0.05;
+			}
+
+			#themes-sankey-chart .sankey-node text {
+				fill: #fff;
 			}
 
 			.section-placeholder {
@@ -1534,6 +1747,17 @@
 				stroke-width: 1.6;
 			}
 
+			/* Themes chart: nodes read at 60%, the finale-selected main nodes pop to
+			   full opacity with no border. */
+			#themes-sankey-chart .sankey-node rect {
+				opacity: 0.6;
+			}
+
+			#themes-sankey-chart .sankey-node.is-selected rect {
+				stroke: none;
+				opacity: 1;
+			}
+
 			/* Full-chain isolation overlay: the selected node's chain drawn as its
 			   own ribbons at attributed widths (see applySelection in main.js). */
 			.sankey-chain {
@@ -1624,6 +1848,31 @@
 
 				.system-themes-visual {
 					padding: 3.5rem 1rem 5rem;
+				}
+
+				#portfolio-themes {
+					min-height: 0;
+				}
+
+				.themes-layout {
+					gap: 1.5rem;
+					grid-template-columns: 1fr;
+					height: auto;
+					padding: 3.8rem 1rem 5rem;
+					position: static;
+				}
+
+				.themes-copy {
+					height: auto;
+					padding: 0;
+				}
+
+				.themes-roster {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+
+				.themes-visual {
+					height: auto;
 				}
 
 				.portfolio-layout {
