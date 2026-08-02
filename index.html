@@ -137,6 +137,30 @@
 			</section>
 
 
+			<section id="timeline" aria-label="Emissions outlook to 2040">
+				<div class="timeline-layout">
+					<div class="timeline-copy" aria-label="Timeline narrative text">
+						<div class="timeline-stack">
+							<p class="timeline-headline">Now let&rsquo;s turn to the future. How will global emissions change through 2040?</p>
+						</div>
+						<div class="timeline-panel" aria-hidden="true">
+							<div class="timeline-yearstrip">
+								<div class="timeline-yearbox"></div>
+								<div class="timeline-years">
+									<!-- Year items are rendered from main.js -->
+								</div>
+							</div>
+							<p class="timeline-closing">Under a business-as-usual scenario, without drastic policy changes, the total volume of <strong>global emissions</strong> is forecast to increase to <strong>60GT by 2040</strong>.</p>
+						</div>
+					</div>
+
+					<section class="timeline-visual" aria-hidden="true">
+						<svg id="timeline-sankey-chart" role="img" aria-label="Emissions flow morphing from 2025 to 2040"></svg>
+					</section>
+				</div>
+			</section>
+
+
 			<section id="tif-tgif-portfolio" aria-label="TIF and TGIF Portfolio">
 				<header class="portfolio-top-nav" data-portfolio-nav>
 					<div class="portfolio-top-nav__inner">
@@ -151,13 +175,9 @@
 						</button>
 						<nav class="portfolio-top-nav__menu" aria-label="Primary">
 							<ul id="portfolio-nav-list" class="portfolio-top-nav__list">
-								<li><a href="#introduction" data-nav-target="introduction">Introduction</a></li>
 								<li><a href="#global-emissions-picture" data-nav-target="global-emissions-picture">Global Emissions Picture</a></li>
 								<li><a href="#tif-tgif-portfolio" data-nav-target="tif-tgif-portfolio">TIF &amp; TGIF Portfolio</a></li>
-								<li><a href="#2040-scenarios" data-nav-target="2040-scenarios">2040 Scenarios</a></li>
 								<li><a href="#climate-impacts" data-nav-target="climate-impacts">Climate Impacts</a></li>
-								<li><a href="#portfolio-themes" data-nav-target="portfolio-themes">Portfolio Themes</a></li>
-								<li><a href="#system-level-themes" data-nav-target="system-level-themes">System-Level Themes</a></li>
 								<li><a href="#acknowledgements-citations" data-nav-target="acknowledgements-citations">Acknowledgements &amp; Citations</a></li>
 							</ul>
 						</nav>
@@ -166,169 +186,13 @@
 
 				<div class="portfolio-intro" data-nav-theme="dark">
 					<h2 class="portfolio-intro__headline">
-						This is the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.
+						The future is uncertain.
 					</h2>
-				</div>
-
-				<div class="portfolio-layout" data-nav-theme="highlight">
-					<div class="portfolio-layout__copy">
-						<div class="portfolio-layout__lead-stage" data-lead-stage>
-							<div class="portfolio-layout__lead-pin">
-								<p class="portfolio-layout__lead">
-									The technologies in the TIF and TGIF portfolios have each been assigned to a node and, together, touch many parts of the global economy.
-								</p>
-
-								<p class="portfolio-layout__lead">
-									Select a company from TIF and TGIF's portfolio to see where its specific technology makes an impact.
-								</p>
-							</div>
-						</div>
-
-						<section class="portfolio-businesses" aria-label="Portfolio businesses">
-							<div class="portfolio-businesses__pin">
-							<div class="portfolio-businesses__detail">
-								<div id="business-panel-fervo" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="fervo" aria-labelledby="company-fervo" hidden>
-									<img class="portfolio-businesses__logo" src="logos/fervo-logo.png" alt="Fervo Energy" onerror="this.remove()">
-									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Fervo Energy</span> is scaling next-generation geothermal power.</h3>
-									<p class="portfolio-businesses__desc">Geothermal power has a direct impact on electricity and heat emissions, where low-carbon baseload energy can help reduce dependence on fossil fuel generation across the economy.</p>
-								</div>
-								<div id="business-panel-propel-aero" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="propel-aero" aria-labelledby="company-propel-aero" hidden>
-									<img class="portfolio-businesses__logo" src="logos/propel-aero-logo.png" alt="Propel Aero" onerror="this.remove()">
-									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Propel Aero</span> is advancing hybrid electric air travel for regional transport.</h3>
-									<p class="portfolio-businesses__desc">Electric air travel technology has a direct impact on plane emissions, resulting in lower emissions for direct oil use and passenger transport when viewed through different lenses.</p>
-								</div>
-								<div id="business-panel-electric-hydrogen" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="electric-hydrogen" aria-labelledby="company-electric-hydrogen" hidden>
-									<img class="portfolio-businesses__logo" src="logos/electric-hydrogen-logo.png" alt="Electric Hydrogen" onerror="this.remove()">
-									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Electric Hydrogen</span> is scaling cost-competitive green hydrogen production.</h3>
-									<p class="portfolio-businesses__desc">Green hydrogen has a direct impact on chemical emissions, although future applications of the technology may impact emissions from passenger transport, freight, and industrial activities like iron and steel.</p>
-								</div>
-								<div id="business-panel-redwood-materials" class="portfolio-businesses__panel" role="tabpanel" data-business-panel="redwood-materials" aria-labelledby="company-redwood-materials" hidden>
-									<img class="portfolio-businesses__logo" src="logos/redwood-materials-logo.png" alt="Redwood Materials" onerror="this.remove()">
-									<h3 class="portfolio-businesses__heading"><span class="portfolio-businesses__accent">Redwood Materials</span> is advancing the circular economy through technologies for battery repurposing and recycling.</h3>
-									<p class="portfolio-businesses__desc">Battery repurposing has a direct impact on emissions from other industries, which includes battery manufacturing.</p>
-								</div>
-							</div>
-
-							<hr class="portfolio-businesses__divider" aria-hidden="true">
-
-							<div class="portfolio-businesses__list" role="tablist" aria-label="Portfolio companies">
-								<button class="portfolio-businesses__company" role="tab" id="company-fervo" data-business-tab="fervo" aria-controls="business-panel-fervo" aria-selected="false" tabindex="0">Fervo Energy</button>
-								<button class="portfolio-businesses__company" role="tab" id="company-propel-aero" data-business-tab="propel-aero" aria-controls="business-panel-propel-aero" aria-selected="false" tabindex="-1">Propel Aero</button>
-								<button class="portfolio-businesses__company" role="tab" id="company-electric-hydrogen" data-business-tab="electric-hydrogen" aria-controls="business-panel-electric-hydrogen" aria-selected="false" tabindex="-1">Electric Hydrogen</button>
-								<button class="portfolio-businesses__company" role="tab" id="company-redwood-materials" data-business-tab="redwood-materials" aria-controls="business-panel-redwood-materials" aria-selected="false" tabindex="-1">Redwood Materials</button>
-							</div>
-							</div>
-						</section>
-					</div>
-					<div class="portfolio-layout__visual" aria-hidden="true">
-						<svg id="portfolio-sankey-chart" role="img" aria-label="Portfolio full sankey context"></svg>
-					</div>
-				</div>
-			</section>
-
-			<section id="2040-scenarios" aria-label="2040 Scenarios" data-nav-theme="energy">
-				<div class="scenarios-intro" data-nav-theme="energy">
-					<h2 class="scenarios-intro__body">The emissions landscape today shows not only the scale of the climate challenge, but also <span>where the greatest opportunities for decarbonization may lie.</span></h2> 
-					<p>To understand the potential impact of these technologies as they scale, we first need to see how emissions flow through the global economy, and how those flows could change over time.</p>
-				</div>
-
-				<div class="scenario-layout" data-nav-theme="highlight">
-					<div class="scenario-layout__copy">
-						<div class="scenario-layout__lead-stage" data-scenario-lead-stage>
-							<div class="scenario-layout__lead-pin">
-								<p class="scenario-layout__lead">
-									Under current government policies already enacted, annual emissions are forecast to rise to 60 Gt CO2e by 2040.
-								</p>
-
-								<p class="scenario-layout__lead">
-									Of course, the future is uncertain.
-								</p>
-
-								<p class="scenario-layout__lead">
-									We consider two alternative scenarios: one in which governments follow through on stated climate commitments that are not yet fully implemented, and one in which electricity demand accelerates rapidly due to the expansion of AI.
-								</p>
-							</div>
-						</div>
-
-						<section class="scenario-selector" aria-label="2040 scenarios">
-							<div class="scenario-selector__pin">
-								<div class="scenario-selector__detail">
-									<div id="scenario-panel-enacted-policies" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="enacted-policies" aria-labelledby="scenario-enacted-policies" hidden>
-										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">Enacted Policies</span></h3>
-										<p class="scenario-selector__desc">This scenario reflects the current policy landscape: a future shaped by climate and energy policies that have already been enacted or are firmly in place. It provides a baseline view of how global emissions may evolve if today&rsquo;s policy momentum continues, but governments do not fully implement additional commitments or more ambitious transition measures. The total annual global emissions in 2040 under this scenario is 60GT.</p>
-									</div>
-
-									<div id="scenario-panel-stated-commitments" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="stated-commitments" aria-labelledby="scenario-stated-commitments" hidden>
-										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">Stated Commitments</span></h3>
-										<p class="scenario-selector__desc">This scenario explores a more ambitious pathway in which governments follow through on stated climate commitments that are not yet fully implemented. It shows how stronger policy execution could accelerate deployment of low-carbon technologies, reshape emissions flows, and expand the opportunity set for climate solutions across the global economy. The total annual global emissions in 2040 under this scenario are 46GT.</p>
-									</div>
-
-									<div id="scenario-panel-high-ai-electricity-demand" class="scenario-selector__panel" role="tabpanel" data-scenario-panel="high-ai-electricity-demand" aria-labelledby="scenario-high-ai-electricity-demand" hidden>
-										<h3 class="scenario-selector__heading"><span class="scenario-selector__accent">High AI Electricity Demand</span></h3>
-										<p class="scenario-selector__desc">This scenario considers a future in which electricity demand grows faster than expected, including from the rapid expansion of AI and data centers. By placing additional pressure on the global energy system, it helps users explore how demand growth could affect emissions and why technologies that expand clean power, improve efficiency, and strengthen grid flexibility may become even more critical. The total annual global emissions in 2040 under this scenario are XXGT.</p>
-									</div>
-								</div>
-
-								<hr class="scenario-selector__divider" aria-hidden="true">
-
-								<div class="scenario-selector__list" role="tablist" aria-label="2040 scenarios">
-									<button class="scenario-selector__tab" role="tab" id="scenario-enacted-policies" data-scenario-tab="enacted-policies" aria-controls="scenario-panel-enacted-policies" aria-selected="false" tabindex="0">Enacted Policies</button>
-									<button class="scenario-selector__tab" role="tab" id="scenario-stated-commitments" data-scenario-tab="stated-commitments" aria-controls="scenario-panel-stated-commitments" aria-selected="false" tabindex="-1">Stated Commitments</button>
-									<button class="scenario-selector__tab" role="tab" id="scenario-high-ai-electricity-demand" data-scenario-tab="high-ai-electricity-demand" aria-controls="scenario-panel-high-ai-electricity-demand" aria-selected="false" tabindex="-1">High AI Electricity Demand</button>
-								</div>
-							</div>
-						</section>
-					</div>
-
-					<div class="scenario-layout__visual" aria-hidden="true">
-						<svg id="scenario-sankey-chart" role="img" aria-label="2040 scenario emissions flow context"></svg>
-					</div>
+					<p>Under different scenarios the picture changes. What's important, however, is that we can now visualize the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.</p>
 				</div>
 			</section>
 			
-			
-			<section id="climate-impacts" aria-label="Climate Impacts">
-				<div class="impacts-intro" data-nav-theme="dark">
-					<h2 class="impacts-intro__body">The companies in TIF/TGIF's portfolio impact these future states by <span>avoiding emissions</span> created by incumbent technologies and reducing 2040 global emissions.</h2>
-				</div>
 
-				<div class="impacts-layout" data-nav-theme="highlight">
-					<div class="impacts-layout__copy">
-						<div class="impacts-layout__lead-stage" data-impacts-lead-stage>
-							<div class="impacts-layout__lead-pin">
-								<p class="impacts-layout__lead">
-									Zoom in on a single node to trace how emissions flow through it &mdash; one step upstream and one step downstream.
-								</p>
-
-								<p class="impacts-layout__lead">
-									Now highlight the emissions <strong>avoided</strong> as this portfolio technology scales through 2040 &mdash; the share of these flows that no longer occur.
-								</p>
-							</div>
-						</div>
-
-						<div class="impacts-businesses">
-							<div class="impacts-businesses__pin" role="tablist" aria-label="Portfolio companies">
-								<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="fervo" aria-selected="false" tabindex="0">Fervo Energy</button>
-								<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="propel-aero" aria-selected="false" tabindex="-1">Propel Aero</button>
-								<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="electric-hydrogen" aria-selected="false" tabindex="-1">Electric Hydrogen</button>
-								<button class="impacts-businesses__company" role="tab" data-impacts-business-tab="redwood-materials" aria-selected="false" tabindex="-1">Redwood Materials</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="impacts-layout__visual">
-						<div class="impacts-layout__visual-shell">
-							<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
-
-							<div class="impacts-scenario-controls" role="group" aria-label="Climate impacts scenarios">
-								<button class="impacts-scenario-controls__button is-active" type="button" data-impacts-scenario-tab="enacted-policies" aria-pressed="true">Enacted Policies</button>
-								<button class="impacts-scenario-controls__button" type="button" data-impacts-scenario-tab="stated-commitments" aria-pressed="false">Stated Commitments</button>
-								<button class="impacts-scenario-controls__button" type="button" data-impacts-scenario-tab="high-ai-electricity-demand" aria-pressed="false">High AI Electricity Demand</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</section>
 			<section id="portfolio-themes" aria-label="Portfolio Themes">
 				<div class="themes-layout">
 					<div class="themes-copy" data-nav-theme="dark">
@@ -344,17 +208,81 @@
 					</div>
 				</div>
 			</section>
-			<section id="system-level-themes" aria-label="System-Level Themes">
-				<div class="system-themes-intro" data-nav-theme="highlight">
-					<h2 class="system-themes-intro__body">
-						The relationship between future emissions scenarios and the TIF/TGIF portfolios reveals important system-level themes. These themes explore the potential for different technologies to reshape the global economy.
-					</h2>
+
+
+
+			<section id="climate-impacts" aria-label="Climate Impacts">
+				
+				<div class="impacts-intro" data-nav-theme="dark">
+					<h2 class="impacts-intro__body">The technologies in TIF/TGIF’s portfolio impact the 2040 global emissions picture by avoiding emissions that would otherwise occur.</h2>
+					<p>Here, we show the largest potential avoided emissions, assuming that the technology scales to its maximum, transforming the market it targets.</p>
 				</div>
 
-				<div class="system-themes-visual" data-nav-theme="dark">
-					<img class="system-themes-visual__image" src="system-level-themes.png" alt="System-Level Themes Illustration" />
+				<div class="impacts-lead-block">
+					<div class="impacts-layout__lead-stage" data-impacts-lead-stage>
+						<div class="impacts-layout__lead-pin">
+							<p class="impacts-layout__lead">
+								Zoom in on a single node to trace how emissions flow through it &mdash; one step upstream and one step downstream.
+							</p>
+
+							<p class="impacts-layout__lead">
+								Now highlight the emissions <strong>avoided</strong> as this portfolio technology scales through 2040 &mdash; the share of these flows that no longer occur.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="impacts-layout" data-nav-theme="highlight">
+					<div class="impacts-layout__copy">
+						<div class="impacts-company-card" data-impacts-company-card aria-live="polite">
+							<p class="impacts-company-card__prompt" data-impacts-card-prompt>
+								Select a portfolio company to view its mapped node and potential avoided emissions in 2040A.
+							</p>
+
+							<div class="impacts-company-card__content" data-impacts-card-content hidden>
+								<img
+									class="impacts-company-card__logo"
+									data-impacts-card-logo
+									src="https://placehold.co/240x60?text=logo"
+									alt="Company logo"
+									loading="lazy"
+								/>
+								<p class="impacts-company-card__sentence" data-impacts-card-sentence></p>
+
+								<div class="impacts-node-visual">
+									<div class="impacts-node-visual__bar" data-impacts-card-node-bar>
+										<div class="impacts-node-avoided" data-impacts-card-node-avoided></div>
+										<div class="impacts-node-remaining" data-impacts-card-node-remaining></div>
+									</div>
+									<div class="impacts-node-visual__meta">
+										<p class="impacts-node-visual__name" data-impacts-card-node-name></p>
+										<p class="impacts-node-visual__savings" data-impacts-card-node-savings></p>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="impacts-businesses">
+							<div class="impacts-businesses__pin" aria-label="Portfolio companies">
+								<div class="impacts-roster" data-impacts-roster>
+									<!-- company columns injected by main.js -->
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="impacts-layout__visual">
+						<div class="impacts-layout__visual-shell">
+							<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
+						</div>
+					</div>
 				</div>
 			</section>
+
+
+
+
+
 			<section id="acknowledgements-citations" aria-label="Acknowledgements and Citations">
 				<div class="acknowledgements-intro" data-nav-theme="energy">
 					<h2 class="acknowledgements-intro__body">Acknowledgements and Citations</h2>

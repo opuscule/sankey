@@ -10,6 +10,7 @@
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const impactsChart = document.getElementById("impacts-sankey-chart");
 	const themesChart = document.getElementById("themes-sankey-chart");
+	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 
 	// --- Shared math helpers --------------------------------------------------
@@ -411,6 +412,9 @@
 		impactsRendered: null,
 		impactsScenarioId: "enacted-policies",
 		impactsBusinessId: "",
+		impactsCompanyKey: "",
+		impactsRosterIndex: new Map(),
+		impactsCard: null,
 		avoidedData: null,
 		avoidedPromise: null,
 		portfolioBusinessNodeMap: new Map(),
@@ -425,7 +429,9 @@
 		themesProgress: 0,
 		themesLeadEl: null,
 		themesFinaleLeadEl: null,
-		finaleOrder: null
+		finaleOrder: null,
+		timelineRendered: null,
+		timelineProgress: 0
 	};
 
 	const fmtMt = d3.format(",.2f");
@@ -445,6 +451,20 @@
 		"electric-hydrogen",
 		"redwood-materials"
 	]);
+
+	const impactsLogoByBusiness = {
+		"fervo": "logos/fervo-logo.png",
+		"propel-aero": "logos/propel-aero-logo.png",
+		"electric-hydrogen": "logos/electric-hydrogen-logo.png",
+		"redwood-materials": "logos/redwood-materials-logo.png"
+	};
+
+	const impactsLogoFallback = "https://placehold.co/240x60?text=logo";
+
+	const impactsNodeLabelByBusiness = {
+		"fervo": "Electricty and heat",
+		"propel-aero": "Plane"
+	};
 
 	const scenarioKeyById = {
 		"enacted-policies": "2040A",
@@ -475,14 +495,11 @@
 	let scenarioLinkGeom = new Map();
 
 	// --- Climate Impacts (avoided emissions) ---------------------------------
-	// The impacts view starts on the full baseline graph. Selecting a portfolio
-	// business narrows the chart to that company's connected subgraph (only the
-	// edges it has avoided-emissions data for) and carves the avoided amount out
-	// of each node and ribbon as an empty, 1px-bordered region. Company selection
-	// forces scenario 2040B ("Stated Commitments"); 2040C has no avoided data.
-	// Business -> avoided company key is resolved via normalizeBusinessSlug over
-	// the avoided.json company keys; avoided link values come from avoided.json.
-	const IMPACTS_DEFAULT_SCENARIO_ID = "stated-commitments";
+	// The impacts view is fixed to 2040A (Enacted Policies) in this version.
+	// Selecting a company narrows to that company's connected avoided-emissions
+	// subgraph; non-mapped companies keep the full baseline graph and show
+	// a no-data details state in the left column card.
+	const IMPACTS_SCENARIO_ID = "enacted-policies";
 
 	// Resolve the avoided.json company key (e.g. "FervoEnergy") for a normalized
 	// business slug (e.g. "fervo"). Returns null until avoided.json has loaded.
@@ -735,15 +752,15 @@
 		render();
 		renderPortfolioSankey();
 		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
-		setupImpactsScenarioSync();
 		setupImpactsBusinessSync();
-		renderImpactsSankey(window.currentImpactsScenarioId || state.impactsScenarioId);
+		renderImpactsSankey();
 		setupPortfolioBusinessSync();
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
 		setupImpactsScroll();
 		initThemesSection();
+		initTimelineSection();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -1592,13 +1609,13 @@
 	// selected it narrows to that company's connected subgraph (only edges with
 	// avoided-emissions data) and carves the avoided amount out of each node and
 	// ribbon as an empty, 1px-bordered region (remaining flow stays filled below).
-	function renderImpactsSankey(rawScenarioId = state.impactsScenarioId) {
+	function renderImpactsSankey() {
 		if (!impactsChart || !state.initData || !state.baselinesData) {
 			return;
 		}
 
-		const scenarioRequest = resolveScenarioRequest(rawScenarioId);
-		state.impactsScenarioId = scenarioRequest.scenarioId;
+		const scenarioRequest = resolveScenarioRequest(IMPACTS_SCENARIO_ID);
+		state.impactsScenarioId = IMPACTS_SCENARIO_ID;
 
 		const businessId = state.impactsBusinessId;
 		const companySelected = !!businessId;
@@ -1617,7 +1634,9 @@
 			if (!state.avoidedData) {
 				ensureAvoidedData().then(() => {
 					if (state.impactsBusinessId === businessId) {
-						renderImpactsSankey(scenarioRequest.scenarioId);
+						renderImpactsSankey();
+						const selected = state.impactsRosterIndex.get(state.impactsCompanyKey);
+						updateImpactsCompanyCard(selected || null);
 					}
 				});
 			} else {
@@ -1721,8 +1740,6 @@
 		}
 
 		const defs = svg.append("defs");
-		const markerGroup = svg.append("g").attr("class", "scenario-marker");
-		const axisGroup = svg.append("g").attr("class", "scenario-axis");
 		const stageBounds = stageXBounds(graph);
 		const stagePairs = Array.from(
 			new Set(
@@ -1907,14 +1924,6 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
 
-		renderGtReferenceAxis({
-			axisGroup,
-			markerGroup,
-			width,
-			height,
-			scenarioId: scenarioRequest.scenarioId
-		});
-
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, graph, 24);
 
@@ -1922,99 +1931,286 @@
 			nodeSelection,
 			linkSelection,
 			graph,
-			scenarioId: scenarioRequest.scenarioId,
+			scenarioId: IMPACTS_SCENARIO_ID,
 			scenarioKey: scenarioRequest.resolvedScenarioKey
 		};
 	}
 
-	function syncImpactsScenarioButtons(activeScenarioId) {
-		const companySelected = !!state.impactsBusinessId;
-		const buttons = Array.from(document.querySelectorAll("[data-impacts-scenario-tab]"));
+	function findNodeLabelById(nodeId) {
+		if (!nodeId || !Array.isArray(state.initData?.nodes)) {
+			return "";
+		}
+		const node = state.initData.nodes.find((entry) => String(entry?.id || "").trim() === nodeId);
+		if (!node) {
+			return deriveLabelFromId(nodeId);
+		}
+		return String(node?.label || deriveLabelFromId(nodeId) || "").trim();
+	}
+
+	function resolveImpactsNodeLabel(selection) {
+		const businessId = normalizeBusinessSlug(selection?.businessId);
+		const mappedNodeId =
+			String(selection?.nodeId || "").trim() ||
+			String(state.portfolioBusinessNodeMap?.get(businessId) || "").trim();
+
+		const fromNodeId = mappedNodeId ? findNodeLabelById(mappedNodeId) : "";
+		if (fromNodeId) {
+			return fromNodeId;
+		}
+
+		if (impactsNodeLabelByBusiness[businessId]) {
+			return impactsNodeLabelByBusiness[businessId];
+		}
+
+		return "No mapped node available";
+	}
+
+	function avoidedTotalForCompany(companyKey, scenarioKey) {
+		const company = state.avoidedData?.[companyKey];
+		const rawLinks = Array.isArray(company?.links) ? company.links : [];
+		return rawLinks.reduce((sum, link) => {
+			const value = toFiniteNumber(link?.[scenarioKey]?.value, 0);
+			return value > 0 ? sum + value : sum;
+		}, 0);
+	}
+
+	function impactsNodeMetrics(nodeId) {
+		if (!nodeId || !Array.isArray(state.impactsRendered?.graph?.nodes)) {
+			return {
+				totalMt: 0,
+				avoidedMt: 0,
+				remainingMt: 0,
+				avoidedRatio: 0
+			};
+		}
+
+		const node = state.impactsRendered.graph.nodes.find(
+			(entry) => String(entry?.id || "").trim() === String(nodeId || "").trim()
+		);
+
+		if (!node) {
+			return {
+				totalMt: 0,
+				avoidedMt: 0,
+				remainingMt: 0,
+				avoidedRatio: 0
+			};
+		}
+
+		const totalMt = Math.max(0, toFiniteNumber(node.value, 0));
+		const avoidedMt = Math.max(0, Math.min(totalMt, toFiniteNumber(node.avoided, 0)));
+		const remainingMt = Math.max(0, totalMt - avoidedMt);
+		const avoidedRatio = totalMt > 0 ? avoidedMt / totalMt : 0;
+
+		return {
+			totalMt,
+			avoidedMt,
+			remainingMt,
+			avoidedRatio
+		};
+	}
+
+	function updateImpactsCompanyCard(selection) {
+		const card = state.impactsCard;
+		if (!card) {
+			return;
+		}
+
+		if (!selection) {
+			card.prompt.hidden = false;
+			card.content.hidden = true;
+			card.root.classList.remove("is-active");
+			return;
+		}
+
+		const scenarioKey = scenarioKeyById[IMPACTS_SCENARIO_ID] || "2040A";
+		const nodeLabel = resolveImpactsNodeLabel(selection);
+		const nodeLabelText = nodeLabel || "No mapped node available";
+		const nodeStage = deriveStageFromId(selection.nodeId);
+		const nodeStageVar = stageColorVars[nodeStage] || "--color-final-energy";
+		const companyKey = selection.businessId
+			? avoidedCompanyKeyForBusiness(selection.businessId)
+			: null;
+		const logoSrc = impactsLogoByBusiness[selection.businessId] || impactsLogoFallback;
+		const nodeMetrics = impactsNodeMetrics(selection.nodeId);
+		const avoidedHeightPct = Math.round(Math.min(1, Math.max(0, nodeMetrics.avoidedRatio)) * 100);
+		const remainingHeightPct = Math.max(0, 100 - avoidedHeightPct);
+
+		if (selection.businessId && !state.avoidedData) {
+			card.logo.src = logoSrc;
+			card.logo.alt = `${selection.label} logo`;
+			card.sentence.innerHTML =
+				`<strong>${selection.label}</strong> reduces emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">loading...</strong>.`;
+			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
+			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
+			card.nodeBar.style.setProperty("--impacts-node-remaining-height", "100%");
+			card.nodeName.textContent = nodeLabelText;
+			card.nodeSavings.textContent = "- loading...";
+			card.prompt.hidden = true;
+			card.content.hidden = false;
+			card.root.classList.add("is-active");
+			return;
+		}
+
+		const avoidedMt = companyKey ? avoidedTotalForCompany(companyKey, scenarioKey) : 0;
+		const hasAvoided = avoidedMt > 0;
+
+		const avoidedGt = avoidedMt / 1000;
+		const avoidedGtText = hasAvoided ? `${d3.format(".2f")(avoidedGt)} Gt` : "N/A";
+
+		card.logo.src = logoSrc;
+		card.logo.alt = `${selection.label} logo`;
+		card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
+		card.nodeBar.style.setProperty("--impacts-node-avoided-height", `${avoidedHeightPct}%`);
+		card.nodeBar.style.setProperty("--impacts-node-remaining-height", `${remainingHeightPct}%`);
+		card.nodeName.textContent = nodeLabelText;
+		card.nodeBar.setAttribute(
+			"aria-label",
+			`Avoided ${formatMass(nodeMetrics.avoidedMt)}; remaining ${formatMass(nodeMetrics.remainingMt)}.`
+		);
+
+		const nodeAvoidedGt = nodeMetrics.avoidedMt / 1000;
+		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? `${d3.format(".2f")(nodeAvoidedGt)} Gt` : "N/A";
+
+		if (hasAvoided) {
+			card.sentence.innerHTML =
+				`<strong>${selection.label}</strong> reduces emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">${avoidedGtText}</strong>.`;
+			card.nodeSavings.textContent = `-${nodeAvoidedGtText}`;
+		} else {
+			card.sentence.innerHTML =
+				`<strong>${selection.label}</strong> reduces emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">data pending</strong>.`;
+			card.nodeSavings.textContent = "- N/A";
+		}
+
+		card.prompt.hidden = true;
+		card.content.hidden = false;
+		card.root.classList.add("is-active");
+	}
+
+	function renderImpactsRoster(model) {
+		const rosterWrap = document.querySelector("[data-impacts-roster]");
+		if (!rosterWrap) {
+			return;
+		}
+
+		rosterWrap.innerHTML = "";
+		state.impactsRosterIndex = new Map();
+
+		model.forEach((theme) => {
+			const col = document.createElement("div");
+			col.className = "impacts-roster__col";
+			const colTitle = document.createElement("h4");
+			colTitle.className = "impacts-roster__title";
+			colTitle.textContent = theme.label;
+			const list = document.createElement("ul");
+			list.className = "impacts-roster__list";
+
+			theme.companies.forEach((company, index) => {
+				const key = `${theme.slug}:${index}`;
+				const item = document.createElement("li");
+				const button = document.createElement("button");
+				button.type = "button";
+				button.className = "impacts-businesses__company";
+				button.textContent = company.label;
+				button.dataset.impactsBusinessId = company.businessId || "";
+				button.dataset.impactsCompanyKey = key;
+				button.setAttribute("aria-pressed", "false");
+				item.append(button);
+				list.append(item);
+
+				state.impactsRosterIndex.set(key, {
+					key,
+					label: company.label,
+					themeLabel: theme.label,
+					businessId: company.businessId,
+					nodeId: company.nodeId
+				});
+			});
+
+			col.append(colTitle, list);
+			rosterWrap.append(col);
+		});
+	}
+
+	function syncImpactsBusinessButtons(activeCompanyKey) {
+		const buttons = Array.from(document.querySelectorAll("[data-impacts-company-key]"));
 		buttons.forEach((button) => {
-			const scenarioId = button.dataset.impactsScenarioTab;
-			const isActive = scenarioId === activeScenarioId;
-			// 2040C has no avoided data, so it can't be carved for a company.
-			const isDisabled = companySelected && scenarioId === "high-ai-electricity-demand";
+			const isActive = button.dataset.impactsCompanyKey === activeCompanyKey;
 			button.classList.toggle("is-active", isActive);
 			button.setAttribute("aria-pressed", isActive ? "true" : "false");
-			button.disabled = isDisabled;
-			button.classList.toggle("is-disabled", isDisabled);
 		});
 	}
 
-	function setActiveImpactsScenario(scenarioId) {
-		if (!Object.prototype.hasOwnProperty.call(scenarioKeyById, scenarioId)) {
-			return;
-		}
-		// Block the disabled scenario while a company is selected.
-		if (state.impactsBusinessId && scenarioId === "high-ai-electricity-demand") {
-			return;
-		}
-		state.impactsScenarioId = scenarioId;
-		window.currentImpactsScenarioId = scenarioId;
-		syncImpactsScenarioButtons(scenarioId);
-		renderImpactsSankey(scenarioId);
-	}
-
-	function setupImpactsScenarioSync() {
-		const buttons = Array.from(document.querySelectorAll("[data-impacts-scenario-tab]"));
-		if (!buttons.length) {
+	function setActiveImpactsBusiness(companyKey) {
+		if (!state.impactsRosterIndex?.has(companyKey)) {
 			return;
 		}
 
-		buttons.forEach((button) => {
-			button.addEventListener("click", () => {
-				setActiveImpactsScenario(button.dataset.impactsScenarioTab || "enacted-policies");
-			});
-		});
-
-		syncImpactsScenarioButtons(state.impactsScenarioId);
-	}
-
-	function syncImpactsBusinessButtons(activeBusinessId) {
-		const buttons = Array.from(document.querySelectorAll("[data-impacts-business-tab]"));
-		buttons.forEach((button) => {
-			const isActive = button.dataset.impactsBusinessTab === activeBusinessId;
-			button.classList.toggle("is-active", isActive);
-			button.setAttribute("aria-selected", isActive ? "true" : "false");
-			button.setAttribute("tabindex", isActive ? "0" : "-1");
-		});
-	}
-
-	function setActiveImpactsBusiness(rawBusinessId) {
-		const businessId = normalizeBusinessSlug(rawBusinessId);
-		if (!supportedPortfolioBusinesses.has(businessId)) {
-			return;
-		}
+		const company = state.impactsRosterIndex.get(companyKey);
+		const businessId = normalizeBusinessSlug(company.businessId);
 
 		// Toggle off if the active company is clicked again -> back to baseline.
-		const nextBusinessId = state.impactsBusinessId === businessId ? "" : businessId;
-		state.impactsBusinessId = nextBusinessId;
-		window.currentImpactsBusinessId = nextBusinessId;
-		syncImpactsBusinessButtons(nextBusinessId);
+		const nextCompanyKey = state.impactsCompanyKey === companyKey ? "" : companyKey;
+		state.impactsCompanyKey = nextCompanyKey;
 
-		// Selecting a company starts on Stated Commitments (2040B); clearing the
-		// selection keeps the current scenario but re-enables all buttons.
-		const scenarioId = nextBusinessId ? IMPACTS_DEFAULT_SCENARIO_ID : state.impactsScenarioId;
-		state.impactsScenarioId = scenarioId;
-		window.currentImpactsScenarioId = scenarioId;
-		syncImpactsScenarioButtons(scenarioId);
-		renderImpactsSankey(scenarioId);
+		const activeBusinessId =
+			nextCompanyKey && supportedPortfolioBusinesses.has(businessId) ? businessId : "";
+		state.impactsBusinessId = activeBusinessId;
+		window.currentImpactsBusinessId = activeBusinessId;
+
+		syncImpactsBusinessButtons(nextCompanyKey);
+		renderImpactsSankey();
+		updateImpactsCompanyCard(nextCompanyKey ? company : null);
 	}
 
 	function setupImpactsBusinessSync() {
-		const buttons = Array.from(document.querySelectorAll("[data-impacts-business-tab]"));
-		if (!buttons.length) {
-			return;
+		const cardRoot = document.querySelector("[data-impacts-company-card]");
+		if (cardRoot) {
+			state.impactsCard = {
+				root: cardRoot,
+				prompt: cardRoot.querySelector("[data-impacts-card-prompt]"),
+				content: cardRoot.querySelector("[data-impacts-card-content]"),
+				logo: cardRoot.querySelector("[data-impacts-card-logo]"),
+				sentence: cardRoot.querySelector("[data-impacts-card-sentence]"),
+				nodeBar: cardRoot.querySelector("[data-impacts-card-node-bar]"),
+				nodeAvoided: cardRoot.querySelector("[data-impacts-card-node-avoided]"),
+				nodeRemaining: cardRoot.querySelector("[data-impacts-card-node-remaining]"),
+				nodeName: cardRoot.querySelector("[data-impacts-card-node-name]"),
+				nodeSavings: cardRoot.querySelector("[data-impacts-card-node-savings]")
+			};
+
+			if (state.impactsCard.logo) {
+				state.impactsCard.logo.addEventListener("error", () => {
+					state.impactsCard.logo.src = impactsLogoFallback;
+				});
+			}
+
+			updateImpactsCompanyCard(null);
 		}
 
-		buttons.forEach((button) => {
-			button.addEventListener("click", () => {
-				setActiveImpactsBusiness(button.dataset.impactsBusinessTab || "");
-			});
-		});
+		ensureThemesData()
+			.then((data) => {
+				const model = state.themesModel || buildThemesModel(data);
+				if (!state.themesModel) {
+					state.themesModel = model;
+				}
 
-		syncImpactsBusinessButtons(state.impactsBusinessId);
+				renderImpactsRoster(model);
+				const buttons = Array.from(document.querySelectorAll("[data-impacts-company-key]"));
+				buttons.forEach((button) => {
+					button.addEventListener("click", () => {
+						setActiveImpactsBusiness(button.dataset.impactsCompanyKey || "");
+					});
+				});
+
+				syncImpactsBusinessButtons(state.impactsCompanyKey);
+			})
+			.catch((error) => {
+				console.warn("[Sankey] Could not initialize impacts roster:", error);
+			});
 	}
 
 	// Scroll choreography for Climate Impacts: the two lead beats crossfade in a
@@ -3717,7 +3913,11 @@
 				.replace(/^_+/, "")
 				.trim();
 			const nodeId = String(company?.node || "").trim();
-			theme.companies.push({ label, nodeId });
+			theme.companies.push({
+				label,
+				nodeId,
+				businessId: normalizeBusinessSlug(company?.company || company?.company_label)
+			});
 			if (nodeId) {
 				theme.nodeIds.add(nodeId);
 			}
@@ -4298,6 +4498,357 @@
 		}
 	}
 
+	// --- Timeline section (2025 -> 2040 scroll morph) -------------------------
+	// The right-column Sankey morphs from the 2025 baseline to the 2040A scenario
+	// while the left column slides a year strip 2025 -> 2040. We have no per-year
+	// data, so both endpoints are laid out independently and every node/link is
+	// linearly interpolated between them (easeInOut over the scroll range).
+	const TIMELINE_TARGET_SCENARIO = "2040A";
+	// Scroll windows as fractions of the #timeline scroll range (section ~320vh).
+	const TL_HEAD_IN = [0.0, 0.06];
+	const TL_HEAD_OUT = [0.22, 0.3];
+	const TL_PANEL_IN = [0.24, 0.32];
+	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~180vh of 320vh)
+	const TL_CLOSE_IN = [0.8, 0.9];
+	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
+	// and grows to TL_END_FRAC (full) by 2040, so the rising envelope reads as the
+	// rising emissions total. Tunable; could instead be derived from GT totals.
+	const TL_START_FRAC = 0.84;
+	const TL_END_FRAC = 1;
+
+	const windowProgress = (value, [start, end]) => clamp01((value - start) / (end - start || 1));
+
+	function renderTimelineSankey() {
+		if (!timelineChart || !state.initData || !state.baselinesData) {
+			return;
+		}
+
+		const bounds = timelineChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(560, Math.floor(bounds.height));
+
+		const layoutGraph = (scenarioKey) => {
+			const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+			const graph = {
+				nodes: built.nodes.map((node) => ({ ...node })),
+				links: built.links.map((link) => ({ ...link }))
+			};
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(9)
+				.nodeAlign(d3.sankeyJustify)
+				.extent([
+					[28, 44],
+					[width - 28, height - 34]
+				])
+				.iterations(64)(graph);
+			spreadStageHeights(graph, 44, height - 34);
+			return graph;
+		};
+
+		const startGraph = layoutGraph(defaultScenario); // 2025
+		const endGraph = layoutGraph(TIMELINE_TARGET_SCENARIO); // 2040A
+
+		// Scale every y about the band bottom so the chart is pinned to the bottom
+		// and its height encodes the endpoint's fraction of full height.
+		const bandBottom = height - 34;
+		const scaleY = (y, frac) => bandBottom - (bandBottom - y) * frac;
+
+		const linkKey = (link) => `${link.source.id}|${link.target.id}`;
+		const nodeGeomMap = (graph, frac) => {
+			const map = new Map();
+			graph.nodes.forEach((node) => {
+				map.set(node.id, {
+					x0: node.x0,
+					y0: scaleY(node.y0, frac),
+					x1: node.x1,
+					y1: scaleY(node.y1, frac),
+					node
+				});
+			});
+			return map;
+		};
+		const linkGeomMap = (graph, frac) => {
+			const map = new Map();
+			graph.links.forEach((link) => {
+				map.set(linkKey(link), {
+					sx: link.source.x1,
+					tx: link.target.x0,
+					y0: scaleY(link.y0, frac),
+					y1: scaleY(link.y1, frac),
+					width: link.width * frac,
+					link
+				});
+			});
+			return map;
+		};
+
+		const startNodes = nodeGeomMap(startGraph, TL_START_FRAC);
+		const endNodes = nodeGeomMap(endGraph, TL_END_FRAC);
+		const startLinks = linkGeomMap(startGraph, TL_START_FRAC);
+		const endLinks = linkGeomMap(endGraph, TL_END_FRAC);
+
+		// A node/link present in only one scenario is collapsed to zero height at
+		// its own position on the missing side, so it grows in / shrinks out cleanly.
+		const collapseNode = (geom) =>
+			geom ? { x0: geom.x0, x1: geom.x1, y0: (geom.y0 + geom.y1) / 2, y1: (geom.y0 + geom.y1) / 2 } : null;
+		const collapseLink = (geom) =>
+			geom
+				? { sx: geom.sx, tx: geom.tx, y0: (geom.y0 + geom.y1) / 2, y1: (geom.y0 + geom.y1) / 2, width: 0 }
+				: null;
+
+		const startNodeOf = (id) => startNodes.get(id) || collapseNode(endNodes.get(id));
+		const endNodeOf = (id) => endNodes.get(id) || collapseNode(startNodes.get(id));
+		const startLinkOf = (key) => startLinks.get(key) || collapseLink(endLinks.get(key));
+		const endLinkOf = (key) => endLinks.get(key) || collapseLink(startLinks.get(key));
+
+		const nodeIds = new Set([...startNodes.keys(), ...endNodes.keys()]);
+		const nodeData = Array.from(nodeIds).map((id) => (endNodes.get(id) || startNodes.get(id)).node);
+
+		const linkKeys = new Set([...startLinks.keys(), ...endLinks.keys()]);
+		const linkData = Array.from(linkKeys).map((key) => {
+			const ref = (endLinks.get(key) || startLinks.get(key)).link;
+			return { id: key, key, source: ref.source, target: ref.target };
+		});
+
+		const svg = d3
+			.select(timelineChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+		svg.selectAll("*").remove();
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(endGraph);
+		const stagePairs = Array.from(
+			new Set(linkData.map((link) => `${link.source?.stage ?? "?"}-${link.target?.stage ?? "?"}`))
+		);
+		stagePairs.forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map((v) => Number.parseInt(v, 10));
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `timeline-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${sourceColorVar})`);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`);
+		});
+
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#timeline-link-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
+		const linkGen = d3.sankeyLinkHorizontal();
+		const linkPathFromGeom = (geom) =>
+			linkGen({ source: { x1: geom.sx }, target: { x0: geom.tx }, y0: geom.y0, y1: geom.y1 });
+
+		const linksGroup = svg.append("g").attr("fill", "none").attr("class", "sankey-links");
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(linkData, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", linkStroke)
+			.attr("d", (d) => linkPathFromGeom(startLinkOf(d.key)))
+			.attr("stroke-width", (d) => Math.max(0.5, startLinkOf(d.key).width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(nodeData, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => {
+				const geom = startNodeOf(d.id);
+				return `translate(${geom.x0},${geom.y0})`;
+			});
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(1, geom.x1 - geom.x0);
+			})
+			.attr("height", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(3, geom.y1 - geom.y0);
+			});
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => {
+				const geom = startNodeOf(d.id);
+				return d.stage !== 7 ? Math.max(1, geom.x1 - geom.x0) + 7 : -7;
+			})
+			.attr("y", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(3, geom.y1 - geom.y0) / 2;
+			})
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(endGraph));
+
+		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
+		renderStageHeaders(headersGroup, endGraph, 24);
+
+		state.timelineRendered = {
+			nodeSelection,
+			linkSelection,
+			startNodeOf,
+			endNodeOf,
+			startLinkOf,
+			endLinkOf,
+			linkPathFromGeom
+		};
+
+		drawTimeline(state.timelineProgress || 0);
+	}
+
+	// Drive the whole section from one scroll clock: crossfade the copy beats,
+	// slide the year strip 2025 -> 2040 through the fixed box, and interpolate the
+	// Sankey geometry between the 2025 and 2040A layouts (easeInOut).
+	function drawTimeline(progress) {
+		state.timelineProgress = progress;
+
+		if (state.timelineHeadEl) {
+			const headIn = windowProgress(progress, TL_HEAD_IN);
+			const headOut = windowProgress(progress, TL_HEAD_OUT);
+			state.timelineHeadEl.style.opacity = String(headIn * (1 - headOut));
+		}
+		if (state.timelinePanelEl) {
+			state.timelinePanelEl.style.opacity = String(windowProgress(progress, TL_PANEL_IN));
+		}
+		if (state.timelineCloseEl) {
+			state.timelineCloseEl.style.opacity = String(windowProgress(progress, TL_CLOSE_IN));
+		}
+
+		const t = smoothstep(windowProgress(progress, TL_ANIM));
+
+		const years = state.timelineYearEls;
+		const yearsEl = state.timelineYearsEl;
+		if (years && years.length && yearsEl && yearsEl.parentElement) {
+			const center = yearsEl.parentElement.clientHeight / 2;
+			const firstCenter = years[0].offsetTop + years[0].offsetHeight / 2;
+			const lastCenter = years[years.length - 1].offsetTop + years[years.length - 1].offsetHeight / 2;
+			const translateY = lerp(center - firstCenter, center - lastCenter, t);
+			yearsEl.style.transform = `translateY(${translateY}px)`;
+			const currentIdx = Math.round(t * (years.length - 1));
+			years.forEach((el, index) => el.classList.toggle("is-current", index === currentIdx));
+		}
+
+		const r = state.timelineRendered;
+		if (!r) {
+			return;
+		}
+
+		r.nodeSelection.attr("transform", (d) => {
+			const a = r.startNodeOf(d.id);
+			const b = r.endNodeOf(d.id);
+			return `translate(${lerp(a.x0, b.x0, t)},${lerp(a.y0, b.y0, t)})`;
+		});
+		r.nodeSelection
+			.select("rect")
+			.attr("width", (d) => {
+				const a = r.startNodeOf(d.id);
+				const b = r.endNodeOf(d.id);
+				return lerp(Math.max(1, a.x1 - a.x0), Math.max(1, b.x1 - b.x0), t);
+			})
+			.attr("height", (d) => {
+				const a = r.startNodeOf(d.id);
+				const b = r.endNodeOf(d.id);
+				return lerp(Math.max(3, a.y1 - a.y0), Math.max(3, b.y1 - b.y0), t);
+			});
+		r.nodeSelection.select("text").attr("y", (d) => {
+			const a = r.startNodeOf(d.id);
+			const b = r.endNodeOf(d.id);
+			return lerp(Math.max(3, a.y1 - a.y0), Math.max(3, b.y1 - b.y0), t) / 2;
+		});
+		r.linkSelection
+			.attr("d", (d) => {
+				const a = r.startLinkOf(d.key);
+				const b = r.endLinkOf(d.key);
+				return r.linkPathFromGeom({
+					sx: lerp(a.sx, b.sx, t),
+					tx: lerp(a.tx, b.tx, t),
+					y0: lerp(a.y0, b.y0, t),
+					y1: lerp(a.y1, b.y1, t)
+				});
+			})
+			.attr("stroke-width", (d) => {
+				const a = r.startLinkOf(d.key);
+				const b = r.endLinkOf(d.key);
+				return Math.max(0.5, lerp(a.width, b.width, t));
+			});
+	}
+
+	function setupTimelineScroll() {
+		const section = document.getElementById("timeline");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawTimeline(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawTimeline(self.progress),
+			onRefresh: (self) => drawTimeline(self.progress)
+		});
+		drawTimeline(0);
+	}
+
+	function initTimelineSection() {
+		if (!timelineChart) {
+			return;
+		}
+		state.timelineHeadEl = document.querySelector("#timeline .timeline-headline");
+		state.timelinePanelEl = document.querySelector("#timeline .timeline-panel");
+		state.timelineCloseEl = document.querySelector("#timeline .timeline-closing");
+
+		const yearsEl = document.querySelector("#timeline .timeline-years");
+		if (yearsEl && !yearsEl.childElementCount) {
+			const fragment = document.createDocumentFragment();
+			for (let year = 2025; year <= 2040; year += 1) {
+				const el = document.createElement("div");
+				el.className = "timeline-year";
+				el.textContent = String(year);
+				fragment.appendChild(el);
+			}
+			yearsEl.appendChild(fragment);
+		}
+		state.timelineYearsEl = yearsEl;
+		state.timelineYearEls = yearsEl ? Array.from(yearsEl.children) : [];
+
+		renderTimelineSankey();
+		setupTimelineScroll();
+	}
+
 	function setupResize() {
 		let frameId = null;
 		const schedule = () => {
@@ -4308,8 +4859,9 @@
 				render();
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
-				renderImpactsSankey(window.currentImpactsScenarioId || state.impactsScenarioId);
+				renderImpactsSankey();
 				renderThemesSankey();
+				renderTimelineSankey();
 				frameId = null;
 			});
 		};
