@@ -2088,7 +2088,7 @@
 			card.logo.src = logoSrc;
 			card.logo.alt = `${selection.label} logo`;
 			card.sentence.innerHTML =
-				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
 				`<strong class="impacts-company-card__sentence-accent">loading...</strong> in 2040.`;
 			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
 			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
@@ -2137,14 +2137,14 @@
 
 		if (nodeAvoidedGtText !== "N/A") {
 			card.sentence.innerHTML =
-				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
 				`<strong class="impacts-company-card__sentence-accent">${sentenceAmountText}</strong> in 2040.`;
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = nodeSavingsText;
 			}
 		} else {
 			card.sentence.innerHTML =
-				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
 				`<strong class="impacts-company-card__sentence-accent">data pending</strong> in 2040.`;
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = nodeSavingsText;
@@ -2281,99 +2281,32 @@
 			});
 	}
 
-	// Scroll choreography for Climate Impacts: the two lead beats crossfade in a
-	// pinned cell. The chart itself is driven by the business/scenario selectors,
-	// not by scroll.
+	// Keep the full Climate Impacts two-column layout pinned for one extra
+	// viewport of scroll once it reaches the top of the screen.
 	function setupImpactsScroll() {
-		const stageEl = document.querySelector(".impacts-layout__lead-stage");
-		const leadEls = Array.from(document.querySelectorAll(".impacts-layout__lead"));
-		const businessesEl = document.querySelector(".impacts-businesses");
-		if (!stageEl || !leadEls.length) {
+		const layoutEl = document.querySelector(".impacts-layout");
+		if (!layoutEl) {
 			return;
 		}
 
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
-			leadEls.forEach((el) => {
-				el.style.opacity = "";
-				el.style.visibility = "";
-			});
 			return;
 		}
 
-		const seg = (p, a, b, c, d) => {
-			if (p <= a || p >= d) return 0;
-			if (p < b) return (p - a) / (b - a);
-			if (p <= c) return 1;
-			return (d - p) / (d - c);
-		};
-
-		const applyProgress = (progress) => {
-			const n = leadEls.length;
-			const slot = 1 / n;
-			const fade = slot * 0.26;
-			leadEls.forEach((el, i) => {
-				const start = i * slot;
-				const end = (i + 1) * slot;
-				const opacity = i === n - 1
-					? seg(progress, start, start + fade, 1, 1.05)
-					: seg(progress, start, start + fade, end - fade, end);
-				gsap.set(el, { autoAlpha: Math.max(0, Math.min(1, opacity)) });
-			});
-		};
-
 		ScrollTrigger.matchMedia({
 			"(min-width: 901px)": () => {
-				stageEl.classList.add("is-pinned");
-				if (businessesEl) {
-					businessesEl.classList.add("is-held");
-				}
-				gsap.set(leadEls, { autoAlpha: 0 });
-
-				const stageST = ScrollTrigger.create({
-					trigger: stageEl,
+				const pinST = ScrollTrigger.create({
+					trigger: layoutEl,
+					pin: layoutEl,
 					start: "top top",
-					end: "bottom bottom",
-					scrub: 0.55,
-					invalidateOnRefresh: true,
-					onRefresh: (self) => applyProgress(self.progress),
-					onUpdate: (self) => applyProgress(self.progress)
+					end: "+=100%",
+					pinSpacing: true,
+					invalidateOnRefresh: true
 				});
 
-				applyProgress(0);
-
-				let businessTween = null;
-				if (businessesEl) {
-					businessTween = gsap.fromTo(
-						businessesEl,
-						{ autoAlpha: 0, y: 34 },
-						{
-							autoAlpha: 1,
-							y: 0,
-							ease: "none",
-							scrollTrigger: {
-								trigger: businessesEl,
-								start: "top 85%",
-								end: "top 56%",
-								scrub: 0.55,
-								invalidateOnRefresh: true
-							}
-						}
-					);
-				}
-
 				return () => {
-					stageST.kill();
-					if (businessTween) {
-						businessTween.scrollTrigger && businessTween.scrollTrigger.kill();
-						businessTween.kill();
-					}
-					stageEl.classList.remove("is-pinned");
-					if (businessesEl) {
-						businessesEl.classList.remove("is-held");
-						gsap.set(businessesEl, { clearProps: "opacity,visibility,transform" });
-					}
-					gsap.set(leadEls, { clearProps: "opacity,visibility" });
+					pinST.kill();
 				};
 			}
 		});
