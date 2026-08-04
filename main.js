@@ -9,6 +9,7 @@
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const impactsChart = document.getElementById("impacts-sankey-chart");
+	const impactsExampleChart = document.getElementById("impacts-example-chart");
 	const themesChart = document.getElementById("themes-sankey-chart");
 	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
@@ -500,6 +501,7 @@
 	// subgraph; non-mapped companies keep the full baseline graph and show
 	// a no-data details state in the left column card.
 	const IMPACTS_SCENARIO_ID = "enacted-policies";
+	const IMPACTS_EXAMPLE_BUSINESS_ID = "fervo";
 
 	// Resolve the avoided.json company key (e.g. "FervoEnergy") for a normalized
 	// business slug (e.g. "fervo"). Returns null until avoided.json has loaded.
@@ -754,6 +756,7 @@
 		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 		setupImpactsBusinessSync();
 		renderImpactsSankey();
+		renderImpactsExampleSankey();
 		setupPortfolioBusinessSync();
 		setupScenarioSync();
 		setupLeadFades();
@@ -1609,16 +1612,25 @@
 	// selected it narrows to that company's connected subgraph (only edges with
 	// avoided-emissions data) and carves the avoided amount out of each node and
 	// ribbon as an empty, 1px-bordered region (remaining flow stays filled below).
-	function renderImpactsSankey() {
-		if (!impactsChart || !state.initData || !state.baselinesData) {
+	function renderImpactsChart(chartEl, options = {}) {
+		if (!chartEl || !state.initData || !state.baselinesData) {
 			return;
 		}
 
-		const scenarioRequest = resolveScenarioRequest(IMPACTS_SCENARIO_ID);
-		state.impactsScenarioId = IMPACTS_SCENARIO_ID;
+		const {
+			businessId: rawBusinessId = "",
+			scenarioId = IMPACTS_SCENARIO_ID,
+			storeInState = false,
+			waitForAvoidedData = false
+		} = options;
 
-		const businessId = state.impactsBusinessId;
+		const scenarioRequest = resolveScenarioRequest(scenarioId);
+		const businessId = normalizeBusinessSlug(rawBusinessId);
 		const companySelected = !!businessId;
+
+		if (storeInState) {
+			state.impactsScenarioId = scenarioId;
+		}
 
 		const fullGraph = buildGraph(
 			state.initData,
@@ -1632,13 +1644,25 @@
 		let avoidedMap = new Map();
 		if (companySelected) {
 			if (!state.avoidedData) {
+				if (waitForAvoidedData) {
+					d3.select(chartEl).selectAll("*").remove();
+				}
 				ensureAvoidedData().then(() => {
-					if (state.impactsBusinessId === businessId) {
-						renderImpactsSankey();
-						const selected = state.impactsRosterIndex.get(state.impactsCompanyKey);
-						updateImpactsCompanyCard(selected || null);
+					if (storeInState) {
+						if (state.impactsBusinessId === businessId) {
+							renderImpactsSankey();
+							const selected = state.impactsRosterIndex.get(state.impactsCompanyKey);
+							updateImpactsCompanyCard(selected || null);
+						}
+						return;
 					}
+
+					renderImpactsChart(chartEl, options);
 				});
+
+				if (waitForAvoidedData) {
+					return null;
+				}
 			} else {
 				const companyKey = avoidedCompanyKeyForBusiness(businessId);
 				if (companyKey) {
@@ -1675,7 +1699,7 @@
 			graphNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
 		}
 
-		const bounds = impactsChart.getBoundingClientRect();
+		const bounds = chartEl.getBoundingClientRect();
 		const width = Math.max(820, Math.floor(bounds.width));
 		const height = Math.max(480, Math.floor(bounds.height));
 		const { axisBottom, gtToY, layoutGt, scaleFactor } = createGtScale(
@@ -1683,10 +1707,10 @@
 			scenarioRequest.scenarioId
 		);
 
-		d3.select(impactsChart).selectAll("*").remove();
+		d3.select(chartEl).selectAll("*").remove();
 
 		const svg = d3
-			.select(impactsChart)
+			.select(chartEl)
 			.attr("viewBox", `0 0 ${width} ${height}`)
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("pointer-events", "none");
@@ -1764,7 +1788,7 @@
 			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
 			const gradient = defs
 				.append("linearGradient")
-				.attr("id", `impacts-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("id", `${chartEl.id || "impacts-chart"}-gradient-${sourceStage}-${targetStage}`)
 				.attr("gradientUnits", "userSpaceOnUse")
 				.attr("x1", sourceX)
 				.attr("y1", 0)
@@ -1787,7 +1811,7 @@
 			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
 			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
 			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
-				return `url(#impacts-link-gradient-${sourceStage}-${targetStage})`;
+				return `url(#${chartEl.id || "impacts-chart"}-gradient-${sourceStage}-${targetStage})`;
 			}
 			return "rgba(208, 222, 235, 0.38)";
 		};
@@ -1927,13 +1951,37 @@
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, graph, 24);
 
-		state.impactsRendered = {
+		const rendered = {
 			nodeSelection,
 			linkSelection,
 			graph,
-			scenarioId: IMPACTS_SCENARIO_ID,
+			scenarioId,
 			scenarioKey: scenarioRequest.resolvedScenarioKey
 		};
+
+		if (storeInState) {
+			state.impactsRendered = rendered;
+		}
+
+		return rendered;
+	}
+
+	function renderImpactsSankey() {
+		return renderImpactsChart(impactsChart, {
+			businessId: state.impactsBusinessId,
+			scenarioId: IMPACTS_SCENARIO_ID,
+			storeInState: true,
+			waitForAvoidedData: false
+		});
+	}
+
+	function renderImpactsExampleSankey() {
+		return renderImpactsChart(impactsExampleChart, {
+			businessId: IMPACTS_EXAMPLE_BUSINESS_ID,
+			scenarioId: IMPACTS_SCENARIO_ID,
+			storeInState: false,
+			waitForAvoidedData: true
+		});
 	}
 
 	function findNodeLabelById(nodeId) {
@@ -2023,41 +2071,41 @@
 			return;
 		}
 
-		const scenarioKey = scenarioKeyById[IMPACTS_SCENARIO_ID] || "2040A";
 		const nodeLabel = resolveImpactsNodeLabel(selection);
 		const nodeLabelText = nodeLabel || "No mapped node available";
 		const nodeStage = deriveStageFromId(selection.nodeId);
 		const nodeStageVar = stageColorVars[nodeStage] || "--color-final-energy";
-		const companyKey = selection.businessId
-			? avoidedCompanyKeyForBusiness(selection.businessId)
-			: null;
 		const logoSrc = impactsLogoByBusiness[selection.businessId] || impactsLogoFallback;
 		const nodeMetrics = impactsNodeMetrics(selection.nodeId);
 		const avoidedHeightPct = Math.round(Math.min(1, Math.max(0, nodeMetrics.avoidedRatio)) * 100);
 		const remainingHeightPct = Math.max(0, 100 - avoidedHeightPct);
+		const technologyLabel =
+			String(selection.technologyLabel || "").trim() ||
+			String(selection.themeLabel || "").trim() ||
+			"This technology";
 
 		if (selection.businessId && !state.avoidedData) {
 			card.logo.src = logoSrc;
 			card.logo.alt = `${selection.label} logo`;
 			card.sentence.innerHTML =
-				`<strong>${selection.label}</strong> reduces emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">loading...</strong>.`;
+				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">loading...</strong> in 2040.`;
 			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
 			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
 			card.nodeBar.style.setProperty("--impacts-node-remaining-height", "100%");
 			card.nodeName.textContent = nodeLabelText;
-			card.nodeSavings.textContent = "- loading...";
+			if (card.nodeSavings) {
+				card.nodeSavings.textContent = "- loading...";
+			}
+			if (card.nodePercentage) {
+				card.nodePercentage.hidden = true;
+				card.nodePercentage.textContent = "";
+			}
 			card.prompt.hidden = true;
 			card.content.hidden = false;
 			card.root.classList.add("is-active");
 			return;
 		}
-
-		const avoidedMt = companyKey ? avoidedTotalForCompany(companyKey, scenarioKey) : 0;
-		const hasAvoided = avoidedMt > 0;
-
-		const avoidedGt = avoidedMt / 1000;
-		const avoidedGtText = hasAvoided ? `${d3.format(".2f")(avoidedGt)} Gt` : "N/A";
 
 		card.logo.src = logoSrc;
 		card.logo.alt = `${selection.label} logo`;
@@ -2072,17 +2120,35 @@
 
 		const nodeAvoidedGt = nodeMetrics.avoidedMt / 1000;
 		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? `${d3.format(".2f")(nodeAvoidedGt)} Gt` : "N/A";
+		const nodeSavingsText = nodeAvoidedGtText === "N/A" ? "- N/A" : `-${nodeAvoidedGtText}`;
+		const sentenceAmountText = nodeSavingsText.replace(/^\s*-\s*/, "");
+		const showNodePercentage = nodeMetrics.totalMt > 0;
+		const nodeAvoidedPctText = `${d3.format(".1f")(Math.max(0, Math.min(1, nodeMetrics.avoidedRatio)) * 100)}% avoided`;
 
-		if (hasAvoided) {
+		if (card.nodePercentage) {
+			if (showNodePercentage) {
+				card.nodePercentage.hidden = false;
+				card.nodePercentage.textContent = nodeAvoidedPctText;
+			} else {
+				card.nodePercentage.hidden = true;
+				card.nodePercentage.textContent = "";
+			}
+		}
+
+		if (nodeAvoidedGtText !== "N/A") {
 			card.sentence.innerHTML =
-				`<strong>${selection.label}</strong> reduces emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">${avoidedGtText}</strong>.`;
-			card.nodeSavings.textContent = `-${nodeAvoidedGtText}`;
+				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">${sentenceAmountText}</strong> in 2040.`;
+			if (card.nodeSavings) {
+				card.nodeSavings.textContent = nodeSavingsText;
+			}
 		} else {
 			card.sentence.innerHTML =
-				`<strong>${selection.label}</strong> reduces emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">data pending</strong>.`;
-			card.nodeSavings.textContent = "- N/A";
+				`${technologyLabel} has the potential to reduce global emissions by ` +
+				`<strong class="impacts-company-card__sentence-accent">data pending</strong> in 2040.`;
+			if (card.nodeSavings) {
+				card.nodeSavings.textContent = nodeSavingsText;
+			}
 		}
 
 		card.prompt.hidden = true;
@@ -2125,6 +2191,7 @@
 					key,
 					label: company.label,
 					themeLabel: theme.label,
+					technologyLabel: company.technologyLabel,
 					businessId: company.businessId,
 					nodeId: company.nodeId
 				});
@@ -2179,7 +2246,8 @@
 				nodeAvoided: cardRoot.querySelector("[data-impacts-card-node-avoided]"),
 				nodeRemaining: cardRoot.querySelector("[data-impacts-card-node-remaining]"),
 				nodeName: cardRoot.querySelector("[data-impacts-card-node-name]"),
-				nodeSavings: cardRoot.querySelector("[data-impacts-card-node-savings]")
+				nodeSavings: cardRoot.querySelector("[data-impacts-card-node-savings]"),
+				nodePercentage: cardRoot.querySelector("[data-impacts-card-node-percentage]")
 			};
 
 			if (state.impactsCard.logo) {
@@ -3913,9 +3981,11 @@
 				.replace(/^_+/, "")
 				.trim();
 			const nodeId = String(company?.node || "").trim();
+			const technologyLabel = String(company?.technology || "").trim();
 			theme.companies.push({
 				label,
 				nodeId,
+				technologyLabel,
 				businessId: normalizeBusinessSlug(company?.company || company?.company_label)
 			});
 			if (nodeId) {
@@ -4860,6 +4930,7 @@
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 				renderImpactsSankey();
+				renderImpactsExampleSankey();
 				renderThemesSankey();
 				renderTimelineSankey();
 				frameId = null;

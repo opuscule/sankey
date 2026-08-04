@@ -1540,6 +1540,186 @@
 				font-weight: 700;
 			}
 
+			.impacts-example {
+				display: grid;
+				gap: clamp(1.75rem, 4vw, 3.5rem);
+				grid-template-columns: minmax(280px, 28rem) minmax(0, 1fr);
+				grid-template-rows: auto auto;
+				margin: 0 5vw 5rem;
+				min-height: min(72vh, 760px);
+				overflow: clip;
+				padding: clamp(2rem, 4vw, 3rem) 0 clamp(1.5rem, 3vw, 2rem);
+				position: relative;
+			}
+
+			.impacts-example__lead {
+				display: grid;
+				gap: 0.7rem;
+				grid-column: 1;
+				grid-row: 1;
+				max-width: 26rem;
+				padding-top: 0.5rem;
+				position: relative;
+				z-index: 2;
+			}
+
+			.impacts-example__lead h3 {
+				color: #fff;
+				font-size: clamp(1.35rem, 2.2vw, 2rem);
+				line-height: 1.2;
+				margin: 0;
+				max-width: 18ch;
+			}
+
+			.impacts-example__lead p {
+				color: #fff;
+				font-size: clamp(1.55rem, 2.25vw, 2.55rem);
+				font-weight: 700;
+				line-height: 1.16;
+				margin: 0;
+				max-width: 15ch;
+				text-wrap: balance;
+			}
+
+			.impacts-example__lead strong {
+				color: #fff;
+			}
+
+			.impacts-example__panel {
+				display: contents;
+			}
+
+			.impacts-example__copy {
+				display: grid;
+				gap: 2rem;
+				grid-column: 1;
+				grid-row: 2;
+				align-self: start;
+				position: relative;
+				z-index: 2;
+			}
+
+			.impacts-example__logo {
+				display: block;
+				filter: brightness(0) invert(1);
+				height: auto;
+				max-height: 60px;
+				max-width: 182px;
+				width: auto;
+			}
+
+			.impacts-example__node {
+				align-items: center;
+				gap: 1.35rem;
+				grid-template-columns: auto 1fr;
+			}
+
+			.impacts-example__bar {
+				--impacts-node-color: var(--color-final-energy);
+				height: 116px;
+				max-height: 116px;
+				width: 38px;
+			}
+
+			.impacts-example__bar .impacts-node-avoided {
+				height: 75.7%;
+				opacity: 0.9;
+			}
+
+			.impacts-example__bar .impacts-node-remaining {
+				background: rgba(47, 215, 164, 0.45);
+				height: 24.3%;
+			}
+
+			.impacts-example__visual {
+				align-self: start;
+				display: grid;
+				grid-column: 2;
+				grid-row: 1 / span 2;
+				justify-items: end;
+				margin-right: -2vw;
+				min-width: 0;
+				padding-top: clamp(3rem, 9vh, 5.5rem);
+			}
+
+			.impacts-example__svg {
+				display: block;
+				height: auto;
+				max-width: none;
+				opacity: 0.98;
+				width: min(100%, 920px);
+			}
+
+			#impacts-example-chart {
+				display: block;
+				height: min(62vh, 540px);
+				max-height: 540px;
+				pointer-events: none;
+				width: min(100%, 920px);
+			}
+
+			.impacts-example__node .impacts-node-visual__meta {
+				gap: 0.9rem;
+			}
+
+			.impacts-example__node .impacts-node-visual__name {
+				font-size: clamp(1.3rem, 1.65vw, 1.75rem);
+				font-weight: 700;
+			}
+
+			.impacts-example__node .impacts-node-visual__savings {
+				font-size: clamp(1.8rem, 2vw, 2.4rem);
+				font-weight: 700;
+			}
+
+			@media (max-width: 900px) {
+				.impacts-example {
+					grid-template-columns: 1fr;
+					grid-template-rows: auto;
+					margin-bottom: 3rem;
+					min-height: auto;
+					padding: 0;
+				}
+
+				.impacts-example__panel {
+					align-items: start;
+					display: grid;
+					grid-template-columns: 1fr;
+					gap: 1.5rem;
+				}
+
+				.impacts-example__lead h3 {
+					max-width: none;
+				}
+
+				.impacts-example__lead,
+				.impacts-example__lead p {
+					max-width: none;
+				}
+
+				.impacts-example__copy {
+					grid-column: auto;
+					grid-row: auto;
+				}
+
+				.impacts-example__visual {
+					grid-column: auto;
+					grid-row: auto;
+					margin-right: 0;
+					transform: none;
+				}
+
+				.impacts-example__svg {
+					width: 100%;
+				}
+
+				#impacts-example-chart {
+					height: auto;
+					max-height: 420px;
+					width: 100%;
+				}
+			}
+
 			.impacts-layout {
 				--impacts-hold: 300vh;
 				display: grid;
@@ -1630,6 +1810,10 @@
 			.impacts-company-card__content {
 				display: grid;
 				gap: 1.5rem;
+			}
+
+			.impacts-company-card__content[hidden] {
+				display: none;
 			}
 
 			.impacts-company-card__logo {
@@ -1800,17 +1984,20 @@
 
 			/* Carved "empty" avoided regions: no fill, 1px border. Remaining regions
 			   keep the normal stage fill (nodes) or gradient fill (ribbons). */
-			#impacts-sankey-chart .impacts-node-avoided {
+			#impacts-sankey-chart .impacts-node-avoided,
+			#impacts-example-chart .impacts-node-avoided {
 				fill: none;
 				stroke: rgba(238, 245, 255, 0.9);
 				stroke-width: 1;
 			}
 
-			#impacts-sankey-chart .impacts-link-remaining {
+			#impacts-sankey-chart .impacts-link-remaining,
+			#impacts-example-chart .impacts-link-remaining {
 				stroke: none;
 			}
 
-			#impacts-sankey-chart .impacts-link-avoided {
+			#impacts-sankey-chart .impacts-link-avoided,
+			#impacts-example-chart .impacts-link-avoided {
 				fill: none;
 				stroke: rgba(238, 245, 255, 0.85);
 				stroke-width: 1;
@@ -1818,22 +2005,26 @@
 
 			/* Intervention node: full-height outline marking the company's
 			   placement, mirroring a click-selected node in the main chart. */
-			#impacts-sankey-chart .impacts-node-intervention {
+			#impacts-sankey-chart .impacts-node-intervention,
+			#impacts-example-chart .impacts-node-intervention {
 				fill: none;
 				stroke: #d4ecff;
 				stroke-width: 1.6;
 			}
 
-			#impacts-sankey-chart .impacts-link {
+			#impacts-sankey-chart .impacts-link,
+			#impacts-example-chart .impacts-link {
 				opacity: 0.9;
 			}
 
-			#impacts-sankey-chart .sankey-link {
+			#impacts-sankey-chart .sankey-link,
+			#impacts-example-chart .sankey-link {
 				opacity: 0.9;
 				transition: opacity 220ms ease, stroke-width 220ms ease;
 			}
 
-			#impacts-sankey-chart .sankey-node {
+			#impacts-sankey-chart .sankey-node,
+			#impacts-example-chart .sankey-node {
 				opacity: 1;
 				transition: opacity 220ms ease;
 			}
