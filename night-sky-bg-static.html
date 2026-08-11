@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Static night sky background</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #050506;
+    }
+
+    body {
+      display: block;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #050506;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sky"></canvas>
+  <script>
+    const canvas = document.getElementById('sky');
+    const ctx = canvas.getContext('2d');
+    const stars = [];
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function buildStars(width, height) {
+      const starCount = Math.max(90, Math.round((width * height) / 14000));
+      stars.length = 0;
+
+      for (let i = 0; i < starCount; i += 1) {
+        const size = Math.random() < 0.82 ? 1 : Math.random() < 0.97 ? 2 : 3;
+        const baseAlpha = size === 1 ? rand(0.25, 0.55) : rand(0.45, 0.8);
+        const tint = Math.random() < 0.25 ? '255,241,221' : Math.random() < 0.5 ? '209,224,255' : '255,255,255';
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size,
+          tint,
+          baseAlpha,
+          phase: rand(0, Math.PI * 2),
+          speed: rand(0.6, 1.5),
+          amplitude: rand(0.08, 0.2),
+        });
+      }
+    }
+
+    function drawSky(time = 0) {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#04050a');
+      gradient.addColorStop(0.55, '#050506');
+      gradient.addColorStop(1, '#0b1020');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      for (const star of stars) {
+        const alpha = Math.max(0.08, Math.min(1, star.baseAlpha + Math.sin(time * 0.001 * star.speed + star.phase) * star.amplitude));
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${star.tint}, ${alpha.toFixed(3)})`;
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+
+        if (star.size >= 2) {
+          ctx.fillStyle = `rgba(${star.tint}, ${(alpha * 0.14).toFixed(3)})`;
+          ctx.fillRect(star.x - 1, star.y - 1, star.size + 2, star.size + 2);
+        }
+      }
+
+      requestAnimationFrame(drawSky);
+    }
+
+    function resizeAndRedraw() {
+      buildStars(window.innerWidth, window.innerHeight);
+      drawSky(0);
+    }
+
+    window.addEventListener('resize', resizeAndRedraw, { passive: true });
+    resizeAndRedraw();
+  </script>
+</body>
+</html>

@@ -98,14 +98,14 @@
 			phase: "cars-example",
 			start: 84,
 			end: 96,
-			copy: 'Flows between neighboring nodes show how <strong>emissions are connected across lenses</strong>, with the width of the flow reflecting the magnitude of such connections. For example, of the 6 Gt CO2e due to <span class="kw kw-sector">Passenger Transport</span>, 4.4 Gt are due to <span class="kw kw-equipment">cars</span>.'
+			copy: 'Flows between neighboring nodes show how <strong>emissions are connected across lenses</strong>, with the width of the flow reflecting the magnitude of such connections.<br><br>For example, of the 6 Gt CO2e due to <span class="kw kw-sector">Passenger Transport</span>, 4.4 Gt are due to <span class="kw kw-equipment">cars</span>.'
 		},
 		{
 			id: "beat-11",
 			phase: "explore",
 			start: 96,
 			end: 100,
-			copy: "Select any node for yourself to see how it connects to others."
+			copy: "<strong>Select any node</strong> for yourself to see the amount of emissions it contributes today and how it connects to others."
 		}
 	];
 
@@ -761,11 +761,112 @@
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
+		setupImpactsIntroPin();
 		setupImpactsScroll();
+		setupAcknowledgementsVideoScrub();
 		initThemesSection();
 		initTimelineSection();
+		setupBottomStickyNav();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
+	}
+
+	// Boundaries used for the bottom-nav scroll-spy active state.
+	const NAV_GROUPS = [
+		{ group: "global-emissions", startSelector: "#global-emissions-picture", endSelector: "#tif-tgif-portfolio" },
+		{ group: "portfolio", startSelector: "#tif-tgif-portfolio", endSelector: "#climate-impacts" },
+		{ group: "climate-impacts", startSelector: "#climate-impacts", endSelector: "#acknowledgements-citations" },
+		{ group: "acknowledgements", startSelector: "#acknowledgements-citations", endSelector: null }
+	];
+
+	// Cached per-group link widths (px) and each group's last-known scroll progress (0-1).
+	const navProgressWidths = {};
+	const navProgressByGroup = {};
+
+	function measureNavProgressGeometry() {
+		const list = document.querySelector(".bottom-sticky-nav__list");
+		if (!list) {
+			return;
+		}
+
+		const listLeft = list.getBoundingClientRect().left;
+		let firstLinkLeft = null;
+
+		NAV_GROUPS.forEach(({ group }) => {
+			const item = list.querySelector(`[data-nav-group="${group}"]`);
+			if (!item) {
+				return;
+			}
+			const li = item.closest("li");
+			const rect = (li || item).getBoundingClientRect();
+			navProgressWidths[group] = rect.width;
+			if (firstLinkLeft === null) {
+				firstLinkLeft = rect.left - listLeft;
+			}
+		});
+
+		list.style.setProperty("--nav-progress-left", `${firstLinkLeft || 0}px`);
+		updateNavProgressBar();
+	}
+
+	function updateNavProgressBar() {
+		const list = document.querySelector(".bottom-sticky-nav__list");
+		if (!list) {
+			return;
+		}
+
+		const totalPx = NAV_GROUPS.reduce((sum, { group }) => {
+			const width = navProgressWidths[group] || 0;
+			const progress = Math.min(Math.max(navProgressByGroup[group] || 0, 0), 1);
+			return sum + width * progress;
+		}, 0);
+
+		list.style.setProperty("--nav-progress-width", `${totalPx}px`);
+	}
+
+	function setupBottomStickyNav() {
+		const nav = document.querySelector(".bottom-sticky-nav");
+		const portfolioSection = document.querySelector("#tif-tgif-portfolio");
+		if (!nav || !portfolioSection) {
+			return;
+		}
+
+		if (!window.gsap || !window.ScrollTrigger) {
+			nav.classList.add("is-visible");
+			return;
+		}
+
+		ScrollTrigger.create({
+			trigger: portfolioSection,
+			start: "top center",
+			onEnter: () => nav.classList.add("is-visible"),
+			onLeaveBack: () => nav.classList.remove("is-visible")
+		});
+
+		measureNavProgressGeometry();
+
+		NAV_GROUPS.forEach(({ group, startSelector, endSelector }) => {
+			const item = nav.querySelector(`[data-nav-group="${group}"]`);
+			const startEl = document.querySelector(startSelector);
+			const endEl = endSelector ? document.querySelector(endSelector) : null;
+			if (!item || !startEl) {
+				return;
+			}
+
+			ScrollTrigger.create({
+				trigger: startEl,
+				start: "top center",
+				// document.body is unreliable as an endTrigger (GSAP treats it ambiguously as the scroller);
+				// fall back to the section's own bottom hitting the viewport bottom instead.
+				endTrigger: endEl || startEl,
+				end: endEl ? "top center" : "bottom bottom",
+				onToggle: (self) => item.classList.toggle("is-active", self.isActive),
+				onUpdate: (self) => {
+					navProgressByGroup[group] = self.progress;
+					updateNavProgressBar();
+				}
+			});
+		});
 	}
 
 	function normalizeBusinessSlug(rawValue) {
@@ -2281,6 +2382,41 @@
 			});
 	}
 
+	// Pins the viewport-sized intro wrapper once its top hits the top of the
+	// screen, holding it through the remaining scroll of the taller
+	// .impacts-intro banner, then releases when that banner's bottom reaches
+	// the bottom of the viewport.
+	function setupImpactsIntroPin() {
+		const introEl = document.querySelector(".impacts-intro");
+		const pinEl = document.querySelector(".impacts-intro__pin");
+		if (!introEl || !pinEl) {
+			return;
+		}
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+			return;
+		}
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				const pinST = ScrollTrigger.create({
+					trigger: pinEl,
+					pin: pinEl,
+					start: "top top",
+					endTrigger: introEl,
+					end: "bottom bottom",
+					pinSpacing: true,
+					invalidateOnRefresh: true
+				});
+
+				return () => {
+					pinST.kill();
+				};
+			}
+		});
+	}
+
 	// Keep the full Climate Impacts two-column layout pinned for one extra
 	// viewport of scroll once it reaches the top of the screen.
 	function setupImpactsScroll() {
@@ -2307,6 +2443,46 @@
 
 				return () => {
 					pinST.kill();
+				};
+			}
+		});
+	}
+
+	// Scroll-scrubs video-poc-v1.mp4 by mapping scroll progress to currentTime; desktop only.
+	function setupAcknowledgementsVideoScrub() {
+		const wrapperEl = document.querySelector(".acknowledgements-video");
+		const video = document.querySelector(".acknowledgements-video__el");
+		if (!wrapperEl || !video) {
+			return;
+		}
+
+		// Paused videos render nothing in some browsers until seeked once metadata is ready.
+		video.addEventListener("loadedmetadata", () => {
+			video.currentTime = 0.01;
+		});
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+			return;
+		}
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				const scrubST = ScrollTrigger.create({
+					trigger: wrapperEl,
+					start: "top top",
+					end: "bottom bottom",
+					scrub: true,
+					invalidateOnRefresh: true,
+					onUpdate: (self) => {
+						if (isFinite(video.duration)) {
+							video.currentTime = self.progress * video.duration;
+						}
+					}
+				});
+
+				return () => {
+					scrubST.kill();
 				};
 			}
 		});
@@ -3131,14 +3307,15 @@
 				const card = introGroup.append("g").attr("class", `intro-card intro-card-stage-${stage}`);
 
 				let mark = null;
-				let barScreen;
+				// Bars are always full card height regardless of the asset's own
+				// (per-word) bar subpath height, so all 7 cards line up top and bottom.
+				const barScreen = {
+					x: cx - barW / 2,
+					y: cardTop,
+					w: barW,
+					h: extentH
+				};
 				if (asset) {
-					barScreen = {
-						x: cx - barW / 2,
-						y: cardTop + asset.bar.y * scale,
-						w: barW,
-						h: asset.bar.height * scale
-					};
 					if (asset.markPaths.length) {
 						mark = card
 							.append("g")
@@ -3151,13 +3328,6 @@
 							.style("opacity", 0);
 						asset.markPaths.forEach((d) => mark.append("path").attr("d", d));
 					}
-				} else {
-					barScreen = {
-						x: cx - barW / 2,
-						y: cardTop + extentH * 0.45,
-						w: barW,
-						h: extentH * 0.55
-					};
 				}
 
 				const barRect = card
@@ -4866,6 +5036,7 @@
 				renderImpactsExampleSankey();
 				renderThemesSankey();
 				renderTimelineSankey();
+				measureNavProgressGeometry();
 				frameId = null;
 			});
 		};
