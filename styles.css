@@ -400,10 +400,43 @@
 				font-weight: 800;
 			}
 
+			/* --- Timeline intro (crossfading headline, locked in place) -------- */
+			#timeline-intro {
+				color: #fff;
+				min-height: 240vh;
+			}
+
+			.timeline-intro__pin {
+				display: grid;
+				height: 100vh;
+				padding: 0 6vw;
+				place-items: center;
+				position: sticky;
+				top: 0;
+			}
+
+			.timeline-intro__stack {
+				display: grid;
+			}
+
+			.timeline-intro__line {
+				color: #fff;
+				font-size: clamp(1.8rem, 2.7vw, 2.7rem);
+				font-weight: 800;
+				grid-area: 1 / 1;
+				line-height: 1.12;
+				margin: 0;
+				max-width: var(--max-copy-width);
+				opacity: 0;
+				text-wrap: balance;
+			}
+
 			/* --- Timeline section (2025 -> 2040 scroll morph) ------------------ */
 			#timeline {
 				color: #e8f4ff;
-				min-height: 320vh;
+				/* 320vh drives the morph; +40vh is a locked hold after .timeline-closing
+				   appears, before the section unpins into the portfolio section. */
+				min-height: 360vh;
 				padding: 0;
 			}
 
@@ -427,28 +460,13 @@
 				width: 100%;
 			}
 
-			.timeline-stack,
-			.timeline-panel {
-				grid-area: 1 / 1;
-				max-width: 100%;
-				width: 100%;
-			}
-
-			.timeline-headline {
-				color: #fff;
-				font-size: clamp(1.8rem, 2.7vw, 2.7rem);
-				font-weight: 800;
-				line-height: 1.12;
-				margin: 0;
-				text-wrap: balance;
-			}
-
 			.timeline-panel {
 				align-self: center;
 				display: flex;
 				flex-direction: column;
 				gap: 2.5rem;
-				opacity: 0;
+				max-width: 100%;
+				width: 100%;
 			}
 
 			.timeline-yearstrip {
@@ -540,6 +558,41 @@
 
 			#timeline-sankey-chart .sankey-links .sankey-link {
 				opacity: 0.35;
+			}
+
+			/* Left GT reference axis: a static "54 Gt" tick at the start-state top,
+			   plus a growing line + live counting label tracking the chart's rising
+			   top edge up to "57 Gt". Modeled on .scenario-axis__* below. */
+			#timeline-sankey-chart .timeline-axis__line {
+				stroke: rgba(232, 244, 255, 0.35);
+				stroke-width: 1;
+			}
+
+			#timeline-sankey-chart .timeline-axis__tick-dash {
+				stroke: rgba(232, 244, 255, 0.45);
+				stroke-width: 1;
+			}
+
+			#timeline-sankey-chart .timeline-axis__tick-label {
+				fill: rgba(232, 244, 255, 0.6);
+				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 11px;
+				font-weight: 500;
+				letter-spacing: 0.02em;
+			}
+
+			#timeline-sankey-chart .timeline-axis__marker-label {
+				fill: #fff;
+				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+			}
+
+			#timeline-sankey-chart .timeline-axis__label-chip {
+				fill: rgba(8, 10, 16, 0.7);
+				rx: 3;
+				ry: 3;
 			}
 
 			.sankey-node-panel {
@@ -2545,6 +2598,25 @@
 					flex-direction: column;
 				}
 
+				#timeline-intro {
+					min-height: auto;
+				}
+
+				.timeline-intro__pin {
+					height: auto;
+					padding: 3rem 1rem;
+					position: static;
+				}
+
+				.timeline-intro__stack {
+					gap: 1rem;
+				}
+
+				.timeline-intro__line {
+					grid-area: auto;
+					opacity: 1;
+				}
+
 				#timeline {
 					min-height: auto;
 				}
@@ -2565,7 +2637,6 @@
 					position: static;
 				}
 
-				.timeline-stack,
 				.timeline-panel {
 					grid-area: auto;
 				}

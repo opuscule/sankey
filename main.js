@@ -765,6 +765,7 @@
 		setupImpactsScroll();
 		setupAcknowledgementsVideoScrub();
 		initThemesSection();
+		initTimelineIntroSection();
 		initTimelineSection();
 		setupBottomStickyNav();
 		setupResize();
@@ -4671,6 +4672,60 @@
 		}
 	}
 
+	// --- Timeline intro (crossfading headline, locked #timeline-intro) --------
+	// Two sentences fade in/out in sequence, held in the same spot, before the
+	// #timeline section takes over. Windows are fractions of #timeline-intro's
+	// own scroll range (section ~240vh).
+	const TLI_LINE1_IN = [0.0, 0.12];
+	const TLI_LINE1_OUT = [0.38, 0.48];
+	const TLI_LINE2_IN = [0.52, 0.64];
+	const TLI_LINE2_OUT = [0.88, 1.0];
+
+	function drawTimelineIntro(progress) {
+		state.timelineIntroProgress = progress;
+		if (state.timelineIntroLine1El) {
+			const inAmt = windowProgress(progress, TLI_LINE1_IN);
+			const outAmt = windowProgress(progress, TLI_LINE1_OUT);
+			state.timelineIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+		if (state.timelineIntroLine2El) {
+			const inAmt = windowProgress(progress, TLI_LINE2_IN);
+			const outAmt = windowProgress(progress, TLI_LINE2_OUT);
+			state.timelineIntroLine2El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+	}
+
+	function setupTimelineIntroScroll() {
+		const section = document.getElementById("timeline-intro");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawTimelineIntro(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawTimelineIntro(self.progress),
+			onRefresh: (self) => drawTimelineIntro(self.progress)
+		});
+		drawTimelineIntro(0);
+	}
+
+	function initTimelineIntroSection() {
+		const section = document.getElementById("timeline-intro");
+		if (!section) {
+			return;
+		}
+		state.timelineIntroLine1El = document.querySelector("#timeline-intro .timeline-intro__line--1");
+		state.timelineIntroLine2El = document.querySelector("#timeline-intro .timeline-intro__line--2");
+		setupTimelineIntroScroll();
+	}
+
 	// --- Timeline section (2025 -> 2040 scroll morph) -------------------------
 	// The right-column Sankey morphs from the 2025 baseline to the 2040A scenario
 	// while the left column slides a year strip 2025 -> 2040. We have no per-year
@@ -4678,16 +4733,18 @@
 	// linearly interpolated between them (easeInOut over the scroll range).
 	const TIMELINE_TARGET_SCENARIO = "2040A";
 	// Scroll windows as fractions of the #timeline scroll range (section ~320vh).
-	const TL_HEAD_IN = [0.0, 0.06];
-	const TL_HEAD_OUT = [0.22, 0.3];
-	const TL_PANEL_IN = [0.24, 0.32];
 	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~180vh of 320vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
 	// and grows to TL_END_FRAC (full) by 2040, so the rising envelope reads as the
 	// rising emissions total. Tunable; could instead be derived from GT totals.
-	const TL_START_FRAC = 0.84;
+	const TL_START_FRAC = 0.92;
 	const TL_END_FRAC = 1;
+	// Left y-axis: hardcoded copy-matching GT labels (not derived from data),
+	// mirroring the scenarioTotalsGt precedent used by the scenario chart.
+	const TIMELINE_START_GT = 54;
+	const TIMELINE_END_GT = 57;
+	const TIMELINE_AXIS_X = 18;
 
 	const windowProgress = (value, [start, end]) => clamp01((value - start) / (end - start || 1));
 
@@ -4882,6 +4939,59 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(endGraph));
 
+		// Left y-axis: a static "54 Gt" tick at the 2025 (start-state) envelope
+		// top, plus a growing line + live counting label that tracks the chart's
+		// rising top edge (same scaleY math as the node envelope) up to "57 Gt".
+		const axisTopStart = scaleY(44, TL_START_FRAC);
+		const axisTopEnd = scaleY(44, TL_END_FRAC);
+		const axisGroup = svg.append("g").attr("class", "timeline-axis");
+
+		// A label's chip <rect> must sit before its <text> sibling to paint underneath it.
+		const fitChipToLabel = (chip, label) => {
+			const bbox = label.node().getBBox();
+			chip
+				.attr("x", bbox.x - 4)
+				.attr("y", bbox.y - 2)
+				.attr("width", bbox.width + 8)
+				.attr("height", bbox.height + 4);
+		};
+
+		axisGroup
+			.append("line")
+			.attr("class", "timeline-axis__tick-dash")
+			.attr("x1", TIMELINE_AXIS_X)
+			.attr("x2", TIMELINE_AXIS_X + 8)
+			.attr("y1", axisTopStart)
+			.attr("y2", axisTopStart);
+		const tickChip = axisGroup.append("rect").attr("class", "timeline-axis__label-chip");
+		const tickLabel = axisGroup
+			.append("text")
+			.attr("class", "timeline-axis__tick-label")
+			.attr("x", TIMELINE_AXIS_X + 12)
+			.attr("y", axisTopStart)
+			.attr("dy", "0.32em")
+			.attr("text-anchor", "start")
+			.text(`${TIMELINE_START_GT} Gt`);
+		fitChipToLabel(tickChip, tickLabel);
+
+		const axisLine = axisGroup
+			.append("line")
+			.attr("class", "timeline-axis__line")
+			.attr("x1", TIMELINE_AXIS_X)
+			.attr("x2", TIMELINE_AXIS_X)
+			.attr("y1", bandBottom)
+			.attr("y2", axisTopStart);
+		const markerChip = axisGroup.append("rect").attr("class", "timeline-axis__label-chip");
+		const axisMarkerLabel = axisGroup
+			.append("text")
+			.attr("class", "timeline-axis__marker-label")
+			.attr("x", TIMELINE_AXIS_X + 12)
+			.attr("y", axisTopStart)
+			.attr("dy", "0.32em")
+			.attr("text-anchor", "start")
+			.text(`${TIMELINE_START_GT} Gt`);
+		fitChipToLabel(markerChip, axisMarkerLabel);
+
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, endGraph, 24);
 
@@ -4892,7 +5002,13 @@
 			endNodeOf,
 			startLinkOf,
 			endLinkOf,
-			linkPathFromGeom
+			linkPathFromGeom,
+			axisLine,
+			axisMarkerLabel,
+			markerChip,
+			fitChipToLabel,
+			axisTopStart,
+			axisTopEnd
 		};
 
 		drawTimeline(state.timelineProgress || 0);
@@ -4904,14 +5020,6 @@
 	function drawTimeline(progress) {
 		state.timelineProgress = progress;
 
-		if (state.timelineHeadEl) {
-			const headIn = windowProgress(progress, TL_HEAD_IN);
-			const headOut = windowProgress(progress, TL_HEAD_OUT);
-			state.timelineHeadEl.style.opacity = String(headIn * (1 - headOut));
-		}
-		if (state.timelinePanelEl) {
-			state.timelinePanelEl.style.opacity = String(windowProgress(progress, TL_PANEL_IN));
-		}
 		if (state.timelineCloseEl) {
 			state.timelineCloseEl.style.opacity = String(windowProgress(progress, TL_CLOSE_IN));
 		}
@@ -4973,6 +5081,14 @@
 				const b = r.endLinkOf(d.key);
 				return Math.max(0.5, lerp(a.width, b.width, t));
 			});
+
+		if (r.axisLine && r.axisMarkerLabel) {
+			const axisTopY = lerp(r.axisTopStart, r.axisTopEnd, t);
+			const gtValue = Math.round(lerp(TIMELINE_START_GT, TIMELINE_END_GT, t) * 10) / 10;
+			r.axisLine.attr("y2", axisTopY);
+			r.axisMarkerLabel.attr("y", axisTopY).text(`${gtValue} Gt`);
+			r.fitChipToLabel(r.markerChip, r.axisMarkerLabel);
+		}
 	}
 
 	function setupTimelineScroll() {
@@ -4987,7 +5103,10 @@
 		ScrollTrigger.create({
 			trigger: section,
 			start: "top top",
-			end: "bottom bottom",
+			// Finish the scrub 40vh before the section's actual (grown) bottom, so
+			// the scrub timeline itself is unchanged and the extra 40vh becomes a
+			// held final state before the section unpins.
+			end: "bottom bottom+=40vh",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
 			onUpdate: (self) => drawTimeline(self.progress),
@@ -5000,8 +5119,6 @@
 		if (!timelineChart) {
 			return;
 		}
-		state.timelineHeadEl = document.querySelector("#timeline .timeline-headline");
-		state.timelinePanelEl = document.querySelector("#timeline .timeline-panel");
 		state.timelineCloseEl = document.querySelector("#timeline .timeline-closing");
 
 		const yearsEl = document.querySelector("#timeline .timeline-years");
