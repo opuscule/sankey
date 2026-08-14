@@ -458,31 +458,31 @@
 	// buildPortfolioBusinessNodeMap(), so adding a company is a data-only change.
 	const supportedPortfolioBusinesses = new Set();
 
-	// Filenames are the client's own and their casing is inconsistent
-	// (-logo.png vs -Logo.png), so they cannot be derived from the slug. Static
-	// hosting is case-sensitive even though macOS is not — keep these exact.
+	// Filenames are company-name slugs, which do not always match the businessId
+	// (e.g. "whisperaero" -> whisper-aero.webp). Static hosting is case-sensitive
+	// even though macOS is not — keep these exact.
 	const impactsLogoByBusiness = {
-		"fervo": "logos/Fervo-Logo-temp.png",
-		"electric-hydrogen": "logos/Electric-Hydrogen-logo.png",
-		"propel-aero": "logos/Propel-Aero-logo.png",
-		"redwood-materials": "logos/Redwood-Materials-Logo.png",
-		"whisperaero": "logos/Whisper-Aero-Logo.png",
-		"harbingermotors": "logos/Harbinger-Logo.png",
-		"heronpower": "logos/Heron-Power-logo.png",
-		"seurat": "logos/Seurat-Logo.png",
-		"quantumscape": "logos/QuantumScape-Logo.png",
-		"span": "logos/Span-logo.png",
-		"navitas": "logos/Navitas-Semiconductor-Logo.png",
-		"jobyaviation": "logos/Joby-Logo.png",
-		"electra": "logos/Electra-logo.png",
-		"limelightsteel": "logos/Limelight-Steel-Logo.png",
-		"helion": "logos/Helion-Logo.png",
-		"chement": "logos/Chement-Logo.png",
-		"erthos": "logos/Erthos-Logo.png",
-		"formenergy": "logos/Form-Energy-logo.png",
-		"magratheametals": "logos/Magrathea-Logo.png",
-		"summitnanotech": "logos/Summit-Nanotech-logo.png",
-		"twelve": "logos/Twelve-Logo.png"
+		"fervo": "logos/fervo-energy.webp",
+		"electric-hydrogen": "logos/electric-hydrogen.webp",
+		"propel-aero": "logos/propel-aero.webp",
+		"redwood-materials": "logos/redwood-materials.webp",
+		"whisperaero": "logos/whisper-aero.webp",
+		"harbingermotors": "logos/harbinger.webp",
+		"heronpower": "logos/heron-power.webp",
+		"seurat": "logos/seurat.webp",
+		"quantumscape": "logos/quantum-scape.webp",
+		"span": "logos/span.webp",
+		"navitas": "logos/navitas-semiconductor.webp",
+		"jobyaviation": "logos/joby.webp",
+		"electra": "logos/electra.webp",
+		"limelightsteel": "logos/limelight-steel.webp",
+		"helion": "logos/helion.webp",
+		"chement": "logos/chement.webp",
+		"erthos": "logos/erthos.webp",
+		"formenergy": "logos/form-energy.webp",
+		"magratheametals": "logos/magrathea.webp",
+		"summitnanotech": "logos/summit-nanotech.webp",
+		"twelve": "logos/twelve.webp"
 	};
 
 	const impactsLogoFallback = "https://placehold.co/240x60?text=logo";
@@ -1113,10 +1113,33 @@
 	// place, like `spreadStageHeights`, so ribbons follow their endpoints.
 	function spreadNodesForLabels(chartEl, graph, top, bottom, gap = 2) {
 		const labelHeights = measureLabelHeights(chartEl, graph, computeLabelMaxWidth(graph));
+		const available = Math.max(0, bottom - top);
+
+		// A column can only afford so much label breathing room. Per stage, work out
+		// how much of the labels' overhang past their node bodies actually fits in
+		// the band; anything beyond that is given up (proportionally) so a crowded
+		// column degrades toward its raw sankey layout instead of demanding more
+		// height than the chart has and being clipped at both ends.
+		const stageFit = new Map();
+		d3.group(graph.nodes, (node) => node.stage).forEach((stageNodes, stage) => {
+			const gapCount = Math.max(0, stageNodes.length - 1);
+			const bodyTotal = d3.sum(stageNodes, (node) => node.y1 - node.y0);
+			const overhangTotal = d3.sum(stageNodes, (node) =>
+				Math.max(0, (labelHeights.get(node.id) || 0) - (node.y1 - node.y0))
+			);
+			const stageGap = gapCount ? Math.max(0, Math.min(gap, (available - bodyTotal) / gapCount)) : 0;
+			const room = available - bodyTotal - stageGap * gapCount;
+			stageFit.set(stage, {
+				gap: stageGap,
+				scale: overhangTotal > 0 ? Math.max(0, Math.min(1, room / overhangTotal)) : 1
+			});
+		});
+
 		const slotHeightByNode = new Map();
 		const entries = graph.nodes.map((node) => {
 			const nodeHeight = node.y1 - node.y0;
-			const height = Math.max(nodeHeight, labelHeights.get(node.id) || 0);
+			const overhang = Math.max(0, (labelHeights.get(node.id) || 0) - nodeHeight);
+			const height = nodeHeight + overhang * (stageFit.get(node.stage)?.scale ?? 1);
 			slotHeightByNode.set(node.id, height);
 			return {
 				id: node.id,
@@ -1127,7 +1150,7 @@
 			};
 		});
 
-		const slotTops = resolveLabelYByStage(entries, top, bottom, gap);
+		const slotTops = resolveLabelYByStage(entries, top, bottom, (stage) => stageFit.get(stage)?.gap ?? gap);
 		const deltaByNode = new Map();
 
 		graph.nodes.forEach((node) => {
@@ -1317,10 +1340,12 @@
 	// average of what its members want, so a crowded run drifts symmetrically
 	// around its nodes instead of cascading downward off the top of the column.
 	// `entries` are {id, stage, height, offset, center}; the returned map is
-	// id -> resolved absolute `y` attribute value.
+	// id -> resolved absolute `y` attribute value. `gap` may be a per-stage
+	// function so an over-subscribed column can tighten its spacing.
 	function resolveLabelYByStage(entries, top, bottom, gap = 2) {
 		const resolved = new Map();
-		d3.group(entries, (entry) => entry.stage).forEach((stageEntries) => {
+		d3.group(entries, (entry) => entry.stage).forEach((stageEntries, stage) => {
+			const stageGap = typeof gap === "function" ? gap(stage) : gap;
 			const ordered = stageEntries.slice().sort((a, b) => a.center - b.center);
 			const blocks = [];
 
@@ -1334,12 +1359,12 @@
 				while (blocks.length > 1) {
 					const below = blocks[blocks.length - 1];
 					const above = blocks[blocks.length - 2];
-					if (above.want + above.height + gap <= below.want) {
+					if (above.want + above.height + stageGap <= below.want) {
 						break;
 					}
 					// `below` would sit this far down inside the merged block, so
 					// discount that when averaging the two blocks' wanted tops.
-					const offset = above.height + gap;
+					const offset = above.height + stageGap;
 					const aboveCount = above.entries.length;
 					const belowCount = below.entries.length;
 					blocks.splice(blocks.length - 2, 2, {
@@ -1361,19 +1386,19 @@
 			let cursor = top;
 			blocks.forEach((block) => {
 				block.top = Math.max(block.top, cursor);
-				cursor = block.top + block.height + gap;
+				cursor = block.top + block.height + stageGap;
 			});
 			cursor = bottom;
 			for (let i = blocks.length - 1; i >= 0; i -= 1) {
 				blocks[i].top = Math.min(blocks[i].top, cursor - blocks[i].height);
-				cursor = blocks[i].top - gap;
+				cursor = blocks[i].top - stageGap;
 			}
 
 			blocks.forEach((block) => {
 				let y = block.top;
 				block.entries.forEach((entry) => {
 					resolved.set(entry.id, y - entry.offset);
-					y += entry.height + gap;
+					y += entry.height + stageGap;
 				});
 			});
 		});
