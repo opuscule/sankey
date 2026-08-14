@@ -9,7 +9,6 @@
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const impactsChart = document.getElementById("impacts-sankey-chart");
-	const impactsExampleChart = document.getElementById("impacts-example-chart");
 	const themesChart = document.getElementById("themes-sankey-chart");
 	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
@@ -21,6 +20,8 @@
 		const t = clamp01(value);
 		return t * t * (3 - 2 * t);
 	};
+	// Remap a 0-1 section progress onto a [start, end] sub-window, clamped outside it.
+	const windowProgress = (value, [start, end]) => clamp01((value - start) / (end - start || 1));
 
 	// --- Scene timeline (single source of truth) ------------------------------
 	// One scroll clock drives both the copy beats and the Sankey choreography.
@@ -416,6 +417,13 @@
 		impactsCompanyKey: "",
 		impactsRosterIndex: new Map(),
 		impactsCard: null,
+		impactsWalkRendered: null,
+		impactsWalkCopy: null,
+		impactsWalkProgress: 0,
+		impactsWalkPreselected: false,
+		impactsWalkChartStale: false,
+		impactsHandedOff: false,
+		impactsTabId: "avoided",
 		avoidedData: null,
 		avoidedPromise: null,
 		portfolioBusinessNodeMap: new Map(),
@@ -516,7 +524,66 @@
 	// subgraph; non-mapped companies keep the full baseline graph and show
 	// a no-data details state in the left column card.
 	const IMPACTS_SCENARIO_ID = "enacted-policies";
-	const IMPACTS_EXAMPLE_BUSINESS_ID = "fervo";
+
+	// --- Impacts walkthrough choreography ------------------------------------
+	// Beats are authored as scroll DURATIONS in vh, not as percentages: `hold`
+	// dwells on the previous state, `vh` is the length of this beat's transition.
+	// The total runway is therefore an OUTPUT of the table, which means beats can
+	// be retimed without renumbering every downstream percentage.
+	const IMPACTS_WALK_COMPANY = "fervo";
+	const IMPACTS_WALK_BEATS = [
+		{ id: "copy-in", hold: 0, vh: 75 },
+		{ id: "chart-in", hold: 40, vh: 75 },
+		{ id: "carve-morph", hold: 60, vh: 120 },
+		{ id: "node-visual-in", hold: 50, vh: 80 },
+		{ id: "copy1-out", hold: 50, vh: 50 },
+		{ id: "avoided-in", hold: 0, vh: 75 },
+		{ id: "copy2-in", hold: 40, vh: 60 },
+		// Copy 2 is a full sentence, so it needs its own dwell before leaving;
+		// without this hold it fades straight back out and is unreadable.
+		{ id: "copy2-out", hold: 60, vh: 60 },
+		{ id: "copy3-in", hold: 35, vh: 65 },
+		{ id: "ripple-final-service", hold: 0, vh: 30 },
+		{ id: "ripple-cascade", hold: 0, vh: 170 },
+		{ id: "copy3-out", hold: 50, vh: 50 },
+		{ id: "copy4-in", hold: 0, vh: 60 },
+		{ id: "roster-in", hold: 50, vh: 75 },
+		{ id: "company-bold", hold: 0, vh: 25 },
+		{ id: "card-reveal", hold: 0, vh: 75 },
+		// Interaction unlocks the instant the card finishes revealing, so this
+		// dwell is the beat's `vh`, not a leading `hold`. A leading hold here
+		// would push the handoff's start to 1.0 and make the roster and tabs
+		// clickable only at the very last pixel of the runway.
+		{ id: "handoff", hold: 0, vh: 150 }
+	];
+	const IMPACTS_WALK_TOTAL_VH = IMPACTS_WALK_BEATS.reduce(
+		(total, beat) => total + beat.hold + beat.vh,
+		0
+	);
+	const IMPACTS_WALK_BOUNDS = {};
+	{
+		let cursor = 0;
+		IMPACTS_WALK_BEATS.forEach((beat) => {
+			cursor += beat.hold;
+			const start = cursor / IMPACTS_WALK_TOTAL_VH;
+			cursor += beat.vh;
+			IMPACTS_WALK_BOUNDS[beat.id] = { start, end: cursor / IMPACTS_WALK_TOTAL_VH };
+		});
+	}
+	// Section progress -> 0-1 progress within a single named beat.
+	const walkT = (p, id) => {
+		const bounds = IMPACTS_WALK_BOUNDS[id];
+		if (!bounds) {
+			return 0;
+		}
+		if (bounds.end <= bounds.start) {
+			return p >= bounds.start ? 1 : 0;
+		}
+		return clamp01((p - bounds.start) / (bounds.end - bounds.start));
+	};
+	// Cascade order for the ripple beats. Final Energy (5) is deliberately absent:
+	// it is the origin stage and already carries its avoided cap by then.
+	const IMPACTS_RIPPLE_STAGES = [2, 3, 4, 6, 7];
 
 	// Resolve the avoided.json company key (e.g. "FervoEnergy") for a normalized
 	// business slug (e.g. "fervo"). Returns null until avoided.json has loaded.
@@ -770,18 +837,17 @@
 		renderPortfolioSankey();
 		renderScenarioSankey(window.currentScenarioId || "enacted-policies");
 		setupImpactsBusinessSync();
-		renderImpactsSankey();
-		renderImpactsExampleSankey();
 		setupPortfolioBusinessSync();
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
-		setupImpactsIntroPin();
-		setupImpactsScroll();
+		initImpactsIntroSection();
+		initImpactsWalk();
 		setupAcknowledgementsVideoScrub();
 		initThemesSection();
 		initTimelineIntroSection();
 		initTimelineSection();
+		initPortfolioIntroSection();
 		setupBottomStickyNav();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
@@ -1164,6 +1230,87 @@
 					.attr("dy", `${index === 0 ? startDy : lineHeightEm}em`)
 					.text(lineText);
 			});
+		});
+	}
+
+	// Push overlapping node labels apart within each stage. A carved column
+	// collapses most of its nodes to slivers far shorter than their own text, so
+	// centring every label on its node body stacks them into an unreadable pile.
+	// Each label is nudged down only as far as it must go to clear the one above,
+	// then pulled back up off the bottom edge, so labels stay as close to their
+	// node as the space allows. `entries` are {id, stage, height, offset, center};
+	// the returned map is id -> resolved absolute `y` attribute value.
+	function resolveLabelYByStage(entries, top, bottom, gap = 2) {
+		const resolved = new Map();
+		d3.group(entries, (entry) => entry.stage).forEach((stageEntries) => {
+			const ordered = stageEntries.slice().sort((a, b) => a.center - b.center);
+			ordered.forEach((entry) => {
+				entry.top = entry.center - entry.height / 2;
+			});
+
+			let cursor = top;
+			ordered.forEach((entry) => {
+				entry.top = Math.max(entry.top, cursor);
+				cursor = entry.top + entry.height + gap;
+			});
+
+			cursor = bottom;
+			for (let i = ordered.length - 1; i >= 0; i -= 1) {
+				ordered[i].top = Math.min(ordered[i].top, cursor - ordered[i].height);
+				cursor = ordered[i].top - gap;
+			}
+
+			ordered.forEach((entry) => resolved.set(entry.id, entry.top - entry.offset));
+		});
+		return resolved;
+	}
+
+	// Rendered ink box of a wrapped node label, as height plus the box's top
+	// relative to the element's own `y`. Multi-line labels carry per-tspan `dy`
+	// offsets, so the box is not centred on `y` and cannot be assumed to be.
+	function measureLabelBox(textNode) {
+		if (!textNode) {
+			return null;
+		}
+		let box;
+		try {
+			box = textNode.getBBox();
+		} catch (error) {
+			return null;
+		}
+		if (!box || !box.height) {
+			return null;
+		}
+		return { height: box.height, offset: box.y - (Number(textNode.getAttribute("y")) || 0) };
+	}
+
+	// Applies `resolveLabelYByStage` to a static chart. Run after `wrapNodeLabels`,
+	// since the resolved line count drives each label's measured box.
+	function declutterNodeLabels(nodeSelection, top, bottom, gap = 2) {
+		const entries = [];
+		const targets = new Map();
+
+		nodeSelection.each(function (node) {
+			const text = d3.select(this).select("text");
+			const box = measureLabelBox(text.node());
+			if (!box) {
+				return;
+			}
+			entries.push({
+				id: node.id,
+				stage: node.stage,
+				height: box.height,
+				offset: box.offset,
+				center: node.y0 + Math.max(3, node.y1 - node.y0) / 2
+			});
+			targets.set(node.id, { text, y0: node.y0 });
+		});
+
+		resolveLabelYByStage(entries, top, bottom, gap).forEach((y, id) => {
+			const target = targets.get(id);
+			if (target) {
+				target.text.attr("y", y - target.y0);
+			}
 		});
 	}
 
@@ -2006,6 +2153,7 @@
 			.text((d) => d.label);
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
+		declutterNodeLabels(nodeSelection, gtToY(layoutGt), axisBottom + 8);
 
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, graph, 24);
@@ -2034,13 +2182,465 @@
 		});
 	}
 
-	function renderImpactsExampleSankey() {
-		return renderImpactsChart(impactsExampleChart, {
-			businessId: IMPACTS_EXAMPLE_BUSINESS_ID,
-			scenarioId: IMPACTS_SCENARIO_ID,
-			storeInState: false,
-			waitForAvoidedData: true
+	// Reveal ramp for item `index` of `count`, staggered across a 0-1 window so
+	// each item fades over `perFade` of that window and the last one lands on 1.
+	function staggeredReveal(t, index, count, perFade) {
+		if (count <= 1) {
+			return smoothstep(clamp01(t / perFade));
+		}
+		const stagger = (1 - perFade) / (count - 1);
+		return smoothstep(clamp01((t - index * stagger) / perFade));
+	}
+
+	// The walkthrough chart is one rendering that morphs between two
+	// independently-computed layouts: the uncarved baseline graph and the focal
+	// company's avoided-emissions subgraph. d3-sankey link ids are positional and
+	// therefore unstable across layouts, so the two sides are matched on
+	// "sourceId|targetId" (same technique as the timeline chart). Anything present
+	// on only one side collapses to zero height at its own position.
+	function renderImpactsWalkChart() {
+		if (!impactsChart || !state.initData || !state.baselinesData) {
+			return;
+		}
+
+		const scenarioRequest = resolveScenarioRequest(IMPACTS_SCENARIO_ID);
+		const scenarioKey = scenarioRequest.resolvedScenarioKey;
+
+		const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+		const baselineNodeById = new Map(built.nodes.map((node) => [node.id, node]));
+
+		const companyKey = avoidedCompanyKeyForBusiness(IMPACTS_WALK_COMPANY);
+		const avoidedMap = companyKey
+			? avoidedValueMapForCompany(companyKey, scenarioKey, baselineNodeById)
+			: new Map();
+
+		const bounds = impactsChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(480, Math.floor(bounds.height));
+		const { axisBottom, gtToY, layoutGt, scaleFactor } = createGtScale(
+			height,
+			scenarioRequest.scenarioId
+		);
+		const bandTop = gtToY(layoutGt);
+
+		const layoutGraph = (nodes, links, spread) => {
+			const graph = {
+				nodes: nodes.map((node) => ({ ...node })),
+				links: links.map((link) => ({
+					...link,
+					avoided: avoidedMap.get(`${link.source}|${link.target}`) || 0
+				}))
+			};
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(Math.max(4, 9 * scaleFactor))
+				.nodeAlign(d3.sankeyJustify)
+				.extent([
+					[28, bandTop],
+					[width - 28, axisBottom]
+				])
+				.iterations(64)(graph);
+			if (spread) {
+				spreadStageHeights(graph, bandTop, axisBottom);
+			}
+			return graph;
+		};
+
+		// Matches renderImpactsChart: the full graph gets stage-height spreading,
+		// the carved subgraph does not.
+		const fullGraph = layoutGraph(built.nodes, built.links, true);
+
+		const subLinks = built.links.filter((link) =>
+			avoidedMap.has(`${link.source}|${link.target}`)
+		);
+		const subNodeIds = new Set();
+		subLinks.forEach((link) => {
+			subNodeIds.add(link.source);
+			subNodeIds.add(link.target);
 		});
+		const carveGraph = subLinks.length
+			? layoutGraph(
+					built.nodes.filter((node) => subNodeIds.has(node.id)),
+					subLinks,
+					false
+			  )
+			: fullGraph;
+
+		// Per-node avoided amount, summed on the node's height-defining side so it
+		// aligns with the ribbons entering/leaving that side.
+		carveGraph.nodes.forEach((node) => {
+			let inBase = 0;
+			let outBase = 0;
+			let inAvoided = 0;
+			let outAvoided = 0;
+			carveGraph.links.forEach((link) => {
+				if (link.target === node) {
+					inBase += link.value;
+					inAvoided += link.avoided || 0;
+				}
+				if (link.source === node) {
+					outBase += link.value;
+					outAvoided += link.avoided || 0;
+				}
+			});
+			node.avoided = inBase >= outBase ? inAvoided : outAvoided;
+		});
+
+		const linkKey = (link) => `${link.source.id}|${link.target.id}`;
+		const nodeGeomMap = (graph) => {
+			const map = new Map();
+			graph.nodes.forEach((node) => {
+				map.set(node.id, { x0: node.x0, y0: node.y0, x1: node.x1, y1: node.y1, node });
+			});
+			return map;
+		};
+		const linkGeomMap = (graph) => {
+			const map = new Map();
+			graph.links.forEach((link) => {
+				map.set(linkKey(link), {
+					sx: link.source.x1,
+					tx: link.target.x0,
+					y0: link.y0,
+					y1: link.y1,
+					width: link.width,
+					link
+				});
+			});
+			return map;
+		};
+
+		const fullNodes = nodeGeomMap(fullGraph);
+		const carveNodes = carveGraph === fullGraph ? fullNodes : nodeGeomMap(carveGraph);
+		const fullLinks = linkGeomMap(fullGraph);
+		const carveLinks = carveGraph === fullGraph ? fullLinks : linkGeomMap(carveGraph);
+
+		// A node/link missing from one side collapses to a zero-height sliver at its
+		// own position on that side, so it grows out of / shrinks into the layout.
+		const collapseNode = (geom) =>
+			geom
+				? {
+						x0: geom.x0,
+						x1: geom.x1,
+						y0: (geom.y0 + geom.y1) / 2,
+						y1: (geom.y0 + geom.y1) / 2
+				  }
+				: null;
+		const collapseLink = (geom) =>
+			geom
+				? {
+						sx: geom.sx,
+						tx: geom.tx,
+						y0: (geom.y0 + geom.y1) / 2,
+						y1: (geom.y0 + geom.y1) / 2,
+						width: 0
+				  }
+				: null;
+
+		const fullNodeOf = (id) => fullNodes.get(id) || collapseNode(carveNodes.get(id));
+		const carveNodeOf = (id) => carveNodes.get(id) || collapseNode(fullNodes.get(id));
+		const fullLinkOf = (key) => fullLinks.get(key) || collapseLink(carveLinks.get(key));
+		const carveLinkOf = (key) => carveLinks.get(key) || collapseLink(fullLinks.get(key));
+
+		// Collapsing to zero height is not enough on its own: a dropped node still
+		// paints its text label, and a dropped ribbon still paints a hairline. Both
+		// also need to fade against the side they are absent from.
+		const nodePresence = (id) => [fullNodes.has(id) ? 1 : 0, carveNodes.has(id) ? 1 : 0];
+		const linkPresence = (key) => [fullLinks.has(key) ? 1 : 0, carveLinks.has(key) ? 1 : 0];
+
+		const nodeData = Array.from(new Set([...fullNodes.keys(), ...carveNodes.keys()])).map(
+			(id) => (carveNodes.get(id) || fullNodes.get(id)).node
+		);
+		const linkData = Array.from(new Set([...fullLinks.keys(), ...carveLinks.keys()])).map(
+			(key) => {
+				const ref = (carveLinks.get(key) || fullLinks.get(key)).link;
+				return { id: key, key, source: ref.source, target: ref.target };
+			}
+		);
+
+		// Ripple bookkeeping: each node's avoided share, plus its top-to-bottom
+		// position within its own stage in the carved layout.
+		const avoidedRatioById = new Map();
+		const rippleOrderById = new Map();
+		const byStage = new Map();
+		carveGraph.nodes.forEach((node) => {
+			const total = Math.max(0, toFiniteNumber(node.value, 0));
+			const avoided = Math.max(0, Math.min(total, toFiniteNumber(node.avoided, 0)));
+			avoidedRatioById.set(node.id, total > 0 ? avoided / total : 0);
+			if (!byStage.has(node.stage)) {
+				byStage.set(node.stage, []);
+			}
+			byStage.get(node.stage).push(node);
+		});
+		byStage.forEach((nodes) => {
+			nodes
+				.slice()
+				.sort((a, b) => a.y0 - b.y0)
+				.forEach((node, index) => {
+					rippleOrderById.set(node.id, { index, count: nodes.length });
+				});
+		});
+
+		const svg = d3
+			.select(impactsChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+		svg.selectAll("*").remove();
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(fullGraph);
+		const stagePairs = Array.from(
+			new Set(
+				linkData.map((link) => `${link.source?.stage ?? "unknown"}-${link.target?.stage ?? "unknown"}`)
+			)
+		);
+		stagePairs.forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map((v) => Number.parseInt(v, 10));
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `impacts-walk-gradient-${sourceStage}-${targetStage}`)
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient
+				.append("stop")
+				.attr("offset", "0%")
+				.style("stop-color", `var(${sourceColorVar})`)
+				.attr("stop-opacity", 0.4);
+			gradient
+				.append("stop")
+				.attr("offset", "100%")
+				.style("stop-color", `var(${targetColorVar})`)
+				.attr("stop-opacity", 0.4);
+		});
+
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#impacts-walk-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
+		const linkGen = d3.sankeyLinkHorizontal();
+		const linkPathFromGeom = (geom) =>
+			linkGen({ source: { x1: geom.sx }, target: { x0: geom.tx }, y0: geom.y0, y1: geom.y1 });
+
+		const linksGroup = svg
+			.append("g")
+			.attr("fill", "none")
+			.attr("stroke-opacity", 1)
+			.attr("class", "sankey-links");
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(linkData, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", linkStroke);
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(nodeData, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`);
+
+		// The white "avoided" cap sits above the remaining body; the ripple beats
+		// grow it downward from zero. Geometry is applied in drawImpactsWalkChart.
+		nodeSelection.append("rect").attr("class", "impacts-node-avoided").attr("x", 0).attr("y", 0);
+		nodeSelection.append("rect").attr("class", "impacts-node-remaining").attr("x", 0);
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => {
+				const geom = carveNodeOf(d.id);
+				return d.stage !== 7 ? Math.max(1, geom.x1 - geom.x0) + 8 : -8;
+			})
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(carveGraph));
+
+		// Labels are decluttered once per layout, then lerped like any other
+		// geometry. A node missing from one side keeps its collapsed centre there
+		// (it is faded out anyway) so it never reserves space among the labels
+		// that are actually visible.
+		const labelBoxes = new Map();
+		nodeSelection.each(function (d) {
+			const box = measureLabelBox(d3.select(this).select("text").node());
+			if (box) {
+				labelBoxes.set(d.id, box);
+			}
+		});
+		const labelYFor = (geomOf, present) => {
+			const entries = [];
+			const absent = new Map();
+			nodeData.forEach((d) => {
+				const box = labelBoxes.get(d.id);
+				if (!box) {
+					return;
+				}
+				const geom = geomOf(d.id);
+				const center = geom.y0 + Math.max(3, geom.y1 - geom.y0) / 2;
+				if (present.has(d.id)) {
+					entries.push({ id: d.id, stage: d.stage, height: box.height, offset: box.offset, center });
+				} else {
+					absent.set(d.id, center - box.height / 2 - box.offset);
+				}
+			});
+			const resolved = resolveLabelYByStage(entries, bandTop, axisBottom + 8);
+			absent.forEach((y, id) => resolved.set(id, y));
+			return resolved;
+		};
+		const fullLabelY = labelYFor(fullNodeOf, fullNodes);
+		const carveLabelY = labelYFor(carveNodeOf, carveNodes);
+
+		const headersGroup = svg
+			.append("g")
+			.attr("class", "sankey-stage-headers")
+			.style("opacity", 0);
+		renderStageHeaders(headersGroup, carveGraph, 24);
+
+		state.impactsWalkRendered = {
+			svg,
+			nodeSelection,
+			linkSelection,
+			headersGroup,
+			fullNodeOf,
+			carveNodeOf,
+			fullLinkOf,
+			carveLinkOf,
+			nodePresence,
+			linkPresence,
+			linkPathFromGeom,
+			avoidedRatioById,
+			rippleOrderById,
+			fullLabelY,
+			carveLabelY
+		};
+
+		// The company card reads its numbers off state.impactsRendered, so point it
+		// at the carved graph the walkthrough lands on.
+		state.impactsRendered = {
+			nodeSelection,
+			linkSelection,
+			graph: carveGraph,
+			scenarioId: IMPACTS_SCENARIO_ID,
+			scenarioKey
+		};
+
+		drawImpactsWalkChart(state.impactsWalkProgress || 0);
+	}
+
+	// Right column: chart fade-in, the full -> carved layout morph, and the
+	// avoided-emissions ripple spreading stage by stage.
+	function drawImpactsWalkChart(p) {
+		const r = state.impactsWalkRendered;
+		if (!r) {
+			return;
+		}
+
+		r.svg.style("opacity", smoothstep(walkT(p, "chart-in")));
+
+		const t = smoothstep(walkT(p, "carve-morph"));
+		r.headersGroup.style("opacity", t);
+
+		const geomFor = (id) => {
+			const a = r.fullNodeOf(id);
+			const b = r.carveNodeOf(id);
+			return {
+				x0: lerp(a.x0, b.x0, t),
+				y0: lerp(a.y0, b.y0, t),
+				w: lerp(Math.max(1, a.x1 - a.x0), Math.max(1, b.x1 - b.x0), t),
+				h: lerp(Math.max(3, a.y1 - a.y0), Math.max(3, b.y1 - b.y0), t)
+			};
+		};
+
+		const focalNodeId = state.portfolioBusinessNodeMap.get(IMPACTS_WALK_COMPANY) || null;
+		const focalReveal = smoothstep(walkT(p, "avoided-in"));
+		const serviceLocal = walkT(p, "ripple-final-service");
+		const cascadeLocal = walkT(p, "ripple-cascade");
+		// Stage windows overlap slightly so the cascade reads as a wave rather than
+		// a sequence of discrete steps.
+		const stageSpan = 0.4;
+		const stageStep =
+			IMPACTS_RIPPLE_STAGES.length > 1 ? (1 - stageSpan) / (IMPACTS_RIPPLE_STAGES.length - 1) : 0;
+
+		const revealFor = (node) => {
+			if (focalNodeId && node.id === focalNodeId) {
+				return focalReveal;
+			}
+			const order = r.rippleOrderById.get(node.id);
+			if (!order) {
+				return 0;
+			}
+			if (node.stage === 1) {
+				return staggeredReveal(serviceLocal, order.index, order.count, 0.45);
+			}
+			const stageIndex = IMPACTS_RIPPLE_STAGES.indexOf(node.stage);
+			if (stageIndex < 0) {
+				return 0;
+			}
+			const local = clamp01((cascadeLocal - stageIndex * stageStep) / stageSpan);
+			return staggeredReveal(local, order.index, order.count, 0.45);
+		};
+
+		r.nodeSelection.each(function (d) {
+			const group = d3.select(this);
+			const geom = geomFor(d.id);
+			const avoidedH = geom.h * (r.avoidedRatioById.get(d.id) || 0) * revealFor(d);
+
+			group.attr("transform", `translate(${geom.x0},${geom.y0})`);
+			const [inFull, inCarve] = r.nodePresence(d.id);
+			group.style("opacity", lerp(inFull, inCarve, t));
+			group.select("rect.impacts-node-avoided").attr("width", geom.w).attr("height", avoidedH);
+			group
+				.select("rect.impacts-node-remaining")
+				.attr("width", geom.w)
+				.attr("y", avoidedH)
+				.attr("height", Math.max(0, geom.h - avoidedH));
+			const labelFull = r.fullLabelY.get(d.id);
+			const labelCarve = r.carveLabelY.get(d.id);
+			const labelY =
+				labelFull === undefined || labelCarve === undefined
+					? geom.y0 + geom.h / 2
+					: lerp(labelFull, labelCarve, t);
+			group.selectAll("text").attr("y", labelY - geom.y0);
+		});
+
+		r.linkSelection
+			.attr("d", (d) => {
+				const a = r.fullLinkOf(d.key);
+				const b = r.carveLinkOf(d.key);
+				return r.linkPathFromGeom({
+					sx: lerp(a.sx, b.sx, t),
+					tx: lerp(a.tx, b.tx, t),
+					y0: lerp(a.y0, b.y0, t),
+					y1: lerp(a.y1, b.y1, t)
+				});
+			})
+			.attr("stroke-width", (d) =>
+				Math.max(0, lerp(r.fullLinkOf(d.key).width, r.carveLinkOf(d.key).width, t))
+			)
+			.style("opacity", (d) => {
+				const [inFull, inCarve] = r.linkPresence(d.key);
+				return lerp(inFull, inCarve, t);
+			});
 	}
 
 	function findNodeLabelById(nodeId) {
@@ -2124,6 +2724,15 @@
 		return "This technology";
 	}
 
+	// The card sentence is also used verbatim as beat 2 of the walkthrough copy,
+	// so it lives in one place rather than being duplicated per call site.
+	function impactsSentenceHtml(technologyLabel, amountText) {
+		return (
+			`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
+			`<strong class="impacts-company-card__sentence-accent">${amountText}</strong> in 2040.`
+		);
+	}
+
 	function updateImpactsCompanyCard(selection) {
 		const card = state.impactsCard;
 		if (!card) {
@@ -2150,9 +2759,7 @@
 		if (selection.businessId && !state.avoidedData) {
 			card.logo.src = logoSrc;
 			card.logo.alt = `${selection.label} logo`;
-			card.sentence.innerHTML =
-				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">loading...</strong> in 2040.`;
+			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, "loading...");
 			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
 			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
 			card.nodeBar.style.setProperty("--impacts-node-remaining-height", "100%");
@@ -2199,24 +2806,70 @@
 		}
 
 		if (nodeAvoidedGtText !== "N/A") {
-			card.sentence.innerHTML =
-				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">${sentenceAmountText}</strong> in 2040.`;
+			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, sentenceAmountText);
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = nodeSavingsText;
 			}
 		} else {
-			card.sentence.innerHTML =
-				`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
-				`<strong class="impacts-company-card__sentence-accent">data pending</strong> in 2040.`;
+			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, "data pending");
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = nodeSavingsText;
 			}
 		}
 
+		renderImpactsCardTabs(selection);
+
 		card.prompt.hidden = true;
 		card.content.hidden = false;
 		card.root.classList.add("is-active");
+	}
+
+	// Populates the two prose tab panels. Bullets are still being authored for
+	// most companies, so an empty list renders an explicit placeholder rather
+	// than an empty panel.
+	function renderImpactsCardTabs(selection) {
+		const card = state.impactsCard;
+		if (!card) {
+			return;
+		}
+
+		if (card.bullets) {
+			card.bullets.innerHTML = "";
+			const bullets = Array.isArray(selection?.bullets) ? selection.bullets : [];
+			const items = bullets.length ? bullets : ["data not found"];
+			items.forEach((text) => {
+				const li = document.createElement("li");
+				li.textContent = text;
+				card.bullets.append(li);
+			});
+		}
+
+		if (card.overview) {
+			card.overview.innerHTML = "";
+			const paragraphs = Array.isArray(selection?.overview) ? selection.overview : [];
+			const items = paragraphs.length ? paragraphs : ["data not found"];
+			items.forEach((text) => {
+				const p = document.createElement("p");
+				p.textContent = text;
+				card.overview.append(p);
+			});
+		}
+	}
+
+	function setActiveImpactsTab(tabId) {
+		const card = state.impactsCard;
+		if (!card?.tabs?.length) {
+			return;
+		}
+		state.impactsTabId = tabId;
+		card.tabs.forEach((tab) => {
+			const isActive = tab.dataset.impactsTab === tabId;
+			tab.classList.toggle("is-active", isActive);
+			tab.setAttribute("aria-selected", isActive ? "true" : "false");
+		});
+		card.panels.forEach((panel) => {
+			panel.hidden = panel.dataset.impactsPanel !== tabId;
+		});
 	}
 
 	function renderImpactsRoster(model) {
@@ -2256,6 +2909,7 @@
 					themeLabel: theme.label,
 					technologyLabel: company.technologyLabel,
 					bullets: company.bullets || [],
+					overview: company.overview || [],
 					businessId: company.businessId,
 					nodeId: company.nodeId
 				});
@@ -2279,6 +2933,10 @@
 		if (!state.impactsRosterIndex?.has(companyKey)) {
 			return;
 		}
+		// The roster is inert until the walkthrough hands control over.
+		if (!state.impactsHandedOff) {
+			return;
+		}
 
 		const company = state.impactsRosterIndex.get(companyKey);
 		const businessId = normalizeBusinessSlug(company.businessId);
@@ -2293,7 +2951,11 @@
 		window.currentImpactsBusinessId = activeBusinessId;
 
 		syncImpactsBusinessButtons(nextCompanyKey);
+		// Selecting a company hands the chart to the interactive renderer, which
+		// tears down the walkthrough's rendering; flag it so scrolling back up
+		// rebuilds the morph instead of scrubbing a detached selection.
 		renderImpactsSankey();
+		state.impactsWalkChartStale = true;
 		updateImpactsCompanyCard(nextCompanyKey ? company : null);
 	}
 
@@ -2311,8 +2973,19 @@
 				nodeRemaining: cardRoot.querySelector("[data-impacts-card-node-remaining]"),
 				nodeName: cardRoot.querySelector("[data-impacts-card-node-name]"),
 				nodeSavings: cardRoot.querySelector("[data-impacts-card-node-savings]"),
-				nodePercentage: cardRoot.querySelector("[data-impacts-card-node-percentage]")
+				nodePercentage: cardRoot.querySelector("[data-impacts-card-node-percentage]"),
+				bullets: cardRoot.querySelector("[data-impacts-card-bullets]"),
+				overview: cardRoot.querySelector("[data-impacts-card-overview]"),
+				tabs: Array.from(cardRoot.querySelectorAll("[data-impacts-tab]")),
+				panels: Array.from(cardRoot.querySelectorAll("[data-impacts-panel]"))
 			};
+
+			state.impactsCard.tabs.forEach((tab) => {
+				tab.addEventListener("click", () => {
+					setActiveImpactsTab(tab.dataset.impactsTab || "avoided");
+				});
+			});
+			setActiveImpactsTab(state.impactsTabId);
 
 			if (state.impactsCard.logo) {
 				state.impactsCard.logo.addEventListener("error", () => {
@@ -2345,70 +3018,309 @@
 			});
 	}
 
-	// Pins the viewport-sized intro wrapper once its top hits the top of the
-	// screen, holding it through the remaining scroll of the taller
-	// .impacts-intro banner, then releases when that banner's bottom reaches
-	// the bottom of the viewport.
-	function setupImpactsIntroPin() {
-		const introEl = document.querySelector(".impacts-intro");
-		const pinEl = document.querySelector(".impacts-intro__pin");
-		if (!introEl || !pinEl) {
+	// Left column: the four copy beats, the standalone node visual, the roster,
+	// and finally the interactive company card.
+	function drawImpactsWalkCopy(p) {
+		const c = state.impactsWalkCopy;
+		if (!c) {
 			return;
 		}
 
-		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+		const copy1Out = smoothstep(walkT(p, "copy1-out"));
+		const copy3Out = smoothstep(walkT(p, "copy3-out"));
+		const rosterIn = smoothstep(walkT(p, "roster-in"));
+		const cardIn = smoothstep(walkT(p, "card-reveal"));
+
+		const setOpacity = (el, value) => {
+			if (el) {
+				el.style.opacity = String(value);
+			}
+		};
+
+		setOpacity(c.copies[0], smoothstep(walkT(p, "copy-in")) * (1 - copy1Out));
+		setOpacity(
+			c.copies[1],
+			smoothstep(walkT(p, "copy2-in")) * (1 - smoothstep(walkT(p, "copy2-out")))
+		);
+		setOpacity(c.copies[2], smoothstep(walkT(p, "copy3-in")) * (1 - copy3Out));
+		// Copy 4 hands the column over to the roster, so it clears as the roster arrives.
+		setOpacity(c.copies[3], smoothstep(walkT(p, "copy4-in")) * (1 - rosterIn));
+
+		// The copy starts vertically centred in the column and rises to the top as
+		// the chart carves down to the company's own subgraph.
+		if (c.stack) {
+			const rise = smoothstep(walkT(p, "carve-morph"));
+			c.stack.style.transform = `translateY(${lerp(c.centerOffset || 0, 0, rise)}px)`;
+		}
+
+		if (c.node) {
+			// Trails the copy out so the two don't leave in lockstep.
+			const nodeOut = smoothstep(clamp01((walkT(p, "copy3-out") - 0.3) / 0.7));
+			setOpacity(c.node, smoothstep(walkT(p, "node-visual-in")) * (1 - nodeOut));
+		}
+
+		const avoidedPct = (c.avoidedRatio || 0) * smoothstep(walkT(p, "avoided-in")) * 100;
+		if (c.nodeBar) {
+			c.nodeBar.style.setProperty("--impacts-node-avoided-height", `${avoidedPct}%`);
+			c.nodeBar.style.setProperty("--impacts-node-remaining-height", `${100 - avoidedPct}%`);
+		}
+		if (c.nodePercentage) {
+			c.nodePercentage.textContent = `${d3.format(".1f")(avoidedPct)}% avoided`;
+		}
+
+		if (c.roster) {
+			setOpacity(c.roster, rosterIn);
+			c.roster.style.pointerEvents = state.impactsHandedOff ? "auto" : "none";
+		}
+
+		if (c.card) {
+			setOpacity(c.card, cardIn);
+			c.card.classList.toggle("is-live", state.impactsHandedOff);
+		}
+	}
+
+	// One scroll clock drives both columns, plus the handoff into the live
+	// interactive state once the final transition beat completes.
+	function drawImpactsWalk(progress) {
+		const p = clamp01(progress);
+		state.impactsWalkProgress = p;
+
+		const boldStart = IMPACTS_WALK_BOUNDS["company-bold"]?.start ?? 1;
+		const handoffStart = IMPACTS_WALK_BOUNDS["handoff"]?.start ?? 1;
+
+		// The walkthrough presets the focal company so the roster and card read as
+		// already-selected the moment the visitor takes over.
+		const shouldPreselect = p >= boldStart;
+		if (shouldPreselect !== state.impactsWalkPreselected) {
+			state.impactsWalkPreselected = shouldPreselect;
+			if (shouldPreselect) {
+				applyImpactsWalkPreselection();
+			} else {
+				state.impactsCompanyKey = "";
+				syncImpactsBusinessButtons("");
+			}
+		}
+
+		state.impactsHandedOff = p >= handoffStart;
+
+		if (!state.impactsHandedOff && state.impactsWalkChartStale) {
+			state.impactsWalkChartStale = false;
+			renderImpactsWalkChart();
+		}
+
+		drawImpactsWalkCopy(p);
+		drawImpactsWalkChart(p);
+	}
+
+	function impactsWalkRosterKey() {
+		for (const [key, entry] of state.impactsRosterIndex) {
+			if (normalizeBusinessSlug(entry.businessId) === IMPACTS_WALK_COMPANY) {
+				return key;
+			}
+		}
+		return "";
+	}
+
+	function applyImpactsWalkPreselection() {
+		const key = impactsWalkRosterKey();
+		if (!key) {
+			return;
+		}
+		state.impactsCompanyKey = key;
+		state.impactsBusinessId = supportedPortfolioBusinesses.has(IMPACTS_WALK_COMPANY)
+			? IMPACTS_WALK_COMPANY
+			: "";
+		window.currentImpactsBusinessId = state.impactsBusinessId;
+		syncImpactsBusinessButtons(key);
+		updateImpactsCompanyCard(state.impactsRosterIndex.get(key) || null);
+	}
+
+	// The copy stack starts centred in the column, so its travel distance has to
+	// be measured rather than hardcoded; re-run on resize.
+	function measureImpactsWalkCopy() {
+		const c = state.impactsWalkCopy;
+		if (!c?.stack || !c.stage) {
+			return;
+		}
+		const stageH = c.stage.getBoundingClientRect().height;
+		const stackH = c.stack.getBoundingClientRect().height;
+		c.centerOffset = Math.max(0, (stageH - stackH) / 2);
+		drawImpactsWalkCopy(state.impactsWalkProgress || 0);
+	}
+
+	// Wires up the walkthrough: caches left-column elements, fills the copy that
+	// is generated from data, renders the morphing chart, then attaches the
+	// scroll clock. Avoided data must be resolved first or the data-driven beats
+	// would render a "loading" state.
+	function initImpactsWalk() {
+		const walkEl = document.querySelector(".impacts-walk");
+		if (!walkEl) {
+			return;
+		}
+
+		walkEl.style.setProperty("--impacts-walk-vh", String(IMPACTS_WALK_TOTAL_VH));
+
+		state.impactsWalkCopy = {
+			stage: walkEl.querySelector(".impacts-walk__stage"),
+			stack: walkEl.querySelector("[data-impacts-walk-copy-stack]"),
+			copies: [1, 2, 3, 4].map((n) =>
+				walkEl.querySelector(`[data-impacts-walk-copy="${n}"]`)
+			),
+			node: walkEl.querySelector("[data-impacts-walk-node]"),
+			nodeBar: walkEl.querySelector("[data-impacts-walk-node-bar]"),
+			nodeName: walkEl.querySelector("[data-impacts-walk-node-name]"),
+			nodePercentage: walkEl.querySelector("[data-impacts-walk-node-percentage]"),
+			roster: walkEl.querySelector(".impacts-businesses"),
+			card: walkEl.querySelector("[data-impacts-company-card]"),
+			avoidedRatio: 0,
+			centerOffset: 0
+		};
+
+		ensureAvoidedData()
+			.then(() => {
+				renderImpactsWalkChart();
+				populateImpactsWalkCopy();
+				measureImpactsWalkCopy();
+				setupImpactsWalkScroll();
+			})
+			.catch((error) => {
+				console.warn("[Sankey] Could not initialize impacts walkthrough:", error);
+			});
+	}
+
+	// Beat 2's sentence and the node visual's labels are derived from the focal
+	// company's own data rather than hardcoded in markup.
+	function populateImpactsWalkCopy() {
+		const c = state.impactsWalkCopy;
+		if (!c) {
+			return;
+		}
+
+		const nodeId = state.portfolioBusinessNodeMap.get(IMPACTS_WALK_COMPANY) || "";
+		const metrics = impactsNodeMetrics(nodeId);
+		c.avoidedRatio = Math.max(0, Math.min(1, metrics.avoidedRatio));
+
+		if (c.nodeName) {
+			c.nodeName.textContent = findNodeLabelById(nodeId) || "";
+		}
+		if (c.nodeBar) {
+			const stageVar = stageColorVars[deriveStageFromId(nodeId)] || "--color-final-energy";
+			c.nodeBar.style.setProperty("--impacts-node-color", `var(${stageVar})`);
+		}
+
+		if (c.copies[1]) {
+			const company = state.initData?.intervention?.companies?.find(
+				(entry) =>
+					normalizeBusinessSlug(entry?.company || entry?.company_label) === IMPACTS_WALK_COMPANY
+			);
+			const technologyLabel = resolveImpactsTechnologyLabel({
+				technologyLabel: String(company?.technology || "").trim(),
+				label: String(company?.company_label || company?.company || "").trim()
+			});
+			const avoidedGt = metrics.avoidedMt / 1000;
+			const amountText = avoidedGt > 0 ? `${d3.format(".2f")(avoidedGt)} Gt` : "data pending";
+			c.copies[1].innerHTML = impactsSentenceHtml(technologyLabel, amountText);
+		}
+	}
+
+	// A plain scrubbed ScrollTrigger over the walkthrough's own runway; the
+	// sticky pinning is handled in CSS by .impacts-layout. Reduced motion still
+	// gets the full walk (it is scroll-driven, not autoplaying) — only a missing
+	// GSAP falls back to the end state.
+	function setupImpactsWalkScroll() {
+		const walkEl = document.querySelector(".impacts-walk");
+		if (!walkEl) {
+			return;
+		}
+
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawImpactsWalk(1);
 			return;
 		}
 
 		ScrollTrigger.matchMedia({
 			"(min-width: 901px)": () => {
-				const pinST = ScrollTrigger.create({
-					trigger: pinEl,
-					pin: pinEl,
+				const scrubST = ScrollTrigger.create({
+					trigger: walkEl,
 					start: "top top",
-					endTrigger: introEl,
 					end: "bottom bottom",
-					pinSpacing: true,
-					invalidateOnRefresh: true
+					scrub: true,
+					invalidateOnRefresh: true,
+					onUpdate: (self) => drawImpactsWalk(self.progress),
+					onRefresh: (self) => drawImpactsWalk(self.progress)
 				});
 
 				return () => {
-					pinST.kill();
+					scrubST.kill();
 				};
+			},
+			"(max-width: 900px)": () => {
+				// No scroll clock on mobile: land on the end state.
+				drawImpactsWalk(1);
+				return () => {};
 			}
 		});
 	}
 
-	// Keep the full Climate Impacts two-column layout pinned for one extra
-	// viewport of scroll once it reaches the top of the screen.
-	function setupImpactsScroll() {
-		const layoutEl = document.querySelector(".impacts-layout");
-		if (!layoutEl) {
+	// Bg fade + two crossfading lines, locked .impacts-intro (mirrors the
+	// portfolio/timeline intros: 515vh scrub range + 100vh pinned viewport,
+	// sequential bg-in 120vh, line1-in 60vh, hold 50vh, line1-out 50vh,
+	// line2-in 60vh, hold 75vh, line2+bg fade-out together over the final 100vh).
+	const II_TOTAL_VH = 515;
+	const II_BG_IN = [0, 120 / II_TOTAL_VH];
+	const II_LINE1_IN = [120 / II_TOTAL_VH, 180 / II_TOTAL_VH];
+	const II_LINE1_OUT = [230 / II_TOTAL_VH, 280 / II_TOTAL_VH];
+	const II_LINE2_IN = [280 / II_TOTAL_VH, 340 / II_TOTAL_VH];
+	const II_ALL_OUT = [415 / II_TOTAL_VH, 1];
+
+	function drawImpactsIntro(progress) {
+		state.impactsIntroProgress = progress;
+		const bgIn = windowProgress(progress, II_BG_IN);
+		const allOut = windowProgress(progress, II_ALL_OUT);
+		if (state.impactsIntroBgEl) {
+			state.impactsIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
+		}
+		if (state.impactsIntroLine1El) {
+			const inAmt = windowProgress(progress, II_LINE1_IN);
+			const outAmt = windowProgress(progress, II_LINE1_OUT);
+			state.impactsIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+		if (state.impactsIntroLine2El) {
+			const inAmt = windowProgress(progress, II_LINE2_IN);
+			state.impactsIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+		}
+	}
+
+	function setupImpactsIntroScroll() {
+		const section = document.querySelector(".impacts-intro");
+		if (!section) {
 			return;
 		}
-
-		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawImpactsIntro(1);
 			return;
 		}
-
-		ScrollTrigger.matchMedia({
-			"(min-width: 901px)": () => {
-				const pinST = ScrollTrigger.create({
-					trigger: layoutEl,
-					pin: layoutEl,
-					start: "top top",
-					end: "+=100%",
-					pinSpacing: true,
-					invalidateOnRefresh: true
-				});
-
-				return () => {
-					pinST.kill();
-				};
-			}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawImpactsIntro(self.progress),
+			onRefresh: (self) => drawImpactsIntro(self.progress)
 		});
+		drawImpactsIntro(0);
+	}
+
+	function initImpactsIntroSection() {
+		const section = document.querySelector(".impacts-intro");
+		if (!section) {
+			return;
+		}
+		state.impactsIntroBgEl = document.querySelector(".impacts-intro .impacts-intro__bg");
+		state.impactsIntroLine1El = document.querySelector(".impacts-intro .impacts-intro__line--1");
+		state.impactsIntroLine2El = document.querySelector(".impacts-intro .impacts-intro__line--2");
+		setupImpactsIntroScroll();
 	}
 
 	// Scroll-scrubs video-poc-v1.mp4 by mapping scroll progress to currentTime; desktop only.
@@ -4059,11 +4971,16 @@
 			const bullets = Array.isArray(company?.bullets)
 				? company.bullets.map((entry) => String(entry || "").trim()).filter(Boolean)
 				: [];
+			// Long-form prose for the company-overview tab in the impacts card.
+			const overview = [company?.par1, company?.par2]
+				.map((entry) => String(entry || "").trim())
+				.filter(Boolean);
 			theme.companies.push({
 				label,
 				nodeId,
 				technologyLabel,
 				bullets,
+				overview,
 				businessId: normalizeBusinessSlug(company?.company || company?.company_label)
 			});
 			if (nodeId) {
@@ -4241,7 +5158,7 @@
 
 	// Split scroll progress into one equal window per theme. Within the active
 	// window: fade the theme copy in/out, brighten its roster column, and reveal
-	// its companies (and their nodes) in a staggered rapid-fire sequence. Non-
+	// all of its companies (and their nodes) together, simultaneously. Non-
 	// active themes are fully reset, so only one theme is ever lit.
 	function drawThemesWalk(progress) {
 		const model = state.themesModel;
@@ -4264,7 +5181,6 @@
 		presence = clamp01(presence);
 
 		const revealStart = 0.16;
-		const revealSpan = 0.52;
 		const perCompanyFade = 0.14;
 
 		model.forEach((theme, index) => {
@@ -4285,12 +5201,10 @@
 		});
 
 		const active = model[activeIdx];
-		const total = active.companies.length;
-		const stagger = total > 1 ? revealSpan / total : 0;
 		const nodeLit = new Map();
-		active.companies.forEach((company, index) => {
-			const startT = revealStart + index * stagger;
-			const lit = smoothstep(clamp01((local - startT) / perCompanyFade)) * presence;
+		// All companies in the active theme reveal together (no per-company stagger).
+		active.companies.forEach((company) => {
+			const lit = smoothstep(clamp01((local - revealStart) / perCompanyFade)) * presence;
 			if (company.el) {
 				company.el.classList.toggle("is-lit", lit > 0.45);
 			}
@@ -4640,17 +5554,24 @@
 		}
 	}
 
-	// --- Timeline intro (crossfading headline, locked #timeline-intro) --------
-	// Two sentences fade in/out in sequence, held in the same spot, before the
-	// #timeline section takes over. Windows are fractions of #timeline-intro's
-	// own scroll range (section ~240vh).
-	const TLI_LINE1_IN = [0.0, 0.12];
-	const TLI_LINE1_OUT = [0.38, 0.48];
-	const TLI_LINE2_IN = [0.52, 0.64];
-	const TLI_LINE2_OUT = [0.88, 1.0];
+	// --- Timeline intro (bg fade + two crossfading lines, locked #timeline-intro) --
+	// Same sequential window shape as the portfolio/impacts intros (515vh scrub
+	// range + 100vh pinned viewport): bg-in 120vh, line1-in 60vh, hold 50vh,
+	// line1-out 50vh, line2-in 60vh, hold 75vh, line2+bg fade-out over the final 100vh.
+	const TLI_TOTAL_VH = 515;
+	const TLI_BG_IN = [0, 120 / TLI_TOTAL_VH];
+	const TLI_LINE1_IN = [120 / TLI_TOTAL_VH, 180 / TLI_TOTAL_VH];
+	const TLI_LINE1_OUT = [230 / TLI_TOTAL_VH, 280 / TLI_TOTAL_VH];
+	const TLI_LINE2_IN = [280 / TLI_TOTAL_VH, 340 / TLI_TOTAL_VH];
+	const TLI_ALL_OUT = [415 / TLI_TOTAL_VH, 1];
 
 	function drawTimelineIntro(progress) {
 		state.timelineIntroProgress = progress;
+		const bgIn = windowProgress(progress, TLI_BG_IN);
+		const allOut = windowProgress(progress, TLI_ALL_OUT);
+		if (state.timelineIntroBgEl) {
+			state.timelineIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
+		}
 		if (state.timelineIntroLine1El) {
 			const inAmt = windowProgress(progress, TLI_LINE1_IN);
 			const outAmt = windowProgress(progress, TLI_LINE1_OUT);
@@ -4658,8 +5579,7 @@
 		}
 		if (state.timelineIntroLine2El) {
 			const inAmt = windowProgress(progress, TLI_LINE2_IN);
-			const outAmt = windowProgress(progress, TLI_LINE2_OUT);
-			state.timelineIntroLine2El.style.opacity = String(inAmt * (1 - outAmt));
+			state.timelineIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
 		}
 	}
 
@@ -4689,9 +5609,71 @@
 		if (!section) {
 			return;
 		}
+		state.timelineIntroBgEl = document.querySelector("#timeline-intro .timeline-intro__bg");
 		state.timelineIntroLine1El = document.querySelector("#timeline-intro .timeline-intro__line--1");
 		state.timelineIntroLine2El = document.querySelector("#timeline-intro .timeline-intro__line--2");
 		setupTimelineIntroScroll();
+	}
+
+	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tgif-portfolio) --
+	// Sequential windows, fractions of a 515vh scroll range (+100vh pinned viewport):
+	// bg fade-in 120vh, line-1 in 60vh, hold 50vh, line-1 out 50vh, line-2 in 60vh,
+	// hold 75vh, then line-2 + bg fade out together over the final 100vh.
+	const PI_TOTAL_VH = 515;
+	const PI_BG_IN = [0, 120 / PI_TOTAL_VH];
+	const PI_LINE1_IN = [120 / PI_TOTAL_VH, 180 / PI_TOTAL_VH];
+	const PI_LINE1_OUT = [230 / PI_TOTAL_VH, 280 / PI_TOTAL_VH];
+	const PI_LINE2_IN = [280 / PI_TOTAL_VH, 340 / PI_TOTAL_VH];
+	const PI_ALL_OUT = [415 / PI_TOTAL_VH, 1];
+
+	function drawPortfolioIntro(progress) {
+		state.portfolioIntroProgress = progress;
+		const bgIn = windowProgress(progress, PI_BG_IN);
+		const allOut = windowProgress(progress, PI_ALL_OUT);
+		if (state.portfolioIntroBgEl) {
+			state.portfolioIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
+		}
+		if (state.portfolioIntroLine1El) {
+			const inAmt = windowProgress(progress, PI_LINE1_IN);
+			const outAmt = windowProgress(progress, PI_LINE1_OUT);
+			state.portfolioIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+		if (state.portfolioIntroLine2El) {
+			const inAmt = windowProgress(progress, PI_LINE2_IN);
+			state.portfolioIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+		}
+	}
+
+	function setupPortfolioIntroScroll() {
+		const section = document.getElementById("tif-tgif-portfolio");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawPortfolioIntro(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawPortfolioIntro(self.progress),
+			onRefresh: (self) => drawPortfolioIntro(self.progress)
+		});
+		drawPortfolioIntro(0);
+	}
+
+	function initPortfolioIntroSection() {
+		const section = document.getElementById("tif-tgif-portfolio");
+		if (!section) {
+			return;
+		}
+		state.portfolioIntroBgEl = document.querySelector("#tif-tgif-portfolio .portfolio-intro__bg");
+		state.portfolioIntroLine1El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--1");
+		state.portfolioIntroLine2El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--2");
+		setupPortfolioIntroScroll();
 	}
 
 	// --- Timeline section (2025 -> 2040 scroll morph) -------------------------
@@ -4713,8 +5695,6 @@
 	const TIMELINE_START_GT = 54;
 	const TIMELINE_END_GT = 57;
 	const TIMELINE_AXIS_X = 18;
-
-	const windowProgress = (value, [start, end]) => clamp01((value - start) / (end - start || 1));
 
 	function renderTimelineSankey() {
 		if (!timelineChart || !state.initData || !state.baselinesData) {
@@ -4747,7 +5727,46 @@
 		};
 
 		const startGraph = layoutGraph(defaultScenario); // 2025
-		const endGraph = layoutGraph(TIMELINE_TARGET_SCENARIO); // 2040A
+
+		// Capture the exact vertical order of nodes from 2025 per stage
+		const startOrderMap = new Map();
+		d3.group(startGraph.nodes, (d) => d.stage).forEach((stageNodes) => {
+			stageNodes
+				.slice()
+				.sort((a, b) => a.y0 - b.y0)
+				.forEach((node, idx) => {
+					startOrderMap.set(node.id, idx);
+				});
+		});
+
+		// Layout the 2040 target scenario locked to 2025 node ordering (iterations: 0)
+		const layoutEndGraph = (scenarioKey) => {
+			const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+			const graph = {
+				nodes: built.nodes.map((node) => ({ ...node })),
+				links: built.links.map((link) => ({ ...link }))
+			};
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(9)
+				.nodeAlign(d3.sankeyJustify)
+				.nodeSort((a, b) => {
+					const orderA = startOrderMap.has(a.id) ? startOrderMap.get(a.id) : 999;
+					const orderB = startOrderMap.has(b.id) ? startOrderMap.get(b.id) : 999;
+					return orderA - orderB;
+				})
+				.extent([
+					[28, 44],
+					[width - 28, height - 34]
+				])
+				.iterations(0)(graph);
+			spreadStageHeights(graph, 44, height - 34);
+			return graph;
+		};
+
+		const endGraph = layoutEndGraph(TIMELINE_TARGET_SCENARIO); // 2040A
 
 		// Scale every y about the band bottom so the chart is pinned to the bottom
 		// and its height encodes the endpoint's fraction of full height.
@@ -5117,8 +6136,14 @@
 				render();
 				renderPortfolioSankey();
 				renderScenarioSankey(window.currentScenarioId || "enacted-policies");
-				renderImpactsSankey();
-				renderImpactsExampleSankey();
+				// Once the visitor has taken over, the chart belongs to the normal
+				// interactive renderer; before that it belongs to the walkthrough.
+				if (state.impactsHandedOff) {
+					renderImpactsSankey();
+				} else {
+					renderImpactsWalkChart();
+				}
+				measureImpactsWalkCopy();
 				renderThemesSankey();
 				renderTimelineSankey();
 				measureNavProgressGeometry();

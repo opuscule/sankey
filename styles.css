@@ -400,35 +400,58 @@
 				font-weight: 800;
 			}
 
-			/* --- Timeline intro (crossfading headline, locked in place) -------- */
+			/* --- Timeline intro (bg fade + crossfading headline, locked in place) -- */
+			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
 			#timeline-intro {
-				color: #fff;
-				min-height: 240vh;
+				min-height: 615vh;
 			}
 
 			.timeline-intro__pin {
 				display: grid;
 				height: 100vh;
-				padding: 0 6vw;
-				place-items: center;
+				align-items: center;
+				justify-content: center;
+				overflow: hidden;
+				padding: clamp(4rem, 8vh, 7rem) 6vw;
 				position: sticky;
 				top: 0;
 			}
 
+			.timeline-intro__bg {
+				position: absolute;
+				inset: 0;
+				background: var(--color-final-service);
+				opacity: 0;
+				z-index: 0;
+			}
+
 			.timeline-intro__stack {
 				display: grid;
+				position: relative;
+				z-index: 1;
 			}
 
 			.timeline-intro__line {
-				color: #fff;
-				font-size: clamp(1.8rem, 2.7vw, 2.7rem);
-				font-weight: 800;
+				color: var(--color-dark);
 				grid-area: 1 / 1;
-				line-height: 1.12;
 				margin: 0;
-				max-width: var(--max-copy-width);
 				opacity: 0;
 				text-wrap: balance;
+			}
+
+			.timeline-intro__line--1 {
+				font-size: clamp(2rem, 3.4vw, 3.4rem);
+				font-weight: 750;
+				letter-spacing: -0.02em;
+				line-height: 1.05;
+				max-width: var(--max-copy-width);
+			}
+
+			.timeline-intro__line--2 {
+				font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+				font-weight: 400;
+				line-height: 1.4;
+				max-width: var(--max-copy-width);
 			}
 
 			/* --- Timeline section (2025 -> 2040 scroll morph) ------------------ */
@@ -777,26 +800,59 @@
 			}
 
 			#tif-tgif-portfolio {
-				padding: 6rem 0 0;
+				padding: 0;
 			}
 
+			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
 			.portfolio-intro {
-				background: var(--color-hero-highlight);
-				color: var(--color-dark);
-				min-height: 100vh;
-				display: grid;
-				align-items: center;
-				padding: clamp(4rem, 8vh, 7rem) 6vw;
-				justify-content: center;
+				min-height: 615vh;
 			}
 
-			.portfolio-intro__headline {
-				font-size: clamp(2rem, 4.6vw, 4rem);
-				font-weight: 750;
-				line-height: 0.98;
-				letter-spacing: -0.03em;
+			.portfolio-intro__pin {
+				display: grid;
+				height: 100vh;
+				align-items: center;
+				justify-content: center;
+				overflow: hidden;
+				padding: clamp(4rem, 8vh, 7rem) 6vw;
+				position: sticky;
+				top: 0;
+			}
+
+			.portfolio-intro__bg {
+				position: absolute;
+				inset: 0;
+				background: var(--color-device);
+				opacity: 0;
+				z-index: 0;
+			}
+
+			.portfolio-intro__stack {
+				display: grid;
+				position: relative;
+				z-index: 1;
+			}
+
+			.portfolio-intro__line {
+				color: var(--color-dark);
+				grid-area: 1 / 1;
 				margin: 0;
+				opacity: 0;
+			}
+
+			.portfolio-intro__line--1 {
+				font-size: clamp(2rem, 3.4vw, 3.4rem);
+				font-weight: 750;
+				line-height: 1.05;
+				letter-spacing: -0.02em;
 				max-width: 22ch;
+			}
+
+			.portfolio-intro__line--2 {
+				font-size: 36px;
+				font-weight: 400;
+				line-height: 1.1;
+				max-width: 34ch;
 			}
 
 			.portfolio-layout {
@@ -1537,232 +1593,201 @@
 				stroke-width: 1;
 			}
 
+			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
 			.impacts-intro {
-				background: var(--color-final-energy);
-				color: var(--color-dark);
-				height: 250vh;
-				min-height: 250vh;
+				min-height: 615vh;
 			}
 
 			.impacts-intro__pin {
-				width: 100vw;
-				height: 100vh;
 				display: grid;
-				gap: 1.25rem;
-				padding: 0 6vw;
-				place-content: center;
-				place-items: center;
+				height: 100vh;
+				align-items: center;
+				justify-content: center;
+				overflow: hidden;
+				padding: clamp(4rem, 8vh, 7rem) 6vw;
+				position: sticky;
+				top: 0;
 			}
 
-			.impacts-intro__body {
+			.impacts-intro__bg {
+				position: absolute;
+				inset: 0;
+				background: var(--color-final-energy);
+				opacity: 0;
+				z-index: 0;
+			}
+
+			.impacts-intro__stack {
+				display: grid;
+				position: relative;
+				z-index: 1;
+			}
+
+			.impacts-intro__line {
+				color: var(--color-dark);
+				grid-area: 1 / 1;
+				margin: 0;
+				opacity: 0;
+				text-align: left;
+			}
+
+			.impacts-intro__line--1 {
 				font-size: clamp(1.6rem, 3.2vw, 2.6rem);
 				font-weight: 800;
 				letter-spacing: -0.01em;
 				line-height: 1.25;
-				margin: 0 auto;
 				max-width: var(--max-copy-width);
-				text-align: left;
-				width: min(100%, var(--max-copy-width));
 			}
 
-			.impacts-intro__body span {
-				font-family: "Archivo Black", "Helvetica Neue", Helvetica, Arial, sans-serif;
-				font-weight: 700;
+			.impacts-intro__line--2 {
+				font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+				font-weight: 400;
+				line-height: 1.4;
+				max-width: var(--max-copy-width);
 			}
 
-			.impacts-highlight-copy {
-				align-items: center;
-				display: flex;
-				justify-content: center;
-				min-height: 80vh;
-				padding: clamp(1.5rem, 4vw, 3rem) 5vw;
+			/* Scroll walkthrough. .impacts-walk is the scroll runway — its height is
+			   the summed beat budget from main.js — and .impacts-layout is the
+			   sticky stage held inside it. */
+			.impacts-walk {
+				min-height: calc(var(--impacts-walk-vh, 1670) * 1vh);
+				position: relative;
 			}
 
-			.impacts-highlight-copy h3 {
+			.impacts-walk__stage {
+				display: grid;
+				min-height: 0;
+				position: relative;
+			}
+
+			.impacts-walk__script,
+			.impacts-walk__stage > .impacts-company-card {
+				grid-area: 1 / 1;
+				min-height: 0;
+			}
+
+			.impacts-walk__script {
+				align-content: start;
+				display: grid;
+				gap: 2rem;
+				grid-template-rows: auto minmax(0, 1fr);
+			}
+
+			.impacts-walk__copy-stack {
+				display: grid;
+				will-change: transform;
+			}
+
+			.impacts-walk__copy {
 				color: #fff;
-				font-size: clamp(1.3rem, 1.95vw, 1.9rem);
+				font-size: clamp(1.15rem, 1.6vw, 1.6rem);
 				font-weight: 700;
+				grid-area: 1 / 1;
 				line-height: 1.35;
 				margin: 0;
-				max-width: min(100%, 50rem);
-				text-align: left;
-				width: 100%;
-			}
-
-			.impacts-example {
-				align-items: center;
-				display: grid;
-				gap: clamp(1.75rem, 4vw, 3.5rem);
-				grid-template-columns: minmax(280px, 28rem) minmax(0, 1fr);
-				grid-template-rows: auto;
-				margin: 0 5vw 5rem;
-				min-height: min(72vh, 760px);
-				padding: clamp(2rem, 4vw, 3rem) 0 clamp(1.5rem, 3vw, 2rem);
-				position: relative;
-			}
-
-			.impacts-example__lead {
-				display: grid;
-				gap: 0.7rem;
-				grid-column: 1;
-				grid-row: 1;
-				max-width: 26rem;
-				padding-top: 0.5rem;
-				position: relative;
-				z-index: 2;
-			}
-
-			.impacts-example__lead h3 {
-				color: #fff;
-				font-size: clamp(1.35rem, 2.2vw, 2rem);
-				line-height: 1.2;
-				margin: 0;
-				max-width: 18ch;
-			}
-
-			.impacts-example__lead p {
-				color: #fff;
-				font-size: clamp(1.55rem, 2.25vw, 2.55rem);
-				font-weight: 700;
-				line-height: 1.16;
-				margin: 0;
-				max-width: 15ch;
+				opacity: 0;
 				text-wrap: balance;
 			}
 
-			.impacts-example__lead strong {
+			.impacts-walk__copy strong {
 				color: #fff;
 			}
 
-			.impacts-example__copy {
-				display: grid;
-				gap: 2rem;
-				align-self: start;
-				position: relative;
-				z-index: 2;
+			.impacts-walk__node {
+				align-self: center;
+				opacity: 0;
 			}
 
-			.impacts-example__logo {
-				display: block;
-				filter: brightness(0) invert(1);
-				height: auto;
-				max-height: 60px;
-				max-width: 182px;
-				width: auto;
-			}
-
-			.impacts-example__node {
-				align-items: center;
-				gap: 1.35rem;
-				grid-template-columns: auto 1fr;
-			}
-
-			.impacts-example__bar {
-				--impacts-node-color: var(--color-final-energy);
+			.impacts-walk__node .impacts-node-visual__bar {
 				height: 116px;
 				max-height: 116px;
 				width: 38px;
 			}
 
-			.impacts-node-visual__bar.impacts-example__bar .impacts-node-avoided {
-				background: #fff;
-				height: 75.7%;
-				opacity: 1;
+			.impacts-walk__node .impacts-node-visual__name {
+				font-size: clamp(1.15rem, 1.5vw, 1.6rem);
+				font-weight: 700;
 			}
 
-			.impacts-node-visual__bar.impacts-example__bar .impacts-node-remaining {
-				background: var(--color-final-energy);
-				height: 24.3%;
-				margin-top: auto;
-			}
-
-			.impacts-example__visual {
-				align-items: center;
-				align-self: start;
-				display: grid;
-				grid-column: 2;
-				height: 100%;
-				justify-items: end;
-				margin-right: -2vw;
-				min-width: 0;
-			}
-
-			.impacts-example__svg {
-				display: block;
-				height: auto;
-				max-width: none;
-				opacity: 0.98;
-				width: min(100%, 920px);
-			}
-
-			#impacts-example-chart {
-				display: block;
-				height: min(62vh, 540px);
-				max-height: 540px;
+			.impacts-walk__stage > .impacts-company-card {
+				opacity: 0;
 				pointer-events: none;
-				width: min(100%, 920px);
 			}
 
-			.impacts-example__node .impacts-node-visual__meta {
-				gap: 0.9rem;
+			.impacts-walk__stage > .impacts-company-card.is-live {
+				pointer-events: auto;
 			}
 
-			.impacts-example__node .impacts-node-visual__name {
-				font-size: clamp(1.3rem, 1.65vw, 1.75rem);
+			.impacts-tabs__panels {
+				display: grid;
+				min-height: 0;
+			}
+
+			.impacts-tabs__panel {
+				grid-area: 1 / 1;
+			}
+
+			.impacts-tabs__panel[hidden] {
+				display: none;
+			}
+
+			.impacts-tabs {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+			}
+
+			.impacts-tabs__tab {
+				appearance: none;
+				background: transparent;
+				border: 1px solid rgba(255, 255, 255, 0.28);
+				color: rgba(255, 255, 255, 0.5);
+				cursor: pointer;
+				font-family: inherit;
+				font-size: 0.78rem;
+				font-weight: 400;
+				letter-spacing: 0.01em;
+				padding: 0.5rem 0.85rem;
+				transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+			}
+
+			.impacts-tabs__tab:hover,
+			.impacts-tabs__tab:focus-visible {
+				color: rgba(255, 255, 255, 0.85);
+			}
+
+			.impacts-tabs__tab.is-active {
+				background: #fff;
+				border-color: #fff;
+				color: var(--color-dark);
 				font-weight: 700;
 			}
 
-			.impacts-example__node .impacts-node-visual__savings {
-				font-size: clamp(1.8rem, 2vw, 2.4rem);
-				font-weight: 700;
+			.impacts-tabs__bullets {
+				color: rgba(244, 250, 255, 0.9);
+				display: grid;
+				font-size: 0.95rem;
+				gap: 0.85rem;
+				line-height: 1.45;
+				margin: 0;
+				padding-left: 1.1rem;
 			}
 
-			@media (max-width: 900px) {
-				.impacts-example {
-					grid-template-columns: 1fr;
-					grid-template-rows: auto;
-					margin-bottom: 3rem;
-					min-height: auto;
-					padding: 0;
-				}
+			.impacts-tabs__prose {
+				color: rgba(244, 250, 255, 0.9);
+				display: grid;
+				font-size: 0.95rem;
+				gap: 0.85rem;
+				line-height: 1.45;
+			}
 
-				.impacts-example__panel {
-					align-items: start;
-					display: grid;
-					grid-template-columns: 1fr;
-					gap: 1.5rem;
-				}
+			.impacts-tabs__prose p {
+				margin: 0;
+			}
 
-				.impacts-example__lead h3 {
-					max-width: none;
-				}
-
-				.impacts-example__lead,
-				.impacts-example__lead p {
-					max-width: none;
-				}
-
-				.impacts-example__copy {
-					grid-column: auto;
-					grid-row: auto;
-				}
-
-				.impacts-example__visual {
-					grid-column: auto;
-					grid-row: auto;
-					margin-right: 0;
-					transform: none;
-				}
-
-				.impacts-example__svg {
-					width: 100%;
-				}
-
-				#impacts-example-chart {
-					height: auto;
-					max-height: 420px;
-					width: 100%;
-				}
+			.impacts-tabs__prose strong {
+				color: #fff;
+				font-weight: 700;
 			}
 
 			.impacts-layout {
@@ -1773,12 +1798,14 @@
 				height: 100vh;
 				min-height: 100vh;
 				padding: 0 5vw;
+				position: sticky;
+				top: 0;
 			}
 
 			.impacts-layout__copy {
 				display: grid;
 				gap: 1.2rem;
-				grid-template-rows: auto minmax(0, 1fr);
+				grid-template-rows: minmax(0, 1fr) auto;
 				height: 100%;
 				padding: 10vh 0 8vh;
 				position: relative;
@@ -1994,7 +2021,7 @@
 				border-top: 1px solid rgba(255, 255, 255, 0.16);
 				display: grid;
 				gap: 1.2rem;
-				grid-template-columns: repeat(4, minmax(0, 1fr));
+				grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 				padding-top: 1.2rem;
 			}
 
@@ -2028,20 +2055,17 @@
 
 			/* Carved "empty" avoided regions: no fill, 1px border. Remaining regions
 			   keep the normal stage fill (nodes) or gradient fill (ribbons). */
-			#impacts-sankey-chart .impacts-node-avoided,
-			#impacts-example-chart .impacts-node-avoided {
+			#impacts-sankey-chart .impacts-node-avoided {
 				fill: #fff;
 				stroke: none;
 				stroke-width: 0;
 			}
 
-			#impacts-sankey-chart .impacts-link-remaining,
-			#impacts-example-chart .impacts-link-remaining {
+			#impacts-sankey-chart .impacts-link-remaining {
 				stroke: none;
 			}
 
-			#impacts-sankey-chart .impacts-link-avoided,
-			#impacts-example-chart .impacts-link-avoided {
+			#impacts-sankey-chart .impacts-link-avoided {
 				fill: none;
 				stroke: rgba(238, 245, 255, 0.85);
 				stroke-width: 1;
@@ -2049,28 +2073,22 @@
 
 			/* Intervention node: full-height outline marking the company's
 			   placement, mirroring a click-selected node in the main chart. */
-			#impacts-sankey-chart .impacts-node-intervention,
-			#impacts-example-chart .impacts-node-intervention {
+			#impacts-sankey-chart .impacts-node-intervention {
 				fill: none;
 				stroke: #d4ecff;
 				stroke-width: 1.6;
 			}
 
-			#impacts-sankey-chart .impacts-link,
-			#impacts-example-chart .impacts-link {
+			#impacts-sankey-chart .impacts-link {
 				opacity: 0.9;
 			}
 
-			#impacts-sankey-chart .sankey-link,
-			#impacts-example-chart .sankey-link {
+			#impacts-sankey-chart .sankey-link {
 				opacity: 0.9;
-				transition: opacity 220ms ease, stroke-width 220ms ease;
 			}
 
-			#impacts-sankey-chart .sankey-node,
-			#impacts-example-chart .sankey-node {
+			#impacts-sankey-chart .sankey-node {
 				opacity: 1;
-				transition: opacity 220ms ease;
 			}
 
 			#impacts-sankey-chart .sankey-link.impacts-is-highlight {
@@ -2267,15 +2285,15 @@
 			}
 
 			.bottom-sticky-nav__item--label {
-				background: var(--color-nav-hero);
+				background: var(--color-hero-highlight);
 			}
 
 			.bottom-sticky-nav__item[data-nav-group="global-emissions"] {
-				background: var(--color-nav-emissions);
+				background: var(--color-final-service);
 			}
 
 			.bottom-sticky-nav__item[data-nav-group="portfolio"] {
-				background: var(--color-nav-portfolio);
+				background: var(--color-device);
 			}
 
 			.bottom-sticky-nav__item[data-nav-group="climate-impacts"] {
@@ -2291,12 +2309,36 @@
 					padding-top: 5.2rem;
 				}
 
+				/* Static fallback: no scrub on mobile, show the end-state look. */
 				.portfolio-intro {
-					min-height: 52vh;
-					padding: 3.5rem 1rem;
+					min-height: auto;
 				}
 
-				.portfolio-intro__headline {
+				.portfolio-intro__pin {
+					display: block;
+					height: auto;
+					overflow: visible;
+					padding: 3.5rem 1rem;
+					position: static;
+				}
+
+				.portfolio-intro__bg {
+					opacity: 1;
+				}
+
+				.portfolio-intro__stack {
+					display: flex;
+					flex-direction: column;
+					gap: 1.5rem;
+				}
+
+				.portfolio-intro__line {
+					grid-area: auto;
+					opacity: 1;
+					position: static;
+				}
+
+				.portfolio-intro__line--1 {
 					font-size: clamp(1.5rem, 8vw, 2.5rem);
 					max-width: var(--max-copy-width);
 				}
@@ -2355,10 +2397,33 @@
 					padding: 3.8rem 1rem 5rem;
 				}
 
+				/* Static fallback: no scrub on mobile, show the end-state look. */
 				.impacts-intro {
-					height: auto;
 					min-height: auto;
+				}
+
+				.impacts-intro__pin {
+					display: block;
+					height: auto;
+					overflow: visible;
 					padding: 3.5rem 1rem;
+					position: static;
+				}
+
+				.impacts-intro__bg {
+					opacity: 1;
+				}
+
+				.impacts-intro__stack {
+					display: flex;
+					flex-direction: column;
+					gap: 1.5rem;
+				}
+
+				.impacts-intro__line {
+					grid-area: auto;
+					opacity: 1;
+					position: static;
 				}
 
 				.acknowledgements-video {
@@ -2394,10 +2459,28 @@
 					gap: 0.25rem;
 				}
 
+				.impacts-walk {
+					min-height: auto;
+				}
+
 				.impacts-layout {
 					gap: 1rem;
 					grid-template-columns: 1fr;
+					height: auto;
+					min-height: auto;
 					padding: 3.8rem 1rem 5rem;
+					position: static;
+				}
+
+				/* Mobile has no scroll clock, so the walkthrough collapses to its
+				   end state: script layer hidden, card and roster shown. */
+				.impacts-walk__script {
+					display: none;
+				}
+
+				.impacts-walk__stage > .impacts-company-card {
+					opacity: 1;
+					pointer-events: auto;
 				}
 
 				.impacts-lead-block {
@@ -2598,23 +2681,33 @@
 					flex-direction: column;
 				}
 
+				/* Static fallback: no scrub on mobile, show the end-state look. */
 				#timeline-intro {
 					min-height: auto;
 				}
 
 				.timeline-intro__pin {
+					display: block;
 					height: auto;
+					overflow: visible;
 					padding: 3rem 1rem;
 					position: static;
 				}
 
+				.timeline-intro__bg {
+					opacity: 1;
+				}
+
 				.timeline-intro__stack {
+					display: flex;
+					flex-direction: column;
 					gap: 1rem;
 				}
 
 				.timeline-intro__line {
 					grid-area: auto;
 					opacity: 1;
+					position: static;
 				}
 
 				#timeline {

@@ -216,7 +216,7 @@ swap:
 7 horizontal `<text.stage-header>` labels on expanded column centres at
 `y = sankeyExtentTop - 26` (`sankeyExtentTop = 70` gives them headroom inside
 the viewBox). Column-1 x is clamped to `Math.max(cx, 58)` so "Final Service"
-never clips the left edge. Per-stage `:root` colour, Helvetica Neue italic 1rem.
+never clips the left edge. Per-stage `:root` colour, Helvetica Neue 1rem.
 Opacity driven per-frame by `drawMaster`.
 
 ### Scroll binding

@@ -52,7 +52,7 @@
 		 
 		<section id="hero-intro" aria-label="Opening hero scene">
 			<div class="hero-stage">
-				<img class="hero-globe" src="globe.webp" alt="Earth globe visual" />
+				<img class="hero-globe" src="globe-v2.webp" alt="Earth globe visual" />
 				<div class="hero-logo" aria-hidden="true">
 					<svg id="logo--light" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="262.547" height="46.656" viewBox="0 0 262.547 46.656">
 						<defs>
@@ -142,6 +142,7 @@
 
 			<section id="timeline-intro" aria-label="Introduction to the 2040 outlook">
 				<div class="timeline-intro__pin">
+					<div class="timeline-intro__bg" aria-hidden="true"></div>
 					<div class="timeline-intro__stack">
 						<p class="timeline-intro__line timeline-intro__line--1">The next step is to turn to the future - to 2040.</p>
 						<p class="timeline-intro__line timeline-intro__line--2">That&rsquo;s the world we have a laser-like focus on at Capricorn, since it&rsquo;s the global emissions picture we are on a mission to change.</p>
@@ -173,10 +174,13 @@
 
 			<section id="tif-tgif-portfolio" aria-label="TIF and TGIF Portfolio">
 				<div class="portfolio-intro">
-					<h2 class="portfolio-intro__headline">
-						The future is uncertain.
-					</h2>
-					<p>Under different scenarios the picture changes. What's important, however, is that we can now visualize the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.</p>
+					<div class="portfolio-intro__pin">
+						<div class="portfolio-intro__bg" aria-hidden="true"></div>
+						<div class="portfolio-intro__stack">
+							<p class="portfolio-intro__line portfolio-intro__line--1">The future is uncertain. Under different scenarios the picture changes.</p>
+							<p class="portfolio-intro__line portfolio-intro__line--2">What's important, however, is that we can now visualize the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.</p>
+						</div>
+					</div>
 				</div>
 			</section>
 			
@@ -203,83 +207,99 @@
 				
 				<div class="impacts-intro">
 					<div class="impacts-intro__pin">
-						<h2 class="impacts-intro__body">The technologies in TIF/TGIF's portfolio impact the 2040 global emissions picture by <strong>avoiding emissions that would otherwise occur</strong>.<br><br>Here, we show the largest potential avoided emissions, assuming that the technology scales to its maximum, transforming the market it targets.</h2>
-					</div>
-				</div>
-
-
-				<div class="impacts-highlight-copy">
-					<h3>Let's take Fervo Energy's enhanced geothermal system (EGS) technology as an example, which avoids future emissions by replacing fossil fuel baseload power generation.</h3>
-				</div>
-
-
-				<div class="impacts-example" aria-label="Static Fervo climate impacts example">
-					
-
-					<div class="impacts-example__panel">
-						<div class="impacts-example__copy">
-							<p style="color:#FFF;">By 2040, emissions are forecasted to be reduced by 11.39 Gt of CO2e through the adoption of geothermal power.</p>
-							<img class="impacts-example__logo" src="logos/Fervo-Logo-temp.png" alt="Fervo Energy logo" loading="lazy">
-							<div class="impacts-node-visual impacts-example__node">
-								<div class="impacts-node-visual__bar impacts-example__bar">
-									<div class="impacts-node-avoided"></div>
-									<div class="impacts-node-remaining"></div>
-								</div>
-								<div class="impacts-node-visual__meta">
-									<p class="impacts-node-visual__name">Electricity and heat</p>
-									<p class="impacts-node-visual__savings">75.7% avoided</p>
-								</div>
-							</div>
+						<div class="impacts-intro__bg" aria-hidden="true"></div>
+						<div class="impacts-intro__stack">
+							<p class="impacts-intro__line impacts-intro__line--1">The technologies in TIF/TGIF's portfolio impact the 2040 global emissions picture by <strong>avoiding emissions that would otherwise occur</strong>.</p>
+							<p class="impacts-intro__line impacts-intro__line--2">Here, we show the largest potential avoided emissions, assuming that the technology scales to its maximum, transforming the market it targets.</p>
 						</div>
 					</div>
-
-					<div class="impacts-example__visual" aria-hidden="true">
-						<svg id="impacts-example-chart" role="img" aria-label="Fervo Energy avoided emissions sankey example"></svg>
-					</div>
 				</div>
 
-				<div class="impacts-layout">
-					<div class="impacts-layout__copy">
-						<div class="impacts-company-card" data-impacts-company-card aria-live="polite">
-							<p class="impacts-company-card__prompt" data-impacts-card-prompt>
-								Select a portfolio company to view its mapped node and potential avoided emissions in 2040A.
-							</p>
 
-							<div class="impacts-company-card__content" data-impacts-card-content hidden>
-								<img
-									class="impacts-company-card__logo"
-									data-impacts-card-logo
-									src="https://placehold.co/240x60?text=logo"
-									alt="Company logo"
-									loading="lazy"
-								/>
-								<p class="impacts-company-card__sentence" data-impacts-card-sentence></p>
-
-								<div class="impacts-node-visual">
-									<div class="impacts-node-visual__bar" data-impacts-card-node-bar>
-										<div class="impacts-node-avoided" data-impacts-card-node-avoided></div>
-										<div class="impacts-node-remaining" data-impacts-card-node-remaining></div>
+				<div class="impacts-walk">
+					<div class="impacts-layout">
+						<div class="impacts-layout__copy">
+							<div class="impacts-walk__stage">
+								<div class="impacts-walk__script" data-impacts-walk-script>
+									<div class="impacts-walk__copy-stack" data-impacts-walk-copy-stack>
+										<p class="impacts-walk__copy" data-impacts-walk-copy="1">Let's take Fervo's enhanced geothermal system (EGS) technology as an example, which <strong>avoids future emissions</strong> by replacing fossil fuel baseload power generation.</p>
+										<p class="impacts-walk__copy" data-impacts-walk-copy="2"></p>
+										<p class="impacts-walk__copy" data-impacts-walk-copy="3">These avoided emissions ripple across the global economy.</p>
+										<p class="impacts-walk__copy" data-impacts-walk-copy="4"><strong>Select any company</strong> in TIF/TGIF's portfolio to see how its technology is forecast to impact the global emissions picture.</p>
 									</div>
-									<div class="impacts-node-visual__meta">
-										<p class="impacts-node-visual__name" data-impacts-card-node-name></p>
-										<p style="color:white;" class="impacts-node-visual__percentage" data-impacts-card-node-percentage></p>
+
+									<div class="impacts-node-visual impacts-walk__node" data-impacts-walk-node>
+										<div class="impacts-node-visual__bar" data-impacts-walk-node-bar>
+											<div class="impacts-node-avoided"></div>
+											<div class="impacts-node-remaining"></div>
+										</div>
+										<div class="impacts-node-visual__meta">
+											<p class="impacts-node-visual__name" data-impacts-walk-node-name></p>
+											<p class="impacts-node-visual__savings" data-impacts-walk-node-percentage></p>
+										</div>
 									</div>
 								</div>
-							</div>
-						</div>
 
-						<div class="impacts-businesses">
-							<div class="impacts-businesses__pin" aria-label="Portfolio companies">
-								<div class="impacts-roster" data-impacts-roster>
-									<!-- company columns injected by main.js -->
+								<div class="impacts-company-card" data-impacts-company-card aria-live="polite">
+									<p class="impacts-company-card__prompt" data-impacts-card-prompt>
+										Select a portfolio company to view its mapped node and potential avoided emissions in 2040A.
+									</p>
+
+									<div class="impacts-company-card__content" data-impacts-card-content hidden>
+										<img
+											class="impacts-company-card__logo"
+											data-impacts-card-logo
+											src="https://placehold.co/240x60?text=logo"
+											alt="Company logo"
+											loading="lazy"
+										/>
+										<p class="impacts-company-card__sentence" data-impacts-card-sentence></p>
+
+										<div class="impacts-tabs__panels">
+											<div class="impacts-tabs__panel" data-impacts-panel="avoided">
+												<div class="impacts-node-visual">
+													<div class="impacts-node-visual__bar" data-impacts-card-node-bar>
+														<div class="impacts-node-avoided" data-impacts-card-node-avoided></div>
+														<div class="impacts-node-remaining" data-impacts-card-node-remaining></div>
+													</div>
+													<div class="impacts-node-visual__meta">
+														<p class="impacts-node-visual__name" data-impacts-card-node-name></p>
+														<p class="impacts-node-visual__savings" data-impacts-card-node-percentage></p>
+													</div>
+												</div>
+											</div>
+
+											<div class="impacts-tabs__panel" data-impacts-panel="analysis" hidden>
+												<ul class="impacts-tabs__bullets" data-impacts-card-bullets></ul>
+											</div>
+
+											<div class="impacts-tabs__panel" data-impacts-panel="overview" hidden>
+												<div class="impacts-tabs__prose" data-impacts-card-overview></div>
+											</div>
+										</div>
+
+										<div class="impacts-tabs" role="tablist" aria-label="Company detail views" data-impacts-tabs>
+											<button type="button" class="impacts-tabs__tab is-active" role="tab" aria-selected="true" data-impacts-tab="avoided">avoided emissions</button>
+											<button type="button" class="impacts-tabs__tab" role="tab" aria-selected="false" data-impacts-tab="analysis">analysis details</button>
+											<button type="button" class="impacts-tabs__tab" role="tab" aria-selected="false" data-impacts-tab="overview">company overview</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="impacts-businesses">
+								<div class="impacts-businesses__pin" aria-label="Portfolio companies">
+									<div class="impacts-roster" data-impacts-roster>
+										<!-- company columns injected by main.js -->
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<div class="impacts-layout__visual">
-						<div class="impacts-layout__visual-shell">
-							<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
+						<div class="impacts-layout__visual">
+							<div class="impacts-layout__visual-shell">
+								<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
+							</div>
 						</div>
 					</div>
 				</div>
