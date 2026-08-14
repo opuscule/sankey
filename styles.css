@@ -1671,6 +1671,9 @@
 				display: grid;
 				gap: 2rem;
 				grid-template-rows: auto minmax(0, 1fr);
+				/* Narration only — it is grid-stacked over the card, so even at
+				   opacity 0 it would swallow clicks on the tabs/roster. */
+				pointer-events: none;
 			}
 
 			.impacts-walk__copy-stack {

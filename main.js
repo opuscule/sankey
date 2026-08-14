@@ -1073,6 +1073,83 @@
 		return graph;
 	}
 
+	// Rendered height of every node's wrapped label, measured in a throwaway
+	// hidden group inside the chart's own <svg> so it picks up the real
+	// `.sankey-node text` font. Returns id -> px.
+	function measureLabelHeights(chartEl, graph, maxWidth) {
+		const heights = new Map();
+		if (!chartEl) {
+			return heights;
+		}
+		const probeGroup = d3
+			.select(chartEl)
+			.append("g")
+			.attr("class", "sankey-nodes")
+			.attr("visibility", "hidden");
+		const probe = probeGroup.append("g").attr("class", "sankey-node").append("text");
+
+		graph.nodes.forEach((node) => {
+			probe.text(node.label);
+			wrapNodeLabels(probe, maxWidth);
+			let box = null;
+			try {
+				box = probe.node().getBBox();
+			} catch (error) {
+				box = null;
+			}
+			heights.set(node.id, box && box.height ? box.height : 0);
+		});
+
+		probeGroup.remove();
+		return heights;
+	}
+
+	// Give every node at least as much vertical room as its own label needs, so
+	// labels can stay centred on the node they belong to instead of being nudged
+	// off it. Nodes keep their height (value) and are re-centred inside
+	// label-sized slots; overlapping slots are merged into blocks that sit on the
+	// average of what their members want, so a crowded run drifts symmetrically
+	// rather than cascading off one end of the column. Mutates node/link y in
+	// place, like `spreadStageHeights`, so ribbons follow their endpoints.
+	function spreadNodesForLabels(chartEl, graph, top, bottom, gap = 2) {
+		const labelHeights = measureLabelHeights(chartEl, graph, computeLabelMaxWidth(graph));
+		const slotHeightByNode = new Map();
+		const entries = graph.nodes.map((node) => {
+			const nodeHeight = node.y1 - node.y0;
+			const height = Math.max(nodeHeight, labelHeights.get(node.id) || 0);
+			slotHeightByNode.set(node.id, height);
+			return {
+				id: node.id,
+				stage: node.stage,
+				height,
+				offset: 0,
+				center: node.y0 + nodeHeight / 2
+			};
+		});
+
+		const slotTops = resolveLabelYByStage(entries, top, bottom, gap);
+		const deltaByNode = new Map();
+
+		graph.nodes.forEach((node) => {
+			const slotTop = slotTops.get(node.id);
+			if (slotTop === undefined) {
+				return;
+			}
+			const nodeHeight = node.y1 - node.y0;
+			const newY0 = slotTop + (slotHeightByNode.get(node.id) - nodeHeight) / 2;
+			deltaByNode.set(node.id, newY0 - node.y0);
+			node.y0 = newY0;
+			node.y1 = newY0 + nodeHeight;
+		});
+
+		graph.links.forEach((link) => {
+			link.y0 += deltaByNode.get(link.source.id) || 0;
+			link.y1 += deltaByNode.get(link.target.id) || 0;
+		});
+
+		return graph;
+	}
+
 	// Draws the horizontal per-stage column labels (`.stage-header`) into `group`,
 	// centered over each stage's column. Joins by stage so it can be re-run on
 	// re-render without tearing the labels down. Mirrors the portfolio chart's
@@ -1236,82 +1313,71 @@
 	// Push overlapping node labels apart within each stage. A carved column
 	// collapses most of its nodes to slivers far shorter than their own text, so
 	// centring every label on its node body stacks them into an unreadable pile.
-	// Each label is nudged down only as far as it must go to clear the one above,
-	// then pulled back up off the bottom edge, so labels stay as close to their
-	// node as the space allows. `entries` are {id, stage, height, offset, center};
-	// the returned map is id -> resolved absolute `y` attribute value.
+	// Overlapping labels are merged into blocks, and each block is centred on the
+	// average of what its members want, so a crowded run drifts symmetrically
+	// around its nodes instead of cascading downward off the top of the column.
+	// `entries` are {id, stage, height, offset, center}; the returned map is
+	// id -> resolved absolute `y` attribute value.
 	function resolveLabelYByStage(entries, top, bottom, gap = 2) {
 		const resolved = new Map();
 		d3.group(entries, (entry) => entry.stage).forEach((stageEntries) => {
 			const ordered = stageEntries.slice().sort((a, b) => a.center - b.center);
+			const blocks = [];
+
 			ordered.forEach((entry) => {
-				entry.top = entry.center - entry.height / 2;
+				blocks.push({
+					entries: [entry],
+					height: entry.height,
+					want: entry.center - entry.height / 2
+				});
+
+				while (blocks.length > 1) {
+					const below = blocks[blocks.length - 1];
+					const above = blocks[blocks.length - 2];
+					if (above.want + above.height + gap <= below.want) {
+						break;
+					}
+					// `below` would sit this far down inside the merged block, so
+					// discount that when averaging the two blocks' wanted tops.
+					const offset = above.height + gap;
+					const aboveCount = above.entries.length;
+					const belowCount = below.entries.length;
+					blocks.splice(blocks.length - 2, 2, {
+						entries: above.entries.concat(below.entries),
+						height: offset + below.height,
+						want:
+							(above.want * aboveCount + (below.want - offset) * belowCount) /
+							(aboveCount + belowCount)
+					});
+				}
 			});
 
+			blocks.forEach((block) => {
+				block.top = Math.min(Math.max(block.want, top), Math.max(top, bottom - block.height));
+			});
+
+			// Clamping to the band can re-introduce overlap when a column is
+			// over-subscribed, so settle the blocks downward then back up.
 			let cursor = top;
-			ordered.forEach((entry) => {
-				entry.top = Math.max(entry.top, cursor);
-				cursor = entry.top + entry.height + gap;
+			blocks.forEach((block) => {
+				block.top = Math.max(block.top, cursor);
+				cursor = block.top + block.height + gap;
 			});
-
 			cursor = bottom;
-			for (let i = ordered.length - 1; i >= 0; i -= 1) {
-				ordered[i].top = Math.min(ordered[i].top, cursor - ordered[i].height);
-				cursor = ordered[i].top - gap;
+			for (let i = blocks.length - 1; i >= 0; i -= 1) {
+				blocks[i].top = Math.min(blocks[i].top, cursor - blocks[i].height);
+				cursor = blocks[i].top - gap;
 			}
 
-			ordered.forEach((entry) => resolved.set(entry.id, entry.top - entry.offset));
+			blocks.forEach((block) => {
+				let y = block.top;
+				block.entries.forEach((entry) => {
+					resolved.set(entry.id, y - entry.offset);
+					y += entry.height + gap;
+				});
+			});
 		});
 		return resolved;
-	}
-
-	// Rendered ink box of a wrapped node label, as height plus the box's top
-	// relative to the element's own `y`. Multi-line labels carry per-tspan `dy`
-	// offsets, so the box is not centred on `y` and cannot be assumed to be.
-	function measureLabelBox(textNode) {
-		if (!textNode) {
-			return null;
-		}
-		let box;
-		try {
-			box = textNode.getBBox();
-		} catch (error) {
-			return null;
-		}
-		if (!box || !box.height) {
-			return null;
-		}
-		return { height: box.height, offset: box.y - (Number(textNode.getAttribute("y")) || 0) };
-	}
-
-	// Applies `resolveLabelYByStage` to a static chart. Run after `wrapNodeLabels`,
-	// since the resolved line count drives each label's measured box.
-	function declutterNodeLabels(nodeSelection, top, bottom, gap = 2) {
-		const entries = [];
-		const targets = new Map();
-
-		nodeSelection.each(function (node) {
-			const text = d3.select(this).select("text");
-			const box = measureLabelBox(text.node());
-			if (!box) {
-				return;
-			}
-			entries.push({
-				id: node.id,
-				stage: node.stage,
-				height: box.height,
-				offset: box.offset,
-				center: node.y0 + Math.max(3, node.y1 - node.y0) / 2
-			});
-			targets.set(node.id, { text, y0: node.y0 });
-		});
-
-		resolveLabelYByStage(entries, top, bottom, gap).forEach((y, id) => {
-			const target = targets.get(id);
-			if (target) {
-				target.text.attr("y", y - target.y0);
-			}
-		});
 	}
 
 	function renderPortfolioSankey() {
@@ -1350,6 +1416,7 @@
 
 		// Align every stage top *and* bottom so the expanded columns are equal height.
 		spreadStageHeights(graph, 44, height - 34);
+		spreadNodesForLabels(portfolioChart, graph, 44, height - 34);
 
 		const defs = svg.append("defs");
 		const stageBounds = stageXBounds(graph);
@@ -1519,6 +1586,7 @@
 		// Align every stage top *and* bottom within the GT-scaled band so columns are
 		// equal height; the band's own top still encodes this scenario's GT total.
 		spreadStageHeights(graph, gtToY(layoutGt), axisBottom);
+		spreadNodesForLabels(scenarioChart, graph, gtToY(layoutGt), axisBottom);
 
 		// Persistent layer groups so scenario switches can tween geometry instead of
 		// tearing the chart down and rebuilding it from scratch each time.
@@ -1946,6 +2014,7 @@
 		if (!carve) {
 			spreadStageHeights(graph, gtToY(layoutGt), axisBottom);
 		}
+		spreadNodesForLabels(chartEl, graph, gtToY(layoutGt), axisBottom + 8);
 
 		// Per-node avoided amount, summed on the node's height-defining side so it
 		// aligns with the carved ribbons entering/leaving that side.
@@ -2153,7 +2222,6 @@
 			.text((d) => d.label);
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(graph));
-		declutterNodeLabels(nodeSelection, gtToY(layoutGt), axisBottom + 8);
 
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, graph, 24);
@@ -2245,6 +2313,7 @@
 			if (spread) {
 				spreadStageHeights(graph, bandTop, axisBottom);
 			}
+			spreadNodesForLabels(impactsChart, graph, bandTop, axisBottom + 8);
 			return graph;
 		};
 
@@ -2476,40 +2545,6 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(carveGraph));
 
-		// Labels are decluttered once per layout, then lerped like any other
-		// geometry. A node missing from one side keeps its collapsed centre there
-		// (it is faded out anyway) so it never reserves space among the labels
-		// that are actually visible.
-		const labelBoxes = new Map();
-		nodeSelection.each(function (d) {
-			const box = measureLabelBox(d3.select(this).select("text").node());
-			if (box) {
-				labelBoxes.set(d.id, box);
-			}
-		});
-		const labelYFor = (geomOf, present) => {
-			const entries = [];
-			const absent = new Map();
-			nodeData.forEach((d) => {
-				const box = labelBoxes.get(d.id);
-				if (!box) {
-					return;
-				}
-				const geom = geomOf(d.id);
-				const center = geom.y0 + Math.max(3, geom.y1 - geom.y0) / 2;
-				if (present.has(d.id)) {
-					entries.push({ id: d.id, stage: d.stage, height: box.height, offset: box.offset, center });
-				} else {
-					absent.set(d.id, center - box.height / 2 - box.offset);
-				}
-			});
-			const resolved = resolveLabelYByStage(entries, bandTop, axisBottom + 8);
-			absent.forEach((y, id) => resolved.set(id, y));
-			return resolved;
-		};
-		const fullLabelY = labelYFor(fullNodeOf, fullNodes);
-		const carveLabelY = labelYFor(carveNodeOf, carveNodes);
-
 		const headersGroup = svg
 			.append("g")
 			.attr("class", "sankey-stage-headers")
@@ -2529,9 +2564,7 @@
 			linkPresence,
 			linkPathFromGeom,
 			avoidedRatioById,
-			rippleOrderById,
-			fullLabelY,
-			carveLabelY
+			rippleOrderById
 		};
 
 		// The company card reads its numbers off state.impactsRendered, so point it
@@ -2614,13 +2647,7 @@
 				.attr("width", geom.w)
 				.attr("y", avoidedH)
 				.attr("height", Math.max(0, geom.h - avoidedH));
-			const labelFull = r.fullLabelY.get(d.id);
-			const labelCarve = r.carveLabelY.get(d.id);
-			const labelY =
-				labelFull === undefined || labelCarve === undefined
-					? geom.y0 + geom.h / 2
-					: lerp(labelFull, labelCarve, t);
-			group.selectAll("text").attr("y", labelY - geom.y0);
+			group.selectAll("text").attr("y", geom.h / 2);
 		});
 
 		r.linkSelection
@@ -3992,6 +4019,7 @@
 		};
 
 		const expandedGraph = computeLayout(9);
+		spreadNodesForLabels(chart, expandedGraph, sankeyExtentTop, sankeyExtentBottom);
 		const collapsedGraph = derivePackedLayout(expandedGraph);
 		const detailGraph = computeDetailLayout(expandedGraph);
 
@@ -5075,6 +5103,7 @@
 
 		// Align every stage top *and* bottom so the expanded columns are equal height.
 		spreadStageHeights(graph, 44, height - 34);
+		spreadNodesForLabels(themesChart, graph, 44, height - 34);
 
 		// Per-stage-pair link gradients (themes-specific ids, anchored in user
 		// space to this chart's columns) so each ribbon reads in its stage colors.
@@ -5723,6 +5752,7 @@
 				])
 				.iterations(64)(graph);
 			spreadStageHeights(graph, 44, height - 34);
+			spreadNodesForLabels(timelineChart, graph, 44, height - 34);
 			return graph;
 		};
 
@@ -5763,6 +5793,7 @@
 				])
 				.iterations(0)(graph);
 			spreadStageHeights(graph, 44, height - 34);
+			spreadNodesForLabels(timelineChart, graph, 44, height - 34);
 			return graph;
 		};
 
