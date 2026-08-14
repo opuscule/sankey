@@ -1,9 +1,9 @@
 (function () {
-	const initPath = "init.json";
-	const baselinesPath = "baselines.json";
-	const nodeDetailsPath = "node_details.json";
-	const avoidedPath = "avoided.json";
-	const themesDataPath = "init-demo.json";
+	const initPath = "init-08132026.json";
+	const baselinesPath = "baselines-08132026.json";
+	const nodeDetailsPath = "node_details-08132026.json";
+	const avoidedPath = "avoided-08132026.json";
+	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
 	const portfolioChart = document.getElementById("portfolio-sankey-chart");
@@ -446,18 +446,35 @@
 			.replace(/[^a-z0-9]+/g, "-")
 			.replace(/^-+|-+$/g, "") || "unknown";
 
-	const supportedPortfolioBusinesses = new Set([
-		"fervo",
-		"propel-aero",
-		"electric-hydrogen",
-		"redwood-materials"
-	]);
+	// Populated from init's intervention.companies roster by
+	// buildPortfolioBusinessNodeMap(), so adding a company is a data-only change.
+	const supportedPortfolioBusinesses = new Set();
 
+	// Filenames are the client's own and their casing is inconsistent
+	// (-logo.png vs -Logo.png), so they cannot be derived from the slug. Static
+	// hosting is case-sensitive even though macOS is not — keep these exact.
 	const impactsLogoByBusiness = {
-		"fervo": "logos/fervo-logo.png",
-		"propel-aero": "logos/propel-aero-logo.png",
-		"electric-hydrogen": "logos/electric-hydrogen-logo.png",
-		"redwood-materials": "logos/redwood-materials-logo.png"
+		"fervo": "logos/Fervo-Logo-temp.png",
+		"electric-hydrogen": "logos/Electric-Hydrogen-logo.png",
+		"propel-aero": "logos/Propel-Aero-logo.png",
+		"redwood-materials": "logos/Redwood-Materials-Logo.png",
+		"whisperaero": "logos/Whisper-Aero-Logo.png",
+		"harbingermotors": "logos/Harbinger-Logo.png",
+		"heronpower": "logos/Heron-Power-logo.png",
+		"seurat": "logos/Seurat-Logo.png",
+		"quantumscape": "logos/QuantumScape-Logo.png",
+		"span": "logos/Span-logo.png",
+		"navitas": "logos/Navitas-Semiconductor-Logo.png",
+		"jobyaviation": "logos/Joby-Logo.png",
+		"electra": "logos/Electra-logo.png",
+		"limelightsteel": "logos/Limelight-Steel-Logo.png",
+		"helion": "logos/Helion-Logo.png",
+		"chement": "logos/Chement-Logo.png",
+		"erthos": "logos/Erthos-Logo.png",
+		"formenergy": "logos/Form-Energy-logo.png",
+		"magratheametals": "logos/Magrathea-Logo.png",
+		"summitnanotech": "logos/Summit-Nanotech-logo.png",
+		"twelve": "logos/Twelve-Logo.png"
 	};
 
 	const impactsLogoFallback = "https://placehold.co/240x60?text=logo";
@@ -468,9 +485,7 @@
 	};
 
 	const scenarioKeyById = {
-		"enacted-policies": "2040A",
-		"stated-commitments": "2040B",
-		"high-ai-electricity-demand": "2040C"
+		"enacted-policies": "2040A"
 	};
 	const warnedMissingScenarioKeys = new Set();
 
@@ -480,11 +495,11 @@
 	// height reads as an absolute GT quantity instead of always filling the frame.
 	// `null` = not yet defined (renders at full height as a neutral fallback).
 	const scenarioTotalsGt = {
-		"enacted-policies": 60,
-		"stated-commitments": 46,
-		"high-ai-electricity-demand": null
+		"enacted-policies": 60
 	};
 	const SCENARIO_MAX_GT = 60;
+	// Reference-axis gridlines, kept independent of which scenarios ship data.
+	const SCENARIO_AXIS_TICKS_GT = [46, 60];
 
 	function scenarioGtFor(scenarioId) {
 		const gt = scenarioTotalsGt[scenarioId];
@@ -898,9 +913,6 @@
 
 	function buildPortfolioBusinessNodeMap(initData) {
 		const map = new Map();
-		for (const businessId of supportedPortfolioBusinesses) {
-			map.set(businessId, null);
-		}
 
 		const companies = initData?.intervention?.companies;
 		if (!Array.isArray(companies)) {
@@ -908,20 +920,14 @@
 		}
 
 		for (const company of companies) {
-			const candidates = [company?.company, company?.company_label];
-			let businessId = "";
-			for (const candidate of candidates) {
-				const normalized = normalizeBusinessSlug(candidate);
-				if (supportedPortfolioBusinesses.has(normalized)) {
-					businessId = normalized;
-					break;
-				}
-			}
-
+			const businessId = normalizeBusinessSlug(company?.company || company?.company_label);
 			if (!businessId) {
 				continue;
 			}
 
+			supportedPortfolioBusinesses.add(businessId);
+
+			// null for the companies whose placement is a multi-node "flow".
 			const nodeId = String(company?.node || "").trim();
 			map.set(businessId, nodeId || null);
 		}
@@ -1064,7 +1070,7 @@
 			.attr("y1", gtToY(0))
 			.attr("y2", gtToY(SCENARIO_MAX_GT));
 
-		const tickData = Object.values(scenarioTotalsGt).filter((gt) => Number.isFinite(gt));
+		const tickData = SCENARIO_AXIS_TICKS_GT;
 		const ticks = axisGroup
 			.selectAll("g.scenario-axis__tick")
 			.data(tickData, (d) => d)
@@ -1603,7 +1609,7 @@
 			resolvedScenarioKey: scenarioRequest.resolvedScenarioKey
 		};
 
-		applyScenarioHighlight(scenarioRequest.scenarioId);
+		applyScenarioHighlight();
 	}
 
 	function setupScenarioSync() {
@@ -1621,64 +1627,15 @@
 			.classed("scenario-is-muted", false);
 	}
 
-	function pairValueMap(links) {
-		const map = new Map();
-		for (const link of links) {
-			const key = `${link.source.id}|${link.target.id}`;
-			map.set(key, Number(link.value) || 0);
-		}
-		return map;
-	}
-
-	function applyScenarioHighlight(rawScenarioId) {
+	// Only one 2040 scenario ships data today, so there is no comparison state
+	// to highlight — the scenario Sankey always renders unmuted.
+	function applyScenarioHighlight() {
 		if (!state.scenarioRendered) {
 			return;
 		}
 
-		const scenarioId = Object.prototype.hasOwnProperty.call(scenarioKeyById, rawScenarioId)
-			? rawScenarioId
-			: state.scenarioRendered.scenarioId;
-		const { nodeSelection, linkSelection, graph, baselineGraph } = state.scenarioRendered;
-
-		if (scenarioId === "enacted-policies") {
-			clearScenarioHighlight(linkSelection, nodeSelection);
-			return;
-		}
-
-		const baselinePairs = pairValueMap(baselineGraph.links);
-		const selectedPairs = pairValueMap(graph.links);
-
-		const relevantPairs = new Set();
-		for (const [pair, selectedValue] of selectedPairs.entries()) {
-			const baselineValue = baselinePairs.get(pair) || 0;
-			const delta = selectedValue - baselineValue;
-			if (scenarioId === "stated-commitments" && delta < -0.05) {
-				relevantPairs.add(pair);
-			}
-			if (scenarioId === "high-ai-electricity-demand" && delta > 0.05) {
-				relevantPairs.add(pair);
-			}
-		}
-
-		if (!relevantPairs.size) {
-			clearScenarioHighlight(linkSelection, nodeSelection);
-			return;
-		}
-
-		const relevantNodes = new Set();
-		for (const pair of relevantPairs) {
-			const [sourceId, targetId] = pair.split("|");
-			relevantNodes.add(sourceId);
-			relevantNodes.add(targetId);
-		}
-
-		const isRelevant = (link) => relevantPairs.has(`${link.source.id}|${link.target.id}`);
-		linkSelection
-			.classed("scenario-is-highlight", isRelevant)
-			.classed("scenario-is-muted", (link) => !isRelevant(link));
-		nodeSelection
-			.classed("scenario-is-highlight", (node) => relevantNodes.has(node.id))
-			.classed("scenario-is-muted", (node) => !relevantNodes.has(node.id));
+		const { nodeSelection, linkSelection } = state.scenarioRendered;
+		clearScenarioHighlight(linkSelection, nodeSelection);
 	}
 
 	// avoided.json is large; fetch it lazily (only the Climate Impacts "after"
@@ -2087,10 +2044,11 @@
 	}
 
 	function findNodeLabelById(nodeId) {
-		if (!nodeId || !Array.isArray(state.initData?.nodes)) {
+		const initNodes = state.initData?.nodes?.nodes;
+		if (!nodeId || !Array.isArray(initNodes)) {
 			return "";
 		}
-		const node = state.initData.nodes.find((entry) => String(entry?.id || "").trim() === nodeId);
+		const node = initNodes.find((entry) => String(entry?.id || "").trim() === nodeId);
 		if (!node) {
 			return deriveLabelFromId(nodeId);
 		}
@@ -2113,15 +2071,6 @@
 		}
 
 		return "No mapped node available";
-	}
-
-	function avoidedTotalForCompany(companyKey, scenarioKey) {
-		const company = state.avoidedData?.[companyKey];
-		const rawLinks = Array.isArray(company?.links) ? company.links : [];
-		return rawLinks.reduce((sum, link) => {
-			const value = toFiniteNumber(link?.[scenarioKey]?.value, 0);
-			return value > 0 ? sum + value : sum;
-		}, 0);
 	}
 
 	function impactsNodeMetrics(nodeId) {
@@ -2160,6 +2109,21 @@
 		};
 	}
 
+	// Several companies ship with `technology: null` until the client fills them
+	// in, so fall back to the company's own name rather than the theme label,
+	// which reads oddly mid-sentence ("Clean energy generation has the potential…").
+	function resolveImpactsTechnologyLabel(selection) {
+		const technology = String(selection?.technologyLabel || "").trim();
+		if (technology) {
+			return technology;
+		}
+		const label = String(selection?.label || "").trim();
+		if (label) {
+			return `${label}'s technology`;
+		}
+		return "This technology";
+	}
+
 	function updateImpactsCompanyCard(selection) {
 		const card = state.impactsCard;
 		if (!card) {
@@ -2181,10 +2145,7 @@
 		const nodeMetrics = impactsNodeMetrics(selection.nodeId);
 		const avoidedHeightPct = Math.round(Math.min(1, Math.max(0, nodeMetrics.avoidedRatio)) * 100);
 		const remainingHeightPct = Math.max(0, 100 - avoidedHeightPct);
-		const technologyLabel =
-			String(selection.technologyLabel || "").trim() ||
-			String(selection.themeLabel || "").trim() ||
-			"This technology";
+		const technologyLabel = resolveImpactsTechnologyLabel(selection);
 
 		if (selection.businessId && !state.avoidedData) {
 			card.logo.src = logoSrc;
@@ -2294,6 +2255,7 @@
 					label: company.label,
 					themeLabel: theme.label,
 					technologyLabel: company.technologyLabel,
+					bullets: company.bullets || [],
 					businessId: company.businessId,
 					nodeId: company.nodeId
 				});
@@ -3996,21 +3958,16 @@
 	}
 
 	// --- Portfolio Themes section --------------------------------------------
-	// A scroll-driven walk through the four portfolio themes. On entry the roster
+	// A scroll-driven walk through the portfolio themes. On entry the roster
 	// is dimmed and the themes Sankey is dark; each theme's scroll window lights
 	// its companies and their nodes, then resets before the next theme.
-	const THEME_ORDER = [
-		"IndustrialProcessesAndMaterials",
-		"Electrification",
-		"CleanEnergyGeneration",
-		"EnergyEfficiency"
-	];
 
 	// Scroll budget (vh) that composes #portfolio-themes min-height (1280vh in CSS).
-	// After the 4-theme walk the section keeps the layout pinned for a finale:
-	// fade the lead copy out, re-light every company/node, sweep the links in,
-	// then a plain hold before the sticky layout releases.
-	const THEMES_TRAVEL_VH = 780; // four-theme walk
+	// The walk is split evenly across however many themes the data ships, then the
+	// section keeps the layout pinned for a finale: fade the lead copy out,
+	// re-light every company/node, sweep the links in, then a plain hold before
+	// the sticky layout releases.
+	const THEMES_TRAVEL_VH = 780; // whole-theme walk
 	const FINALE_LEAD_FADE_VH = 60; // "Consider four themes" fade-out
 	const FINALE_ANIM_VH = 240; // 0-100 finale timeline
 	const FINALE_HOLD_VH = 100; // pinned hold before unpin
@@ -4021,21 +3978,14 @@
 	const P_FINALE_END =
 		(THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH) / THEMES_SCROLL_VH;
 
-	const THEME_BLURBS = {
-		IndustrialProcessesAndMaterials:
-			"Companies focused on industrial processes and materials tend to be concentrated within the industrial sectors of the global economy and are working to lower the emissions of producing essential materials like cement and steel.",
-		Electrification:
-			"Companies focused on electrification are concentrated within the transportation and building energy use parts of the global economy and are working to transition key equipment like planes, trucks, and residential heating and cooling systems to electric versions.",
-		CleanEnergyGeneration:
-			"Companies focused on clean energy generation are all concentrated within electricity and heat generation and are working to generate low emissions electricity and heat that flows through the global economy.",
-		EnergyEfficiency:
-			"Companies focused on energy efficiency tend to be concentrated within the digital parts of the global economy and are working to reduce the energy requirements of equipment like electronics, computing infrastructure, and the grid."
-	};
-
-	// init-demo.json is the demo roster (24 companies tagged by theme). It is only
-	// used by this section, so fetch it lazily and cache the parsed result.
+	// The themes roster comes from init's intervention block, which is already
+	// fetched at page load; reuse it rather than pulling the file down twice.
 	function ensureThemesData() {
 		if (state.themesData) {
+			return Promise.resolve(state.themesData);
+		}
+		if (state.initData) {
+			state.themesData = state.initData;
 			return Promise.resolve(state.themesData);
 		}
 		if (state.themesPromise) {
@@ -4059,13 +4009,30 @@
 		return state.themesPromise;
 	}
 
-	// Group the demo companies by theme, preserving THEME_ORDER, and strip the
-	// leading "_" that marks fake companies from their display labels.
+	// Group companies by their theme id. Theme order, labels and blurbs all come
+	// from intervention.themes[], so a theme change is a data-only change.
 	function buildThemesModel(data) {
 		const companies = data?.intervention?.companies;
 		if (!Array.isArray(companies)) {
 			return [];
 		}
+
+		const themeMeta = new Map();
+		const rawThemes = Array.isArray(data?.intervention?.themes)
+			? data.intervention.themes
+			: [];
+		rawThemes.forEach((theme, index) => {
+			const slug = String(theme?.theme || "").trim();
+			if (!slug) {
+				return;
+			}
+			themeMeta.set(slug, {
+				label: String(theme?.theme_label || slug).trim(),
+				blurb: String(theme?.description || "").trim(),
+				order: Number.isFinite(theme?.order) ? theme.order : index
+			});
+		});
+
 		const byTheme = new Map();
 		companies.forEach((company) => {
 			const slug = String(company?.theme || "").trim();
@@ -4073,9 +4040,12 @@
 				return;
 			}
 			if (!byTheme.has(slug)) {
+				const meta = themeMeta.get(slug);
 				byTheme.set(slug, {
 					slug,
-					label: String(company?.theme_label || slug).trim(),
+					label: meta?.label || slug,
+					blurb: meta?.blurb || "",
+					order: meta?.order ?? Number.MAX_SAFE_INTEGER,
 					companies: [],
 					nodeIds: new Set()
 				});
@@ -4086,27 +4056,25 @@
 				.trim();
 			const nodeId = String(company?.node || "").trim();
 			const technologyLabel = String(company?.technology || "").trim();
+			const bullets = Array.isArray(company?.bullets)
+				? company.bullets.map((entry) => String(entry || "").trim()).filter(Boolean)
+				: [];
 			theme.companies.push({
 				label,
 				nodeId,
 				technologyLabel,
+				bullets,
 				businessId: normalizeBusinessSlug(company?.company || company?.company_label)
 			});
 			if (nodeId) {
 				theme.nodeIds.add(nodeId);
 			}
 		});
-		const ordered = THEME_ORDER.filter((slug) => byTheme.has(slug)).concat(
-			Array.from(byTheme.keys()).filter((slug) => !THEME_ORDER.includes(slug))
-		);
-		return ordered.map((slug) => {
-			const theme = byTheme.get(slug);
-			theme.blurb = THEME_BLURBS[slug] || "";
-			return theme;
-		});
+
+		return Array.from(byTheme.values()).sort((a, b) => a.order - b.order);
 	}
 
-	// Build the left-column info blocks and the four persistent roster columns,
+	// Build the left-column info blocks and the persistent roster columns,
 	// caching element references on the model for the scroll handler to toggle.
 	function renderThemesRoster(model) {
 		const infoWrap = document.querySelector(".themes-info");
@@ -4271,7 +4239,7 @@
 		drawThemes(state.themesProgress || 0);
 	}
 
-	// Split scroll progress into four equal theme windows. Within the active
+	// Split scroll progress into one equal window per theme. Within the active
 	// window: fade the theme copy in/out, brighten its roster column, and reveal
 	// its companies (and their nodes) in a staggered rapid-fire sequence. Non-
 	// active themes are fully reset, so only one theme is ever lit.

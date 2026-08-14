@@ -18,12 +18,15 @@ A static single-page interactive data visualisation showing global greenhouse ga
 | `styles.css` | All layout and visual styles |
 | `main.js` | Sankey data loading, layout, scroll animation, and interaction (single IIFE) |
 
-Data is loaded at runtime from `init.json` (node metadata) and `baselines.json`
-(scenario flow values) in the repo root. `node_details.json` (per-node full
-flow chains, ~5 MB — fully populated by the data team 2026-07-06) is fetched
+Data is loaded at runtime from `init-08132026.json` (node metadata, plus the
+portfolio company roster and themes) and
+`baselines-08132026.json` (scenario flow values, covering `2025` and `2040A`) in
+the repo root. `node_details-08132026.json` (per-node full
+flow chains, ~4 MB, covering `2025` and `2040A`) is fetched
 lazily when the chart first becomes interactive; it powers full-chain
-click-to-isolate on the main chart and the portfolio highlight. The Option B
-bundle's `avoided.json` and `STATUS.md` are not yet delivered.
+click-to-isolate on the main chart and the portfolio highlight.
+`avoided-08132026.json` (avoided emissions, `2040A` only) is fetched lazily for
+the Climate Impacts view.
 
 Design assets in the repo root, one pair per stage
 (`final-service, sector, equipment, device, final-energy, fuel, emissions`):
@@ -117,7 +120,7 @@ Copy lives in each scene's `copy` (HTML allowed). Coloured keywords use
 
 ### Data pipeline
 
-1. `loadAndRender()` fetches `init.json` and `baselines.json`, then passes both to `buildGraph()`.
+1. `loadAndRender()` fetches `init-08132026.json` and `baselines-08132026.json`, then passes both to `buildGraph()`.
 2. `buildGraph()` creates node/link objects from JSON contracts:
   - node stage/order/group/description come from `init.nodes.nodes[]`
   - link values come from `baselines.links[]` under the active scenario key (default `2025`)
@@ -247,7 +250,7 @@ Clicking a node (only when `.is-interactive`) sets `state.selectedNodeId` and
 runs `applySelection()`, which has two modes:
 
 - **Full chain (default)**: the node's layer-1→7 chain from
-  `node_details.json` is drawn as its own ribbons in `<g.sankey-chain>`
+  `node_details-08132026.json` is drawn as its own ribbons in `<g.sankey-chain>`
   (between links and nodes, `pointer-events: none`) at **attributed widths** —
   the chain's `6_Oil → 7_CO2` value is only the slice of that flow passing
   through the selected node, so widths come from chain values scaled by the
@@ -260,11 +263,11 @@ runs `applySelection()`, which has two modes:
   unknown endpoints dropped with a one-time console warning; results cached
   per node id.
 - **Direct-neighbor fallback** (`applyDirectSelection()`): the original
-  one-hop behavior — used while `node_details.json` is still loading (upgrades
-  in place when it resolves), if the fetch failed, or for a node whose chain
-  is missing/empty in a future data drop.
+  one-hop behavior — used while `node_details-08132026.json` is still loading
+  (upgrades in place when it resolves), if the fetch failed, or for a node whose
+  chain is missing/empty in a future data drop.
 
-`node_details.json` is fetched lazily by `ensureNodeDetails()` (shared with
+`node_details-08132026.json` is fetched lazily by `ensureNodeDetails()` (shared with
 the portfolio highlight): kicked off the first time `setSankeyInteraction(true)`
 runs, cached, empty-object on failure. Background click resets everything and
 clears the overlay. CSS: `.is-interactive .sankey-link { opacity: 0.16 }`,
@@ -364,7 +367,7 @@ starfield via the `--page-bg-shift` custom property.
 | Node/link colours | `styles.css` — `:root` CSS variables + `.sankey-node.stage-N rect` |
 | Node click interaction | `main.js` — `applySelection()`, `applyDirectSelection()`, `chainLinksFor()`; CSS `.is-interactive` + `.sankey-chain` rules |
 | Hero animation | `index.html` — inline `<script>` after `gsap.registerPlugin` |
-| Data | `init.json` + `baselines.json` + `node_details.json` |
+| Data | `init-08132026.json` + `baselines-08132026.json` + `node_details-08132026.json` |
 
 ---
 
