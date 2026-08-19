@@ -730,14 +730,18 @@
 	};
 
 	// --- Intro title-card assets -----------------------------------------------
-	// Each {slug}.svg bundles one 20-unit-wide bar subpath ("M{x} {y}h20v{h}h-20z")
-	// with the wordmark letterforms, all in a single fill. We split the bar out at
-	// parse time so the bar rect can morph independently of the wordmark, and
-	// recolor everything with the official palette CSS vars (the shipped asset
-	// fills are slightly off-palette).
+	// Each {slug}.svg bundles one plain-rect bar subpath ("M{x} {y}h{w}v{h}h-{w}z",
+	// or the absolute-close variant "...H{x}z") with the wordmark letterforms, all
+	// in a single fill. Bar size varies per asset, and some letterforms are
+	// themselves small rects (e.g. "I"), so every path is scanned for rect
+	// candidates and the tallest one wins -- a stray letter-rect is always much
+	// shorter than the real bar. We split the bar out at parse time so the bar
+	// rect can morph independently of the wordmark, and recolor everything with
+	// the official palette CSS vars (the shipped asset fills are slightly
+	// off-palette or, for newer assets, unset).
 	async function loadIntroAssets() {
 		const parser = new DOMParser();
-		const barPattern = /M([\d.]+)[ ,]([\d.]+)h20v([\d.]+)h-20z/;
+		const barPattern = /M([\d.]+)[ ,]([\d.]+)h([\d.]+)v([\d.]+)(?:h-\3|H\1)z/g;
 
 		const entries = await Promise.all(
 			Object.entries(STAGE_META).map(async ([stageRaw, meta]) => {
@@ -759,30 +763,45 @@
 						.map(Number);
 					const viewBox = { width: viewBoxParts[2] || 100, height: viewBoxParts[3] || 410 };
 
-					let bar = null;
-					const markPaths = [];
-					doc.querySelectorAll("path").forEach((path) => {
-						let d = path.getAttribute("d") || "";
-						if (!bar) {
-							const match = d.match(barPattern);
-							if (match) {
-								bar = {
+					const paths = Array.from(doc.querySelectorAll("path"));
+					let bestCandidate = null;
+					paths.forEach((path, pathIndex) => {
+						const d = path.getAttribute("d") || "";
+						for (const match of d.matchAll(barPattern)) {
+							const height = Number.parseFloat(match[4]);
+							if (!bestCandidate || height > bestCandidate.height) {
+								bestCandidate = {
+									pathIndex,
+									match: match[0],
 									x: Number.parseFloat(match[1]),
 									y: Number.parseFloat(match[2]),
-									width: 20,
-									height: Number.parseFloat(match[3])
+									width: Number.parseFloat(match[3]),
+									height
 								};
-								d = d.replace(match[0], "").trim();
 							}
+						}
+					});
+
+					if (!bestCandidate) {
+						throw new Error("bar subpath not found");
+					}
+
+					const bar = {
+						x: bestCandidate.x,
+						y: bestCandidate.y,
+						width: bestCandidate.width,
+						height: bestCandidate.height
+					};
+					const markPaths = [];
+					paths.forEach((path, pathIndex) => {
+						let d = path.getAttribute("d") || "";
+						if (pathIndex === bestCandidate.pathIndex) {
+							d = d.replace(bestCandidate.match, "").trim();
 						}
 						if (d) {
 							markPaths.push(d);
 						}
 					});
-
-					if (!bar) {
-						throw new Error("bar subpath not found");
-					}
 
 					return [stage, { viewBox, bar, markPaths }];
 				} catch (err) {
@@ -843,6 +862,7 @@
 		setupScenarioLeadFades();
 		initImpactsIntroSection();
 		initImpactsWalk();
+		initClosingTransitionSection();
 		setupAcknowledgementsVideoScrub();
 		initThemesSection();
 		initTimelineIntroSection();
@@ -3375,7 +3395,199 @@
 		setupImpactsIntroScroll();
 	}
 
-	// Scroll-scrubs video-poc-v1.mp4 by mapping scroll progress to currentTime; desktop only.
+	// --- Closing transition (night sky hand-off, locked #closing-transition) --
+	// Hands the persistent #site-bg starfield off to a section-local canvas that
+	// brightens toward the real opening frame of the closing video, while 4
+	// headline lines crossfade over the top. 900vh scroll range: a short lead-in
+	// (sky only), then 4 sequential in/hold/out line windows, then a tail
+	// crossfade into closing-transition-frame.jpg (the video's real frame 0)
+	// before the video section takes over.
+	// The sticky pin (100vh viewport) releases at (CT_TOTAL_VH-100)/CT_TOTAL_VH =
+	// 800/900 and then scrolls away over the section's final 100vh. Everything
+	// below must finish settling comfortably before that release point, or the
+	// pin ends up mid-fade while it's already physically scrolling off-screen.
+	const CT_TOTAL_VH = 900;
+	const CT_LINE1_IN = [40 / CT_TOTAL_VH, 80 / CT_TOTAL_VH];
+	const CT_LINE1_OUT = [150 / CT_TOTAL_VH, 190 / CT_TOTAL_VH];
+	const CT_LINE2_IN = [210 / CT_TOTAL_VH, 250 / CT_TOTAL_VH];
+	const CT_LINE2_OUT = [320 / CT_TOTAL_VH, 360 / CT_TOTAL_VH];
+	const CT_LINE3_IN = [380 / CT_TOTAL_VH, 420 / CT_TOTAL_VH];
+	const CT_LINE3_OUT = [490 / CT_TOTAL_VH, 530 / CT_TOTAL_VH];
+	const CT_LINE4_IN = [550 / CT_TOTAL_VH, 590 / CT_TOTAL_VH];
+	const CT_LINE4_OUT = [660 / CT_TOTAL_VH, 700 / CT_TOTAL_VH];
+	// Crossfade completes by 760/900, leaving a 40vh fully-settled hold before
+	// the 800/900 release so the handoff into the video happens on a static frame.
+	const CT_CROSSFADE = [700 / CT_TOTAL_VH, 760 / CT_TOTAL_VH];
+
+	// Gradient stops the canvas interpolates between as progress goes 0 -> 1.
+	// FROM matches night-sky-bg-static.html's gradient exactly (the persistent
+	// #site-bg starfield visible through #climate-impacts) so the hand-off is
+	// invisible. TO is sampled directly from frame 0 of closing-video-opt-v1.mp4
+	// so the tail crossfade into closing-transition-frame.jpg is seamless.
+	const CT_SKY_FROM = [[0, [4, 5, 10]], [0.55, [5, 5, 6]], [1, [11, 16, 32]]];
+	const CT_SKY_TO = [[0, [15, 22, 29]], [0.25, [16, 26, 36]], [0.5, [17, 33, 54]], [0.7, [23, 51, 78]], [0.85, [43, 79, 117]], [1, [74, 113, 157]]];
+
+	function drawClosingTransitionText(progress) {
+		state.closingTransitionProgress = progress;
+		const crossfade = windowProgress(progress, CT_CROSSFADE);
+		if (state.closingTransitionFrameEl) {
+			state.closingTransitionFrameEl.style.opacity = String(crossfade);
+		}
+		const lines = [
+			[state.closingTransitionLine1El, CT_LINE1_IN, CT_LINE1_OUT],
+			[state.closingTransitionLine2El, CT_LINE2_IN, CT_LINE2_OUT],
+			[state.closingTransitionLine3El, CT_LINE3_IN, CT_LINE3_OUT],
+			[state.closingTransitionLine4El, CT_LINE4_IN, CT_LINE4_OUT]
+		];
+		for (const [el, inWindow, outWindow] of lines) {
+			if (!el) {
+				continue;
+			}
+			const inAmt = windowProgress(progress, inWindow);
+			const outAmt = windowProgress(progress, outWindow);
+			el.style.opacity = String(inAmt * (1 - outAmt));
+		}
+	}
+
+	function buildClosingTransitionStars(width, height) {
+		const rand = (a, b) => Math.random() * (b - a) + a;
+		const total = Math.max(400, Math.round((width * height) / 620));
+		const opening = Math.max(90, Math.round((width * height) / 14000));
+		const stars = [];
+		for (let i = 0; i < total; i++) {
+			const early = i < opening;
+			const size = early
+				? (Math.random() < 0.82 ? 1 : Math.random() < 0.97 ? 2 : 3)
+				: (Math.random() < 0.9 ? 1 : 2);
+			const tint = Math.random() < 0.25 ? "255,241,221" : Math.random() < 0.5 ? "209,224,255" : "255,255,255";
+			stars.push({
+				x: Math.random() * width,
+				y: Math.random() * height,
+				size,
+				tint,
+				baseAlpha: early ? (size === 1 ? rand(0.25, 0.55) : rand(0.45, 0.8)) : rand(0.3, 0.95),
+				appearAt: early ? 0 : Math.pow(Math.random(), 0.55) * 0.9,
+				phase: rand(0, Math.PI * 2),
+				speed: rand(0.6, 1.5),
+				amplitude: rand(0.08, 0.2)
+			});
+		}
+		return stars;
+	}
+
+	function resizeClosingTransitionCanvas() {
+		const canvas = state.closingTransitionCanvasEl;
+		const ctx = state.closingTransitionCtx;
+		if (!canvas || !ctx) {
+			return;
+		}
+		const width = window.innerWidth;
+		const height = window.innerHeight;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		canvas.width = Math.round(width * dpr);
+		canvas.height = Math.round(height * dpr);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		state.closingTransitionW = width;
+		state.closingTransitionH = height;
+		state.closingTransitionStars = buildClosingTransitionStars(width, height);
+	}
+
+	function drawClosingTransitionSky(time) {
+		const ctx = state.closingTransitionCtx;
+		const w = state.closingTransitionW;
+		const h = state.closingTransitionH;
+		if (!ctx || !w || !h) {
+			state.closingTransitionRaf = requestAnimationFrame(drawClosingTransitionSky);
+			return;
+		}
+
+		const p = state.closingTransitionProgress || 0;
+		const mix = (c1, c2, t) => `rgb(${c1.map((v, i) => Math.round(lerp(v, c2[i], t))).join(",")})`;
+
+		const grad = ctx.createLinearGradient(0, 0, 0, h);
+		for (let i = 0; i < CT_SKY_TO.length; i++) {
+			const stop = CT_SKY_TO[i][0];
+			let fromColor = CT_SKY_FROM[0][1];
+			for (let j = 0; j < CT_SKY_FROM.length - 1; j++) {
+				if (stop >= CT_SKY_FROM[j][0] && stop <= CT_SKY_FROM[j + 1][0]) {
+					const t = (stop - CT_SKY_FROM[j][0]) / (CT_SKY_FROM[j + 1][0] - CT_SKY_FROM[j][0]);
+					fromColor = CT_SKY_FROM[j][1].map((v, k) => lerp(v, CT_SKY_FROM[j + 1][1][k], t));
+					break;
+				}
+			}
+			grad.addColorStop(stop, mix(fromColor, CT_SKY_TO[i][1], p));
+		}
+		ctx.fillStyle = grad;
+		ctx.fillRect(0, 0, w, h);
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		for (const star of state.closingTransitionStars || []) {
+			const life = star.appearAt === 0 ? 1 : windowProgress(p, [star.appearAt, Math.min(1, star.appearAt + 0.22)]);
+			if (life <= 0.01) {
+				continue;
+			}
+			const twinkle = reduceMotion ? 0 : Math.sin(time * 0.001 * star.speed + star.phase) * star.amplitude;
+			const alpha = clamp01((star.baseAlpha + twinkle) * life);
+			if (alpha < 0.02) {
+				continue;
+			}
+			ctx.fillStyle = `rgba(${star.tint},${alpha.toFixed(3)})`;
+			ctx.fillRect(star.x, star.y, star.size, star.size);
+			if (star.size >= 2) {
+				ctx.fillStyle = `rgba(${star.tint},${(alpha * 0.14).toFixed(3)})`;
+				ctx.fillRect(star.x - 1, star.y - 1, star.size + 2, star.size + 2);
+			}
+		}
+
+		state.closingTransitionRaf = requestAnimationFrame(drawClosingTransitionSky);
+	}
+
+	function setupClosingTransitionScroll() {
+		const section = document.getElementById("closing-transition");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawClosingTransitionText(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawClosingTransitionText(self.progress),
+			onRefresh: (self) => drawClosingTransitionText(self.progress)
+		});
+		drawClosingTransitionText(0);
+	}
+
+	function initClosingTransitionSection() {
+		const section = document.getElementById("closing-transition");
+		if (!section) {
+			return;
+		}
+		state.closingTransitionCanvasEl = document.querySelector("#closing-transition .closing-transition__sky");
+		state.closingTransitionFrameEl = document.querySelector("#closing-transition .closing-transition__frame");
+		state.closingTransitionLine1El = document.querySelector("#closing-transition .closing-transition__line--1");
+		state.closingTransitionLine2El = document.querySelector("#closing-transition .closing-transition__line--2");
+		state.closingTransitionLine3El = document.querySelector("#closing-transition .closing-transition__line--3");
+		state.closingTransitionLine4El = document.querySelector("#closing-transition .closing-transition__line--4");
+
+		if (state.closingTransitionCanvasEl) {
+			state.closingTransitionCtx = state.closingTransitionCanvasEl.getContext("2d");
+			resizeClosingTransitionCanvas();
+			window.addEventListener("resize", resizeClosingTransitionCanvas, { passive: true });
+			if (!state.closingTransitionRaf) {
+				state.closingTransitionRaf = requestAnimationFrame(drawClosingTransitionSky);
+			}
+		}
+
+		setupClosingTransitionScroll();
+	}
+
+	// Scroll-scrubs closing-video-opt-v1.mp4 by mapping scroll progress to currentTime; desktop only.
 	function setupAcknowledgementsVideoScrub() {
 		const wrapperEl = document.querySelector(".acknowledgements-video");
 		const video = document.querySelector(".acknowledgements-video__el");
@@ -4225,39 +4437,42 @@
 			const slotGap = groupWidth / 6;
 			const cardTop = sankeyExtentTop;
 
+			// Bars sit as a short stub at the bottom of each card (per the mock-up)
+			// rather than spanning the full card height. Share one height across all
+			// 7 cards -- the *shortest* of the assets' own bar-subpath heights -- so
+			// they still line up. Using the shortest (rather than tallest) guarantees
+			// the shared bar never grows past any single asset's own bar boundary and
+			// overlaps that word's lowest letters -- since bar and mark share the same
+			// fill color, an overlapping letter is invisible, not just occluded.
+			const naturalBarHeights = Array.from({ length: 7 }, (_, i) => {
+				const asset = state.introAssets?.get(i + 1) || null;
+				if (!asset) {
+					return null;
+				}
+				const assetScale = extentH / asset.viewBox.height;
+				return asset.bar.height * assetScale;
+			}).filter((h) => h !== null);
+			const sharedBarH = naturalBarHeights.length ? Math.min(...naturalBarHeights) : extentH * 0.3;
+
 			for (let stage = 1; stage <= 7; stage += 1) {
 				const meta = STAGE_META[stage];
 				const asset = state.introAssets?.get(stage) || null;
 				const cx = groupLeft + (stage - 1) * slotGap;
 				const scale = extentH / (asset ? asset.viewBox.height : 412);
-				const barW = 20 * scale;
+				const barW = (asset ? asset.bar.width : 20) * scale;
 
 				const card = introGroup.append("g").attr("class", `intro-card intro-card-stage-${stage}`);
 
-				let mark = null;
-				// Bars are always full card height regardless of the asset's own
-				// (per-word) bar subpath height, so all 7 cards line up top and bottom.
+				// Short bottom-anchored stub, matching the mock-up; the wordmark reads
+				// upward above it. barRect is appended before mark so the mark paints
+				// on top and stays legible instead of being occluded by the bar. Width
+				// is a fixed 27px per card, independent of the photo/mark's own barW.
 				const barScreen = {
-					x: cx - barW / 2,
-					y: cardTop,
-					w: barW,
-					h: extentH
+					x: cx - 27 / 2,
+					y: cardTop + extentH - sharedBarH,
+					w: 27,
+					h: sharedBarH
 				};
-				if (asset) {
-					if (asset.markPaths.length) {
-						mark = card
-							.append("g")
-							.attr("class", "intro-card-mark")
-							.attr("fill", `var(${stageColorVars[stage]})`)
-							.attr(
-								"transform",
-								`translate(${cx - (asset.bar.x + asset.bar.width / 2) * scale}, ${cardTop}) scale(${scale})`
-							)
-							.style("opacity", 0);
-						asset.markPaths.forEach((d) => mark.append("path").attr("d", d));
-					}
-				}
-
 				const barRect = card
 					.append("rect")
 					.attr("class", "intro-card-bar")
@@ -4267,6 +4482,20 @@
 					.attr("width", barScreen.w)
 					.attr("height", barScreen.h)
 					.style("opacity", 0);
+
+				let mark = null;
+				if (asset && asset.markPaths.length) {
+					mark = card
+						.append("g")
+						.attr("class", "intro-card-mark")
+						.attr("fill", `var(${stageColorVars[stage]})`)
+						.attr(
+							"transform",
+							`translate(${cx - (asset.bar.x + asset.bar.width / 2) * scale}, ${cardTop}) scale(${scale})`
+						)
+						.style("opacity", 0);
+					asset.markPaths.forEach((d) => mark.append("path").attr("d", d));
+				}
 
 				const photoGeom = { x: cx - barW / 2, y: cardTop, w: barW, h: extentH };
 				const clipId = `intro-photo-clip-${stage}`;
@@ -4316,6 +4545,42 @@
 				.attr("fill", `var(${stageColorVars[col.stage]})`)
 				.text(STAGE_META[col.stage].label);
 		});
+
+		// Scene 9 ("...sum to global emissions"): a "54 Gt" reference caliper
+		// 180px right of the isolated stage-1 column's visible edge -- a
+		// vertical line spanning the full node-column height, capped top and
+		// bottom by short ticks, with the total labeled alongside.
+		const stage1Nodes = expandedGraph.nodes.filter((node) => node.stage === 1);
+		const stage1Right = stage1Nodes.length
+			? d3.max(stage1Nodes, (node) => node.x1)
+			: sankeyExtentLeft + 20;
+		const lensAxisX = stage1Right + 180;
+
+		const lensAxisGroup = svg.append("g").attr("class", "lens-focus-axis").style("opacity", 0);
+		lensAxisGroup
+			.append("line")
+			.attr("class", "lens-focus-axis__line")
+			.attr("x1", lensAxisX)
+			.attr("x2", lensAxisX)
+			.attr("y1", sankeyExtentTop)
+			.attr("y2", sankeyExtentBottom);
+		[sankeyExtentTop, sankeyExtentBottom].forEach((y) => {
+			lensAxisGroup
+				.append("line")
+				.attr("class", "lens-focus-axis__tick")
+				.attr("x1", lensAxisX - 20)
+				.attr("x2", lensAxisX)
+				.attr("y1", y)
+				.attr("y2", y);
+		});
+		lensAxisGroup
+			.append("text")
+			.attr("class", "lens-focus-axis__label")
+			.attr("x", lensAxisX + 12)
+			.attr("y", (sankeyExtentTop + sankeyExtentBottom) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", "start")
+			.text("54 Gt");
 
 		const setSankeyInteraction = (enabled) => {
 			if (state.sankeyInteractive === enabled) {
@@ -4577,6 +4842,7 @@
 			let forceStartAnchor = false;
 			let linkOpacityFn = () => 0;
 			let headerOpacity = 0;
+			let axisOpacity = 0;
 			let interactiveNow = false;
 
 			if (p < B.unstack.start) {
@@ -4613,6 +4879,7 @@
 				}
 				linkOpacityFn = () => LINK_PEAK_OPACITY * (1 - focus);
 				headerOpacity = 1 - focus;
+				axisOpacity = focus;
 			} else if (p < B.explore.start) {
 				// Scene 10: zoom to stages 1-3, highlight the Passenger transport chain.
 				const zoom = smoothstep(clamp01(tCars / 0.3));
@@ -4666,6 +4933,7 @@
 			}
 
 			headerGroup.style("opacity", headerOpacity);
+			lensAxisGroup.style("opacity", axisOpacity);
 			setSankeyInteraction(interactiveNow);
 		};
 
@@ -5052,7 +5320,11 @@
 		if (!infoWrap || !rosterWrap) {
 			return;
 		}
+		const finaleLeadEl = infoWrap.querySelector(".themes-finale-lead");
 		infoWrap.innerHTML = "";
+		if (finaleLeadEl) {
+			infoWrap.append(finaleLeadEl);
+		}
 		rosterWrap.innerHTML = "";
 		model.forEach((theme) => {
 			const info = document.createElement("div");
@@ -5736,7 +6008,7 @@
 	// data, so both endpoints are laid out independently and every node/link is
 	// linearly interpolated between them (easeInOut over the scroll range).
 	const TIMELINE_TARGET_SCENARIO = "2040A";
-	// Scroll windows as fractions of the #timeline scroll range (section ~320vh).
+	// Scroll windows as fractions of the #timeline scroll range (section ~480vh).
 	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~180vh of 320vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
@@ -6010,10 +6282,10 @@
 		const tickLabel = axisGroup
 			.append("text")
 			.attr("class", "timeline-axis__tick-label")
-			.attr("x", TIMELINE_AXIS_X + 12)
+			.attr("x", TIMELINE_AXIS_X - 12)
 			.attr("y", axisTopStart)
 			.attr("dy", "0.32em")
-			.attr("text-anchor", "start")
+			.attr("text-anchor", "end")
 			.text(`${TIMELINE_START_GT} Gt`);
 		fitChipToLabel(tickChip, tickLabel);
 
@@ -6028,10 +6300,10 @@
 		const axisMarkerLabel = axisGroup
 			.append("text")
 			.attr("class", "timeline-axis__marker-label")
-			.attr("x", TIMELINE_AXIS_X + 12)
+			.attr("x", TIMELINE_AXIS_X - 12)
 			.attr("y", axisTopStart)
 			.attr("dy", "0.32em")
-			.attr("text-anchor", "start")
+			.attr("text-anchor", "end")
 			.text(`${TIMELINE_START_GT} Gt`);
 		fitChipToLabel(markerChip, axisMarkerLabel);
 
@@ -6134,6 +6406,15 @@
 		}
 	}
 
+	// Fades the pinned timeline content out (still pinned) over the final 40vh
+	// before the section unpins, so #timeline is fully invisible before
+	// .portfolio-intro's own crossfade begins.
+	function drawTimelineFade(progress) {
+		if (state.timelineLayoutEl) {
+			state.timelineLayoutEl.style.opacity = String(1 - progress);
+		}
+	}
+
 	function setupTimelineScroll() {
 		const section = document.getElementById("timeline");
 		if (!section) {
@@ -6141,21 +6422,36 @@
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
 			drawTimeline(1);
+			drawTimelineFade(1);
 			return;
 		}
 		ScrollTrigger.create({
 			trigger: section,
 			start: "top top",
-			// Finish the scrub 40vh before the section's actual (grown) bottom, so
-			// the scrub timeline itself is unchanged and the extra 40vh becomes a
-			// held final state before the section unpins.
-			end: "bottom bottom+=40vh",
+			// Finish the scrub 115vh before the section's actual (grown) bottom, so
+			// the scrub timeline itself is unchanged and the extra 115vh becomes a
+			// held final state (75vh static hold + 40vh fade-out below) before the
+			// section unpins.
+			end: "bottom bottom+=115vh",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
 			onUpdate: (self) => drawTimeline(self.progress),
 			onRefresh: (self) => drawTimeline(self.progress)
 		});
 		drawTimeline(0);
+
+		// After the 75vh static hold, scrub #timeline's own fade-out over the
+		// final 40vh before the section unpins into the portfolio section.
+		ScrollTrigger.create({
+			trigger: section,
+			start: "bottom bottom+=40vh",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawTimelineFade(self.progress),
+			onRefresh: (self) => drawTimelineFade(self.progress)
+		});
+		drawTimelineFade(0);
 	}
 
 	function initTimelineSection() {
@@ -6163,6 +6459,7 @@
 			return;
 		}
 		state.timelineCloseEl = document.querySelector("#timeline .timeline-closing");
+		state.timelineLayoutEl = document.querySelector("#timeline .timeline-layout");
 
 		const yearsEl = document.querySelector("#timeline .timeline-years");
 		if (yearsEl && !yearsEl.childElementCount) {

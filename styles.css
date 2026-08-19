@@ -56,14 +56,14 @@
 			:root {
 				color-scheme: light;
 				--color-hero-highlight: #F2FB37;
-				--max-copy-width: 768px;
+				--max-copy-width: 615px;
 				--color-final-service: #F27A83;
 				--color-sector: #E22950;
 				--color-equipment: #F55D2B;
 				--color-device: #FE9C07;
 				--color-final-energy: #2FD7A4;
 				--color-fuel: #A8DFE6;
-				--color-emissions: #0159C3;
+				--color-emissions: #1475ff;
 				--color-dark: #000;
 				--color-nav-hero: #E87178;
 				--color-nav-emissions: #F59324;
@@ -146,7 +146,7 @@
 				position: absolute;
 				top: 20vh;
 				transform: translateX(-50%);
-				width: 250px;
+				width: 200px;
 				will-change: transform, opacity;
 				z-index: 4;
 			}
@@ -188,6 +188,10 @@
 				top: 30vh;
 				will-change: transform, opacity;
 				z-index: 5;
+
+				span {
+					letter-spacing: -10%;
+				}
 			}
 
 			.hero-subtitle {
@@ -445,7 +449,7 @@
 
 			.timeline-intro__line--1 {
 				font-size: clamp(2rem, 3.4vw, 3.4rem);
-				font-weight: 750;
+				font-weight: 700;
 				letter-spacing: -0.02em;
 				line-height: 1.05;
 				max-width: var(--max-copy-width);
@@ -460,15 +464,16 @@
 				font-weight: 400;
 				line-height: 1.15;
 				max-width: var(--max-copy-width);
-				text-wrap: balance;
+				text-wrap: pretty;
 			}
 
 			/* --- Timeline section (2025 -> 2040 scroll morph) ------------------ */
 			#timeline {
 				color: #e8f4ff;
-				/* 320vh drives the morph; +40vh is a locked hold after .timeline-closing
-				   appears, before the section unpins into the portfolio section. */
-				min-height: 360vh;
+				/* 480vh drives the morph; +75vh is a locked static hold after
+				   .timeline-closing appears; final +40vh scrubs #timeline's own
+				   fade-out, before the section unpins into the portfolio section. */
+				min-height: 595vh;
 				padding: 0;
 			}
 
@@ -596,26 +601,26 @@
 			   plus a growing line + live counting label tracking the chart's rising
 			   top edge up to "57 Gt". Modeled on .scenario-axis__* below. */
 			#timeline-sankey-chart .timeline-axis__line {
-				stroke: rgba(232, 244, 255, 0.35);
+				stroke: var(--color-emissions);
 				stroke-width: 1;
 			}
 
 			#timeline-sankey-chart .timeline-axis__tick-dash {
-				stroke: rgba(232, 244, 255, 0.45);
+				stroke: var(--color-emissions);
 				stroke-width: 1;
 			}
 
 			#timeline-sankey-chart .timeline-axis__tick-label {
-				fill: rgba(232, 244, 255, 0.6);
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				fill: var(--color-emissions);
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: 11px;
 				font-weight: 500;
 				letter-spacing: 0.02em;
 			}
 
 			#timeline-sankey-chart .timeline-axis__marker-label {
-				fill: #fff;
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				fill: var(--color-emissions);
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: 11px;
 				font-weight: 700;
 				letter-spacing: 0.02em;
@@ -666,27 +671,27 @@
 			}
 
 			.node-panel__callout {
-				align-items: baseline;
-				background: rgba(6, 20, 38, 0.55);
-				border: 1px solid rgba(120, 170, 220, 0.28);
-				border-radius: 14px;
+				align-items: center;
 				column-gap: 0.9rem;
 				display: flex;
 				flex-wrap: wrap;
-				padding: 1rem 1.25rem;
 				row-gap: 0.35rem;
 			}
 
 			.node-panel__throughput {
-				color: #fff;
-				font-size: clamp(1.8rem, 2.6vw, 2.6rem);
-				font-weight: 700;
+				color: var(--color-emissions);
+				font-size: 18px;
+				font-weight: 600;
 				letter-spacing: -0.02em;
 				line-height: 1;
+				border: 1px solid var(--color-emissions);
+				padding: 0.75rem 1rem 0.5rem;
+				width: fit-content;
+				margin-bottom: 0.25rem;
 			}
 
 			.node-panel__share {
-				color: rgba(229, 241, 255, 0.72);
+				color: var(--color-emissions);
 				font-size: clamp(0.85rem, 1vw, 1rem);
 				font-weight: 400;
 			}
@@ -1173,6 +1178,7 @@
 			.themes-col .themes-col__list {
 				border-top-style: solid;
 				border-top-width: 1px;
+				padding-top: 0.75rem;
 			}
 
 			.themes-col[data-theme="Materials"] .themes-col__list {
@@ -1264,11 +1270,80 @@
 				width: 100%;
 			}
 
+			/* Night-sky transition: hands off the persistent #site-bg starfield to a
+			   section-local canvas that brightens toward the video's real opening
+			   frame, with 4 headline lines crossfading over the top. */
+			.closing-transition {
+				min-height: 900vh;
+				position: relative;
+			}
+
+			.closing-transition__pin {
+				display: grid;
+				height: 100vh;
+				overflow: hidden;
+				place-items: center;
+				position: sticky;
+				top: 0;
+			}
+
+			.closing-transition__sky,
+			.closing-transition__frame {
+				height: 100%;
+				inset: 0;
+				object-fit: cover;
+				position: absolute;
+				width: 100%;
+			}
+
+			.closing-transition__sky {
+				z-index: 0;
+			}
+
+			.closing-transition__frame {
+				opacity: 0;
+				z-index: 1;
+			}
+
+			.closing-transition__stack {
+				display: grid;
+				padding: 0 6vw;
+				position: relative;
+				z-index: 2;
+			}
+
+			.closing-transition__line {
+				color: #fff;
+				grid-area: 1 / 1;
+				margin: 0;
+				opacity: 0;
+				text-align: left;
+				text-wrap: pretty;
+			}
+
+			.closing-transition__line--1 {
+				font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+				font-weight: 700;
+				letter-spacing: -0.01em;
+				line-height: 1.25;
+				max-width: var(--max-copy-width);
+			}
+
+			.closing-transition__line--2,
+			.closing-transition__line--3,
+			.closing-transition__line--4 {
+				font-size: clamp(1.7rem, 2.5vw, 2.5rem);
+				font-weight: 400;
+				line-height: 1.15;
+				max-width: var(--max-copy-width);
+			}
+
 			.acknowledgements-video {
-				min-height: 250vh;
+				min-height: 450vh;
 			}
 
 			.acknowledgements-video__sticky {
+				background: var(--color-dark);
 				height: 100vh;
 				overflow: hidden;
 				position: sticky;
@@ -1593,7 +1668,7 @@
 
 			#scenario-sankey-chart .scenario-axis__tick-label {
 				fill: rgba(238, 245, 255, 0.6);
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: 11px;
 				font-weight: 500;
 				letter-spacing: 0.02em;
@@ -1657,7 +1732,7 @@
 
 			.impacts-intro__line--1 {
 				font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-				font-weight: 800;
+				font-weight: 700;
 				letter-spacing: -0.01em;
 				line-height: 1.25;
 				max-width: var(--max-copy-width);
@@ -1766,8 +1841,8 @@
 				font-family: inherit;
 				font-size: 0.78rem;
 				font-weight: 400;
-				letter-spacing: 0.01em;
-				padding: 0.5rem 0.85rem;
+				letter-spacing: 0;
+				padding: 0.65rem 0.75rem 0.5rem;
 				transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
 			}
 
@@ -1780,7 +1855,7 @@
 				background: #fff;
 				border-color: #fff;
 				color: var(--color-dark);
-				font-weight: 700;
+				font-weight: 400;
 			}
 
 			.impacts-tabs__bullets {
@@ -1939,6 +2014,7 @@
 				height: 100px;
 				max-height: 100px;
 				width: 32px;
+				padding-bottom: 8px;
 			}
 
 			.impacts-node-visual__bar .impacts-node-avoided {
@@ -2168,9 +2244,27 @@
 
 			.sankey-node text {
 				fill: #eef5ff;
-				font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: 11px;
 				pointer-events: none;
+			}
+
+			/* Scene 9 ("...sum to global emissions"): a "54 Gt" reference caliper
+			   sitting 180px right of the isolated stage-1 column. */
+			#sankey-chart .lens-focus-axis {
+				pointer-events: none;
+			}
+
+			#sankey-chart .lens-focus-axis__line,
+			#sankey-chart .lens-focus-axis__tick {
+				stroke: var(--color-emissions);
+				stroke-width: 1;
+			}
+
+			#sankey-chart .lens-focus-axis__label {
+				fill: var(--color-emissions);
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 16px;
 			}
 
 			.sankey-link {
