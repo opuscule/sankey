@@ -1,8 +1,8 @@
 (function () {
-	const initPath = "init-08132026.json";
-	const baselinesPath = "baselines-08132026.json";
-	const nodeDetailsPath = "node_details-08132026.json";
-	const avoidedPath = "avoided-08132026.json";
+	const initPath = "init-08192026.json";
+	const baselinesPath = "baselines-08192026.json";
+	const nodeDetailsPath = "node_details-08192026.json";
+	const avoidedPath = "avoided-08192026.json";
 	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
@@ -5331,13 +5331,10 @@
 			info.className = "themes-info__block";
 			info.dataset.theme = theme.slug;
 			info.style.opacity = "0";
-			const infoTitle = document.createElement("h3");
-			infoTitle.className = "themes-info__title";
-			infoTitle.textContent = theme.label;
 			const infoBody = document.createElement("p");
 			infoBody.className = "themes-info__body";
-			infoBody.textContent = theme.blurb;
-			info.append(infoTitle, infoBody);
+			infoBody.innerHTML = theme.blurb;
+			info.append(infoBody);
 			infoWrap.append(info);
 			theme.infoEl = info;
 

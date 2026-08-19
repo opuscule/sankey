@@ -1107,7 +1107,7 @@
 			.themes-lead,
 			.themes-finale-lead {
 				color: #fff;
-				font-size: clamp(1.05rem, 1.5vw, 1.5rem);
+				font-size: 16px;
 				font-weight: 700;
 				grid-area: 1 / 1;
 				line-height: 1.25;
@@ -1128,19 +1128,28 @@
 				transition: opacity 320ms ease;
 			}
 
-			.themes-info__title {
-				color: #fff;
-				font-size: clamp(1rem, 1.3vw, 1.3rem);
-				font-weight: 700;
-				margin: 0 0 0.4rem;
-			}
-
 			.themes-info__body {
-				color: rgba(229, 241, 255, 0.82);
-				font-size: clamp(0.9rem, 1.1vw, 1.05rem);
+				color: #fff;
+				font-size: 16px;
 				line-height: 1.45;
 				margin: 0;
 				max-width: 46ch;
+			}
+
+			.themes-info__body strong {
+				font-weight: 600;
+			}
+
+			.themes-info__block[data-theme="Electrification"] .themes-info__body strong {
+				color: #00dba0;
+			}
+
+			.themes-info__block[data-theme="Energy"] .themes-info__body strong {
+				color: #98e1e6;
+			}
+
+			.themes-info__block[data-theme="Materials"] .themes-info__body strong {
+				color: #f7004d;
 			}
 
 			.themes-roster,
@@ -1182,15 +1191,27 @@
 			}
 
 			.themes-col[data-theme="Materials"] .themes-col__list {
-				border-top-color: #f7004d;
+				border-top-color: hsl(341.3deg 100% 48.43% / 25%);
+			}
+
+			.themes-col[data-theme="Materials"].is-active .themes-col__list {
+				border-top-color: hsl(341.3deg 100% 48.43%);
 			}
 
 			.themes-col[data-theme="Energy"] .themes-col__list {
-				border-top-color: #98e1e6;
+				border-top-color: hsl(183.85deg 60.94% 74.9% / 25%);
+			}
+
+			.themes-col[data-theme="Energy"].is-active .themes-col__list {
+				border-top-color: hsl(183.85deg 60.94% 74.9%);
 			}
 
 			.themes-col[data-theme="Electrification"] .themes-col__list {
-				border-top-color: #00dba0;
+				border-top-color: hsl(163.84deg 100% 42.94% / 25%);
+			}
+
+			.themes-col[data-theme="Electrification"].is-active .themes-col__list {
+				border-top-color: hsl(163.84deg 100% 42.94%);
 			}
 
 			.themes-company {
