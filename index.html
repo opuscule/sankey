@@ -98,21 +98,27 @@
 					</p>
 				</div>
 				</div>
-				<div class="hero-copy-2">
-					<p>
-						In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscape <span style="color:var(--color-hero-highlight);">as it is today</span> and <span style="color:var(--color-hero-highlight);">how it could evolve</span> through the scaling of climate technologies across the global economy.
-					</p>
-				</div>
-				<div class="hero-copy-3">
-					<p>
-						Centered on the portfolios of the <strong style="color:var(--color-hero-highlight);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-hero-highlight);">Technology Growth Impact Fund (TGIF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
-					</p>
-					<p>
-						The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.
-					</p>
-					<p>
-						<strong>Begin exploring the flows shaping our future.</strong>
-					</p>
+				<div class="hero-copy-intro">
+					<div class="hero-copy-intro__pin">
+						<div class="hero-copy-intro__stack">
+							<div class="hero-copy-2">
+								<p>
+									In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscape <span style="color:var(--color-hero-highlight);">as it is today</span> and <span style="color:var(--color-hero-highlight);">how it could evolve</span> through the scaling of climate technologies across the global economy.
+								</p>
+							</div>
+							<div class="hero-copy-3">
+								<p>
+									Centered on the portfolios of the <strong style="color:var(--color-hero-highlight);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-hero-highlight);">Technology Growth Impact Fund (TGIF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
+								</p>
+								<p>
+									The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.
+								</p>
+								<p>
+									<strong>Begin exploring the flows shaping our future.</strong>
+								</p>
+							</div>
+						</div>
+					</div>
 				</div>
 		</section>
 		<main id="app">
@@ -158,12 +164,12 @@
 									<!-- Year items are rendered from main.js -->
 								</div>
 							</div>
-							<p class="timeline-closing">Under a business-as-usual scenario, without drastic policy changes, the total volume of <strong>global emissions</strong> is forecast to increase to <strong>57GT by 2040</strong>.</p>
+							<p class="timeline-closing">On the one hand AI continues to drive demand for energy, increasing emissions, while on the other, a business-as-usual pace of technology adoption plays a mitigating role, even without drastic policy changes.</p>
 						</div>
 					</div>
 
 					<section class="timeline-visual" aria-hidden="true">
-						<svg id="timeline-sankey-chart" role="img" aria-label="Emissions flow morphing from 2025 to 2040"></svg>
+						<svg id="timeline-sankey-chart" role="img" aria-label="Emissions flow morphing from 2025 to 2040" style="overflow: visible;"></svg>
 					</section>
 				</div>
 			</section>
@@ -174,8 +180,8 @@
 					<div class="portfolio-intro__pin">
 						<div class="portfolio-intro__bg" aria-hidden="true"></div>
 						<div class="portfolio-intro__stack">
-							<p class="portfolio-intro__line portfolio-intro__line--1">The future is uncertain. Under different scenarios the picture changes.</p>
-							<p class="portfolio-intro__line portfolio-intro__line--2">What's important, however, is that we can now visualize the landscape of global emissions in which Capricorn's Technology Impact Fund family is driving decarbonization.</p>
+							<p class="portfolio-intro__line portfolio-intro__line--1">This is our starting point for exploring the investments of the Technology Impact Fund and Technology Growth Impact Fund.</p>
+							<p class="portfolio-intro__line portfolio-intro__line--2">It’s the landscape of global emissions where we are contributing new solutions to accelerate decarbonization.</p>
 						</div>
 					</div>
 				</div>
@@ -188,7 +194,7 @@
 						<div class="themes-lead-stack">
 							<p class="themes-lead">Consider three themes within the TIF and TGIF portfolio:</p>
 						</div>
-						<div class="themes-info" aria-live="polite"><p class="themes-finale-lead">We can see that the technologies in the TIF and TGIF portfolios together touch many parts of the global economy.</p><!-- theme info blocks injected by main.js --></div>
+						<div class="themes-info" aria-live="polite"><p class="themes-finale-lead">Together, the technologies in the TIF and TGIF portfolios touch many parts of the global economy.</p><!-- theme info blocks injected by main.js --></div>
 						<div class="themes-roster" aria-label="Companies by theme"><!-- theme columns injected by main.js --></div>
 					</div>
 					<div class="themes-visual">
@@ -391,7 +397,7 @@
 
 				const maxScroll = ScrollTrigger.maxScroll(window) || 1;
 				const progress = Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
-				const shiftPx = (-140 * progress).toFixed(2);
+				const shiftPx = (-112 * progress).toFixed(2);
 				document.body.style.setProperty("--site-bg-shift", `${shiftPx}px`);
 			};
 
@@ -429,7 +435,7 @@
 						scrollTrigger: {
 							trigger: heroIntro,
 							start: "top top",
-							end: "+=120%",
+							end: "+=96%",
 							scrub: true,
 							pin: heroStage,
 							invalidateOnRefresh: true
@@ -480,7 +486,7 @@
 
 				const wordTimeline = gsap.timeline({ paused: true });
 				const staggerAmount = revealNumber(element.dataset.revealStagger, 0.05);
-				const start = element.dataset.revealStart || "top 84%";
+				const start = element.dataset.revealStart || "top 74%";
 				const end = element.dataset.revealEnd || "bottom 34%";
 
 				gsap.set(words, {
@@ -653,5 +659,7 @@
 
 		<!-- Your app script(s) go below -->
 		<script src="main.js"></script>
+
+		<div class="viewport-frame"></div>
 	</body>
 </html>

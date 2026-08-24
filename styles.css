@@ -211,9 +211,8 @@
 			.hero-copy-2,
 			.hero-copy-3 {
 				display: grid;
-				min-height: 75vh;
-				padding: 1vh 6vw;
-				place-content: center;
+				grid-area: 1 / 1;
+				opacity: 0;
 				place-items: center;
 				text-transform: none;
 			}
@@ -242,6 +241,32 @@
 				font-size: clamp(1rem, 1.55vw, 1.2rem);
 				font-weight: 400;
 				line-height: 1.55;
+			}
+
+			/* --- Hero copy intro (two crossfading panels, locked in place once
+			   .hero-stage has scrolled off) --- */
+			/* 396vh = 316vh scrubbed fade sequence + 80vh pinned viewport. Same
+			   in/hold/out beat lengths as the timeline/impacts/portfolio intros
+			   (48/40/40/48/60/80), minus their 96vh bg-fade-in lead-in, since
+			   this block has no __bg layer. */
+			.hero-copy-intro {
+				min-height: 396vh;
+			}
+
+			.hero-copy-intro__pin {
+				display: grid;
+				height: 100vh;
+				align-items: center;
+				justify-content: center;
+				overflow: hidden;
+				padding: clamp(4rem, 8vh, 7rem) 6vw;
+				position: sticky;
+				top: 0;
+			}
+
+			.hero-copy-intro__stack {
+				display: grid;
+				position: relative;
 			}
 
 			#intro-anchor {
@@ -408,10 +433,18 @@
 				font-size: 16px;
 			}
 
+			/* beat-11 ("select any node") must never appear before the chart has
+			   actually gone interactive -- gated on the class main.js toggles in
+			   setSankeyInteraction, not just on scroll percentage. */
+			#sankey-narrative:not(.chart-interactive) #beat-11 {
+				opacity: 0 !important;
+				visibility: hidden !important;
+			}
+
 			/* --- Timeline intro (bg fade + crossfading headline, locked in place) -- */
-			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
+			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
 			#timeline-intro {
-				min-height: 615vh;
+				min-height: 492vh;
 			}
 
 			.timeline-intro__pin {
@@ -470,10 +503,10 @@
 			/* --- Timeline section (2025 -> 2040 scroll morph) ------------------ */
 			#timeline {
 				color: #e8f4ff;
-				/* 480vh drives the morph; +75vh is a locked static hold after
-				   .timeline-closing appears; final +40vh scrubs #timeline's own
+				/* 384vh drives the morph; +60vh is a locked static hold after
+				   .timeline-closing appears; final +32vh scrubs #timeline's own
 				   fade-out, before the section unpins into the portfolio section. */
-				min-height: 595vh;
+				min-height: 476vh;
 				padding: 0;
 			}
 
@@ -499,16 +532,20 @@
 
 			.timeline-panel {
 				align-self: center;
-				display: flex;
-				flex-direction: column;
-				gap: 2.5rem;
+				display: grid;
+				grid-template-columns: auto;
+				grid-template-rows: auto auto auto;
 				max-width: 100%;
 				width: 100%;
 			}
 
 			.timeline-yearstrip {
+				grid-column: 1 / 2;
+				grid-row: 1 / 3;
 				--tl-year-h: 70px;
 				height: calc(var(--tl-year-h) * 5);
+				-webkit-mask-image: linear-gradient(180deg, transparent 0%, #fff 40%, #fff 60%, transparent 100%);
+				mask-image: linear-gradient(180deg, transparent 0%, #fff 40%, #fff 60%, transparent 100%);
 				overflow: hidden;
 				position: relative;
 				width: 100%;
@@ -536,7 +573,7 @@
 
 			.timeline-year {
 				align-items: center;
-				color: rgba(229, 241, 255, 0.28);
+				/* color: rgba(229, 241, 255, 0.28); */
 				display: flex;
 				font-size: 1.125rem;
 				font-weight: 700;
@@ -566,11 +603,12 @@
 
 			.timeline-closing {
 				color: #fff;
-				font-size: clamp(1rem, 1.35vw, 1.35rem);
+				font-size: 15px;
 				font-weight: 400;
+				grid-column: 1 / 2;
+				grid-row: 2 / 3;
 				line-height: 1.5;
 				margin: 0;
-				max-width: 34ch;
 				opacity: 0;
 			}
 
@@ -624,12 +662,6 @@
 				font-size: 11px;
 				font-weight: 700;
 				letter-spacing: 0.02em;
-			}
-
-			#timeline-sankey-chart .timeline-axis__label-chip {
-				fill: rgba(8, 10, 16, 0.7);
-				rx: 3;
-				ry: 3;
 			}
 
 			.sankey-node-panel {
@@ -811,6 +843,24 @@
 				overflow: hidden;
 			}
 
+			/* Full-viewport frame used to punctuate interactive moments (first:
+			   the sankey chart going click-to-explore). Reused for later
+			   interactivity beats -- toggle .is-active from JS, don't retheme it
+			   per-section. */
+			.viewport-frame {
+				position: fixed;
+				inset: -10px;
+				border: 3px solid #fff;
+				pointer-events: none;
+				z-index: 9999;
+				box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.80), inset 0 0 12px rgba(255, 255, 255, 0.35), inset 0 0 30px rgba(255, 255, 255, 0.12);
+				transition: all 0.3s ease;
+			}
+
+			.viewport-frame.is-active {
+				inset: 0;
+			}
+
 			/* Dev scrub mode (?p=…): hide the hero so #sankey-narrative sits at the
 			   top of the document for precise visual QA. */
 			.dev-scrub #hero-intro {
@@ -821,9 +871,9 @@
 				padding: 0;
 			}
 
-			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
+			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
 			.portfolio-intro {
-				min-height: 615vh;
+				min-height: 492vh;
 			}
 
 			.portfolio-intro__pin {
@@ -867,7 +917,7 @@
 			}
 
 			.portfolio-layout {
-				--portfolio-hold: 260vh; /* length of the pinned company "hold" scroll (desktop) */
+				--portfolio-hold: 208vh; /* length of the pinned company "hold" scroll (desktop) */
 				display: grid;
 				gap: 4vw;
 				grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
@@ -896,7 +946,7 @@
 			}
 
 			.portfolio-layout__lead-stage.is-pinned {
-				height: 220vh;
+				height: 176vh;
 			}
 
 			.portfolio-layout__lead-stage.is-pinned .portfolio-layout__lead-pin {
@@ -920,7 +970,7 @@
 			   .is-held is added by setupLeadFades in the same matchMedia branch as the
 			   lead-stage pin. */
 			.portfolio-businesses.is-held {
-				height: var(--portfolio-hold, 260vh);
+				height: var(--portfolio-hold, 208vh);
 				margin-top: 0;
 			}
 
@@ -1071,8 +1121,8 @@
 			/* --- Portfolio Themes section --- */
 			#portfolio-themes {
 				position: relative;
-				/* 100vh sticky + 780vh themes + 60vh lead fade + 240vh finale + 100vh hold */
-				min-height: 1280vh;
+				/* 80vh sticky + 624vh themes + 48vh lead fade + 192vh finale + 80vh hold */
+				min-height: 1024vh;
 			}
 
 			.themes-layout {
@@ -1295,7 +1345,7 @@
 			   section-local canvas that brightens toward the video's real opening
 			   frame, with 4 headline lines crossfading over the top. */
 			.closing-transition {
-				min-height: 900vh;
+				min-height: 720vh;
 				position: relative;
 			}
 
@@ -1360,7 +1410,7 @@
 			}
 
 			.acknowledgements-video {
-				min-height: 450vh;
+				min-height: 360vh;
 			}
 
 			.acknowledgements-video__sticky {
@@ -1501,7 +1551,7 @@
 			}
 
 			.scenario-layout {
-				--scenario-hold: 240vh;
+				--scenario-hold: 192vh;
 				display: grid;
 				gap: 4vw;
 				grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
@@ -1519,7 +1569,7 @@
 			}
 
 			.scenario-layout__lead-stage.is-pinned {
-				height: 240vh;
+				height: 192vh;
 			}
 
 			.scenario-layout__lead-stage.is-pinned .scenario-layout__lead-pin {
@@ -1549,7 +1599,7 @@
 			}
 
 			.scenario-selector.is-held {
-				height: var(--scenario-hold, 240vh);
+				height: var(--scenario-hold, 192vh);
 				margin-top: 0;
 			}
 
@@ -1713,9 +1763,9 @@
 				stroke-width: 1;
 			}
 
-			/* 615vh = 515vh scrubbed fade sequence + 100vh pinned viewport. */
+			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
 			.impacts-intro {
-				min-height: 615vh;
+				min-height: 492vh;
 			}
 
 			.impacts-intro__pin {
@@ -2396,6 +2446,9 @@
 
 			.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label {
 				flex: 0 0 auto;
+				font-family: "Helvetica Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				text-transform: uppercase;
+				font-size: 12px;
 			}
 
 			.bottom-sticky-nav__item {
@@ -2421,7 +2474,7 @@
 			}
 
 			.bottom-sticky-nav__item--label {
-				background: var(--color-hero-highlight);
+				background: #fff;
 			}
 
 			.bottom-sticky-nav__item[data-nav-group="global-emissions"] {
@@ -2747,6 +2800,31 @@
 				.hero-subtitle {
 					font-size: clamp(0.95rem, 4.4vw, 1.2rem);
 					max-width: 32ch;
+				}
+
+				/* Static fallback: no scrub on mobile, show the end-state look. */
+				.hero-copy-intro {
+					min-height: auto;
+				}
+
+				.hero-copy-intro__pin {
+					display: block;
+					height: auto;
+					overflow: visible;
+					padding: 3rem 1rem;
+					position: static;
+				}
+
+				.hero-copy-intro__stack {
+					display: flex;
+					flex-direction: column;
+					gap: 1.5rem;
+				}
+
+				.hero-copy-2,
+				.hero-copy-3 {
+					grid-area: auto;
+					opacity: 1;
 				}
 
 				.landscape-layout {

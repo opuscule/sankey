@@ -12,6 +12,25 @@
 	const themesChart = document.getElementById("themes-sankey-chart");
 	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
+	const narrativeSection = document.getElementById("sankey-narrative");
+	// Queried lazily (not cached at module load): the .viewport-frame div sits
+	// after this <script> tag in the DOM, so it doesn't exist yet when this
+	// file first parses.
+	let viewportFrame = null;
+	// Shared with setSankeyInteraction (chart-side) and applyBeatProgress
+	// (scroll-side) below -- plain module bindings rather than fields on
+	// `state`, since applyBeatProgress(0) runs synchronously during
+	// setupNarrativeBeats(), before `const state` exists.
+	let chartIsInteractive = false;
+	let narrativeExiting = false;
+	function updateViewportFrame() {
+		if (!viewportFrame) {
+			viewportFrame = document.querySelector(".viewport-frame");
+		}
+		if (viewportFrame) {
+			viewportFrame.classList.toggle("is-active", chartIsInteractive && !narrativeExiting);
+		}
+	}
 
 	// --- Shared math helpers --------------------------------------------------
 	const lerp = (start, end, progress) => start + (end - start) * progress;
@@ -36,7 +55,7 @@
 			start: 0,
 			end: 9,
 			variant: "headline",
-			copy: '<span class="headline-accent">Global emissions in 2025:</span><br /><span class="headline-plain">54 gigatons CO2e</span>'
+			copy: '<span class="headline-plain">In 2025, global emissions totaled <strong>54 Gt of CO2e</strong>.</span>'
 		},
 		{
 			id: "beat-2",
@@ -50,7 +69,7 @@
 			phase: "wipe-reveal",
 			start: 17,
 			end: 27,
-			copy: "The same total emissions can be viewed through seven different lenses."
+			copy: "Total emissions can be viewed through seven different lenses."
 		},
 		{
 			id: "beat-4",
@@ -126,7 +145,7 @@
 
 	// Total scroll length of the narrative section, in px. Longer distance =
 	// more breathing room per scene.
-	const NARRATIVE_SCROLL_DISTANCE = 13000;
+	const NARRATIVE_SCROLL_DISTANCE = 10400;
 
 	// The final HOLD_TAIL fraction of the section is a pinned hold on the
 	// finished interactive chart — the user keeps scrolling but nothing moves,
@@ -135,6 +154,11 @@
 	// (1 - HOLD_TAIL) of the scroll.
 	const HOLD_TAIL = 0.15;
 	const ANIM_SPAN = 1 - HOLD_TAIL;
+
+	// Raw scroll progress (0-1, full "top top" to "bottom bottom" range) where
+	// the pinned narrative starts fading out, finishing exactly at 1 so it is
+	// already invisible before it un-pins and would otherwise scroll up.
+	const NARRATIVE_EXIT_START = 0.94;
 
 	// --- Dev scrub (?p=0.47) ---------------------------------------------------
 	// Lets QA land on an exact master progress without fighting an 11000px
@@ -207,9 +231,11 @@
 	}
 
 	function setupNarrativeBeats() {
-		const narrativeSection = document.getElementById("sankey-narrative");
 		const copyContainer = narrativeSection
 			? narrativeSection.querySelector(".sankey-copy")
+			: null;
+		const sankeyLayoutEl = narrativeSection
+			? narrativeSection.querySelector(".sankey-layout")
 			: null;
 
 		if (!copyContainer || !SCENES.length) {
@@ -279,6 +305,16 @@
 				const opacity = Math.max(0, Math.min(1, getBeatOpacity(globalPercent, SCENES[index])));
 				gsap.set(el, { autoAlpha: opacity, filter: "blur(0px)" });
 			});
+
+			// Fade the whole pinned narrative out at the very end of its scroll
+			// runway (linear, no ease -- matches the beat fades above) so it is
+			// invisible by the time it un-pins, instead of visibly scrolling up.
+			const exitT = clamp01((progress - NARRATIVE_EXIT_START) / (1 - NARRATIVE_EXIT_START));
+			narrativeExiting = exitT > 0;
+			if (sankeyLayoutEl) {
+				gsap.set(sankeyLayoutEl, { opacity: 1 - exitT });
+			}
+			updateViewportFrame();
 		};
 
 		gsap.set(beatEls, { autoAlpha: 0, filter: "blur(0px)" });
@@ -532,29 +568,29 @@
 	// be retimed without renumbering every downstream percentage.
 	const IMPACTS_WALK_COMPANY = "fervo";
 	const IMPACTS_WALK_BEATS = [
-		{ id: "copy-in", hold: 0, vh: 75 },
-		{ id: "chart-in", hold: 40, vh: 75 },
-		{ id: "carve-morph", hold: 60, vh: 120 },
-		{ id: "node-visual-in", hold: 50, vh: 80 },
-		{ id: "copy1-out", hold: 50, vh: 50 },
-		{ id: "avoided-in", hold: 0, vh: 75 },
-		{ id: "copy2-in", hold: 40, vh: 60 },
+		{ id: "copy-in", hold: 0, vh: 60 },
+		{ id: "chart-in", hold: 32, vh: 60 },
+		{ id: "carve-morph", hold: 48, vh: 96 },
+		{ id: "node-visual-in", hold: 40, vh: 64 },
+		{ id: "copy1-out", hold: 40, vh: 40 },
+		{ id: "avoided-in", hold: 0, vh: 60 },
+		{ id: "copy2-in", hold: 32, vh: 48 },
 		// Copy 2 is a full sentence, so it needs its own dwell before leaving;
 		// without this hold it fades straight back out and is unreadable.
-		{ id: "copy2-out", hold: 60, vh: 60 },
-		{ id: "copy3-in", hold: 35, vh: 65 },
-		{ id: "ripple-final-service", hold: 0, vh: 30 },
-		{ id: "ripple-cascade", hold: 0, vh: 170 },
-		{ id: "copy3-out", hold: 50, vh: 50 },
-		{ id: "copy4-in", hold: 0, vh: 60 },
-		{ id: "roster-in", hold: 50, vh: 75 },
-		{ id: "company-bold", hold: 0, vh: 25 },
-		{ id: "card-reveal", hold: 0, vh: 75 },
+		{ id: "copy2-out", hold: 48, vh: 48 },
+		{ id: "copy3-in", hold: 28, vh: 52 },
+		{ id: "ripple-final-service", hold: 0, vh: 24 },
+		{ id: "ripple-cascade", hold: 0, vh: 136 },
+		{ id: "copy3-out", hold: 40, vh: 40 },
+		{ id: "copy4-in", hold: 0, vh: 48 },
+		{ id: "roster-in", hold: 40, vh: 60 },
+		{ id: "company-bold", hold: 0, vh: 20 },
+		{ id: "card-reveal", hold: 0, vh: 60 },
 		// Interaction unlocks the instant the card finishes revealing, so this
 		// dwell is the beat's `vh`, not a leading `hold`. A leading hold here
 		// would push the handoff's start to 1.0 and make the roster and tabs
 		// clickable only at the very last pixel of the runway.
-		{ id: "handoff", hold: 0, vh: 150 }
+		{ id: "handoff", hold: 0, vh: 120 }
 	];
 	const IMPACTS_WALK_TOTAL_VH = IMPACTS_WALK_BEATS.reduce(
 		(total, beat) => total + beat.hold + beat.vh,
@@ -860,6 +896,7 @@
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
+		initHeroCopyIntroSection();
 		initImpactsIntroSection();
 		initImpactsWalk();
 		initClosingTransitionSection();
@@ -3334,16 +3371,72 @@
 		});
 	}
 
+	// --- Hero copy intro (two crossfading panels, locked once .hero-stage has
+	// scrolled off #hero-intro's pin). Same in/hold/out beat lengths as the
+	// timeline/impacts/portfolio intros (48/40/40/48/60/80vh) over a 316vh
+	// scrub range + 80vh pinned viewport; their 96vh bg-fade-in lead-in is
+	// dropped since this block has no __bg layer.
+	const HCI_TOTAL_VH = 316;
+	const HCI_LINE1_IN = [0, 48 / HCI_TOTAL_VH];
+	const HCI_LINE1_OUT = [88 / HCI_TOTAL_VH, 128 / HCI_TOTAL_VH];
+	const HCI_LINE2_IN = [128 / HCI_TOTAL_VH, 176 / HCI_TOTAL_VH];
+	const HCI_ALL_OUT = [236 / HCI_TOTAL_VH, 1];
+
+	function drawHeroCopyIntro(progress) {
+		state.heroCopyIntroProgress = progress;
+		const allOut = windowProgress(progress, HCI_ALL_OUT);
+		if (state.heroCopyIntroLine1El) {
+			const inAmt = windowProgress(progress, HCI_LINE1_IN);
+			const outAmt = windowProgress(progress, HCI_LINE1_OUT);
+			state.heroCopyIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+		if (state.heroCopyIntroLine2El) {
+			const inAmt = windowProgress(progress, HCI_LINE2_IN);
+			state.heroCopyIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+		}
+	}
+
+	function setupHeroCopyIntroScroll() {
+		const section = document.querySelector(".hero-copy-intro");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawHeroCopyIntro(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top top",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawHeroCopyIntro(self.progress),
+			onRefresh: (self) => drawHeroCopyIntro(self.progress)
+		});
+		drawHeroCopyIntro(0);
+	}
+
+	function initHeroCopyIntroSection() {
+		const section = document.querySelector(".hero-copy-intro");
+		if (!section) {
+			return;
+		}
+		state.heroCopyIntroLine1El = document.querySelector(".hero-copy-intro .hero-copy-2");
+		state.heroCopyIntroLine2El = document.querySelector(".hero-copy-intro .hero-copy-3");
+		setupHeroCopyIntroScroll();
+	}
+
 	// Bg fade + two crossfading lines, locked .impacts-intro (mirrors the
-	// portfolio/timeline intros: 515vh scrub range + 100vh pinned viewport,
-	// sequential bg-in 120vh, line1-in 60vh, hold 50vh, line1-out 50vh,
-	// line2-in 60vh, hold 75vh, line2+bg fade-out together over the final 100vh).
-	const II_TOTAL_VH = 515;
-	const II_BG_IN = [0, 120 / II_TOTAL_VH];
-	const II_LINE1_IN = [120 / II_TOTAL_VH, 180 / II_TOTAL_VH];
-	const II_LINE1_OUT = [230 / II_TOTAL_VH, 280 / II_TOTAL_VH];
-	const II_LINE2_IN = [280 / II_TOTAL_VH, 340 / II_TOTAL_VH];
-	const II_ALL_OUT = [415 / II_TOTAL_VH, 1];
+	// portfolio/timeline intros: 412vh scrub range + 80vh pinned viewport,
+	// sequential bg-in 96vh, line1-in 48vh, hold 40vh, line1-out 40vh,
+	// line2-in 48vh, hold 60vh, line2+bg fade-out together over the final 80vh).
+	const II_TOTAL_VH = 412;
+	const II_BG_IN = [0, 96 / II_TOTAL_VH];
+	const II_LINE1_IN = [96 / II_TOTAL_VH, 144 / II_TOTAL_VH];
+	const II_LINE1_OUT = [184 / II_TOTAL_VH, 224 / II_TOTAL_VH];
+	const II_LINE2_IN = [224 / II_TOTAL_VH, 272 / II_TOTAL_VH];
+	const II_ALL_OUT = [332 / II_TOTAL_VH, 1];
 
 	function drawImpactsIntro(progress) {
 		state.impactsIntroProgress = progress;
@@ -3402,22 +3495,22 @@
 	// (sky only), then 4 sequential in/hold/out line windows, then a tail
 	// crossfade into closing-transition-frame.jpg (the video's real frame 0)
 	// before the video section takes over.
-	// The sticky pin (100vh viewport) releases at (CT_TOTAL_VH-100)/CT_TOTAL_VH =
-	// 800/900 and then scrolls away over the section's final 100vh. Everything
+	// The sticky pin (80vh viewport) releases at (CT_TOTAL_VH-80)/CT_TOTAL_VH =
+	// 640/720 and then scrolls away over the section's final 80vh. Everything
 	// below must finish settling comfortably before that release point, or the
 	// pin ends up mid-fade while it's already physically scrolling off-screen.
-	const CT_TOTAL_VH = 900;
-	const CT_LINE1_IN = [40 / CT_TOTAL_VH, 80 / CT_TOTAL_VH];
-	const CT_LINE1_OUT = [150 / CT_TOTAL_VH, 190 / CT_TOTAL_VH];
-	const CT_LINE2_IN = [210 / CT_TOTAL_VH, 250 / CT_TOTAL_VH];
-	const CT_LINE2_OUT = [320 / CT_TOTAL_VH, 360 / CT_TOTAL_VH];
-	const CT_LINE3_IN = [380 / CT_TOTAL_VH, 420 / CT_TOTAL_VH];
-	const CT_LINE3_OUT = [490 / CT_TOTAL_VH, 530 / CT_TOTAL_VH];
-	const CT_LINE4_IN = [550 / CT_TOTAL_VH, 590 / CT_TOTAL_VH];
-	const CT_LINE4_OUT = [660 / CT_TOTAL_VH, 700 / CT_TOTAL_VH];
-	// Crossfade completes by 760/900, leaving a 40vh fully-settled hold before
-	// the 800/900 release so the handoff into the video happens on a static frame.
-	const CT_CROSSFADE = [700 / CT_TOTAL_VH, 760 / CT_TOTAL_VH];
+	const CT_TOTAL_VH = 720;
+	const CT_LINE1_IN = [32 / CT_TOTAL_VH, 64 / CT_TOTAL_VH];
+	const CT_LINE1_OUT = [120 / CT_TOTAL_VH, 152 / CT_TOTAL_VH];
+	const CT_LINE2_IN = [168 / CT_TOTAL_VH, 200 / CT_TOTAL_VH];
+	const CT_LINE2_OUT = [256 / CT_TOTAL_VH, 288 / CT_TOTAL_VH];
+	const CT_LINE3_IN = [304 / CT_TOTAL_VH, 336 / CT_TOTAL_VH];
+	const CT_LINE3_OUT = [392 / CT_TOTAL_VH, 424 / CT_TOTAL_VH];
+	const CT_LINE4_IN = [440 / CT_TOTAL_VH, 472 / CT_TOTAL_VH];
+	const CT_LINE4_OUT = [528 / CT_TOTAL_VH, 560 / CT_TOTAL_VH];
+	// Crossfade completes by 608/720, leaving a 32vh fully-settled hold before
+	// the 640/720 release so the handoff into the video happens on a static frame.
+	const CT_CROSSFADE = [560 / CT_TOTAL_VH, 608 / CT_TOTAL_VH];
 
 	// Gradient stops the canvas interpolates between as progress goes 0 -> 1.
 	// FROM matches night-sky-bg-static.html's gradient exactly (the persistent
@@ -3692,7 +3785,7 @@
 							ease: "none",
 							scrollTrigger: {
 								trigger: selectorEl,
-								start: "top 85%",
+								start: "top 79%",
 								end: "top 54%",
 								scrub: 0.55,
 								invalidateOnRefresh: true
@@ -3784,7 +3877,7 @@
 							ease: "none",
 							scrollTrigger: {
 								trigger: businessesEl,
-								start: "top 82%",
+								start: "top 77%",
 								end: "top 55%",
 								scrub: 0.5,
 								invalidateOnRefresh: true,
@@ -4438,21 +4531,18 @@
 			const cardTop = sankeyExtentTop;
 
 			// Bars sit as a short stub at the bottom of each card (per the mock-up)
-			// rather than spanning the full card height. Share one height across all
-			// 7 cards -- the *shortest* of the assets' own bar-subpath heights -- so
-			// they still line up. Using the shortest (rather than tallest) guarantees
-			// the shared bar never grows past any single asset's own bar boundary and
-			// overlaps that word's lowest letters -- since bar and mark share the same
-			// fill color, an overlapping letter is invisible, not just occluded.
-			const naturalBarHeights = Array.from({ length: 7 }, (_, i) => {
+			// rather than spanning the full card height. Each card uses its own
+			// asset's bar-subpath height, scaled to extentH -- this is exactly the
+			// gap the design baked in below that word, so shorter words (SECTOR,
+			// FUEL, ...) get taller bars that reach higher, matching the mock-up.
+			const naturalBarHeightByStage = Array.from({ length: 7 }, (_, i) => {
 				const asset = state.introAssets?.get(i + 1) || null;
 				if (!asset) {
 					return null;
 				}
 				const assetScale = extentH / asset.viewBox.height;
 				return asset.bar.height * assetScale;
-			}).filter((h) => h !== null);
-			const sharedBarH = naturalBarHeights.length ? Math.min(...naturalBarHeights) : extentH * 0.3;
+			});
 
 			for (let stage = 1; stage <= 7; stage += 1) {
 				const meta = STAGE_META[stage];
@@ -4467,11 +4557,12 @@
 				// upward above it. barRect is appended before mark so the mark paints
 				// on top and stays legible instead of being occluded by the bar. Width
 				// is a fixed 27px per card, independent of the photo/mark's own barW.
+				const barH = naturalBarHeightByStage[stage - 1] ?? extentH * 0.3;
 				const barScreen = {
 					x: cx - 27 / 2,
-					y: cardTop + extentH - sharedBarH,
+					y: cardTop + extentH - barH,
 					w: 27,
-					h: sharedBarH
+					h: barH
 				};
 				const barRect = card
 					.append("rect")
@@ -4590,6 +4681,12 @@
 			state.sankeyInteractive = enabled;
 			chart.style.pointerEvents = enabled ? "auto" : "none";
 			chart.classList.toggle("is-interactive", enabled);
+
+			chartIsInteractive = enabled;
+			if (narrativeSection) {
+				narrativeSection.classList.toggle("chart-interactive", enabled);
+			}
+			updateViewportFrame();
 
 			if (enabled) {
 				// Prefetch the chain data so the first node click can usually
@@ -5200,16 +5297,24 @@
 	// section keeps the layout pinned for a finale: fade the lead copy out,
 	// re-light every company/node, sweep the links in, then a plain hold before
 	// the sticky layout releases.
-	const THEMES_TRAVEL_VH = 780; // whole-theme walk
-	const FINALE_LEAD_FADE_VH = 60; // "Consider four themes" fade-out
-	const FINALE_ANIM_VH = 240; // 0-100 finale timeline
-	const FINALE_HOLD_VH = 100; // pinned hold before unpin
+	const THEMES_TRAVEL_VH = 624; // whole-theme walk
+	const FINALE_LEAD_FADE_VH = 48; // "Consider four themes" fade-out
+	const FINALE_ANIM_VH = 192; // 0-100 finale timeline
+	const FINALE_HOLD_VH = 80; // pinned hold before unpin
 	const THEMES_SCROLL_VH =
 		THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH + FINALE_HOLD_VH;
 	const P_THEMES_END = THEMES_TRAVEL_VH / THEMES_SCROLL_VH;
 	const P_LEAD_END = (THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH) / THEMES_SCROLL_VH;
 	const P_FINALE_END =
 		(THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH) / THEMES_SCROLL_VH;
+
+	// The layout only becomes visible once the section is fully pinned (its
+	// sticky top:0 has already engaged, so this window is scrubbed with zero
+	// motion) — carved out of the front of THEMES_TRAVEL_VH rather than added
+	// on top, so it doesn't shift any of the fractions above or the section's
+	// CSS min-height.
+	const ENTRY_FADE_VH = 48;
+	const P_ENTRY_END = ENTRY_FADE_VH / THEMES_SCROLL_VH;
 
 	// The themes roster comes from init's intervention block, which is already
 	// fetched at page load; reuse it rather than pulling the file down twice.
@@ -5656,6 +5761,23 @@
 		if (!state.themesLeadEl) {
 			state.themesLeadEl = document.querySelector(".themes-lead");
 			state.themesFinaleLeadEl = document.querySelector(".themes-finale-lead");
+			state.themesLayoutEl = document.querySelector(".themes-layout");
+		}
+
+		// Entry: the layout is invisible while the section approaches (so the
+		// ordinary scroll that carries it up from below the fold isn't seen),
+		// then fades in over ENTRY_FADE_VH once already pinned in place. Exit:
+		// past the finale, the pinned layout holds static for the first half of
+		// the hold budget, then dissolves to the shared black background over the
+		// second half so the section disappears instead of visibly unsticking.
+		if (state.themesLayoutEl) {
+			const entryT = clamp01(progress / P_ENTRY_END);
+			const holdLocal =
+				progress <= P_FINALE_END
+					? 0
+					: clamp01((progress - P_FINALE_END) / (1 - P_FINALE_END));
+			const exitFadeT = clamp01((holdLocal - 0.5) / 0.5);
+			state.themesLayoutEl.style.opacity = String(entryT * (1 - exitFadeT));
 		}
 
 		if (progress < P_THEMES_END) {
@@ -5878,15 +6000,15 @@
 	}
 
 	// --- Timeline intro (bg fade + two crossfading lines, locked #timeline-intro) --
-	// Same sequential window shape as the portfolio/impacts intros (515vh scrub
-	// range + 100vh pinned viewport): bg-in 120vh, line1-in 60vh, hold 50vh,
-	// line1-out 50vh, line2-in 60vh, hold 75vh, line2+bg fade-out over the final 100vh.
-	const TLI_TOTAL_VH = 515;
-	const TLI_BG_IN = [0, 120 / TLI_TOTAL_VH];
-	const TLI_LINE1_IN = [120 / TLI_TOTAL_VH, 180 / TLI_TOTAL_VH];
-	const TLI_LINE1_OUT = [230 / TLI_TOTAL_VH, 280 / TLI_TOTAL_VH];
-	const TLI_LINE2_IN = [280 / TLI_TOTAL_VH, 340 / TLI_TOTAL_VH];
-	const TLI_ALL_OUT = [415 / TLI_TOTAL_VH, 1];
+	// Same sequential window shape as the portfolio/impacts intros (412vh scrub
+	// range + 80vh pinned viewport): bg-in 96vh, line1-in 48vh, hold 40vh,
+	// line1-out 40vh, line2-in 48vh, hold 60vh, line2+bg fade-out over the final 80vh.
+	const TLI_TOTAL_VH = 412;
+	const TLI_BG_IN = [0, 96 / TLI_TOTAL_VH];
+	const TLI_LINE1_IN = [96 / TLI_TOTAL_VH, 144 / TLI_TOTAL_VH];
+	const TLI_LINE1_OUT = [184 / TLI_TOTAL_VH, 224 / TLI_TOTAL_VH];
+	const TLI_LINE2_IN = [224 / TLI_TOTAL_VH, 272 / TLI_TOTAL_VH];
+	const TLI_ALL_OUT = [332 / TLI_TOTAL_VH, 1];
 
 	function drawTimelineIntro(progress) {
 		state.timelineIntroProgress = progress;
@@ -5939,15 +6061,15 @@
 	}
 
 	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tgif-portfolio) --
-	// Sequential windows, fractions of a 515vh scroll range (+100vh pinned viewport):
-	// bg fade-in 120vh, line-1 in 60vh, hold 50vh, line-1 out 50vh, line-2 in 60vh,
-	// hold 75vh, then line-2 + bg fade out together over the final 100vh.
-	const PI_TOTAL_VH = 515;
-	const PI_BG_IN = [0, 120 / PI_TOTAL_VH];
-	const PI_LINE1_IN = [120 / PI_TOTAL_VH, 180 / PI_TOTAL_VH];
-	const PI_LINE1_OUT = [230 / PI_TOTAL_VH, 280 / PI_TOTAL_VH];
-	const PI_LINE2_IN = [280 / PI_TOTAL_VH, 340 / PI_TOTAL_VH];
-	const PI_ALL_OUT = [415 / PI_TOTAL_VH, 1];
+	// Sequential windows, fractions of a 412vh scroll range (+80vh pinned viewport):
+	// bg fade-in 96vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
+	// hold 60vh, then line-2 + bg fade out together over the final 80vh.
+	const PI_TOTAL_VH = 412;
+	const PI_BG_IN = [0, 96 / PI_TOTAL_VH];
+	const PI_LINE1_IN = [96 / PI_TOTAL_VH, 144 / PI_TOTAL_VH];
+	const PI_LINE1_OUT = [184 / PI_TOTAL_VH, 224 / PI_TOTAL_VH];
+	const PI_LINE2_IN = [224 / PI_TOTAL_VH, 272 / PI_TOTAL_VH];
+	const PI_ALL_OUT = [332 / PI_TOTAL_VH, 1];
 
 	function drawPortfolioIntro(progress) {
 		state.portfolioIntroProgress = progress;
@@ -6005,8 +6127,8 @@
 	// data, so both endpoints are laid out independently and every node/link is
 	// linearly interpolated between them (easeInOut over the scroll range).
 	const TIMELINE_TARGET_SCENARIO = "2040A";
-	// Scroll windows as fractions of the #timeline scroll range (section ~480vh).
-	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~180vh of 320vh)
+	// Scroll windows as fractions of the #timeline scroll range (section ~384vh).
+	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~144vh of 256vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
 	// and grows to TL_END_FRAC (full) by 2040, so the rising envelope reads as the
@@ -6258,16 +6380,6 @@
 		const axisTopEnd = scaleY(44, TL_END_FRAC);
 		const axisGroup = svg.append("g").attr("class", "timeline-axis");
 
-		// A label's chip <rect> must sit before its <text> sibling to paint underneath it.
-		const fitChipToLabel = (chip, label) => {
-			const bbox = label.node().getBBox();
-			chip
-				.attr("x", bbox.x - 4)
-				.attr("y", bbox.y - 2)
-				.attr("width", bbox.width + 8)
-				.attr("height", bbox.height + 4);
-		};
-
 		axisGroup
 			.append("line")
 			.attr("class", "timeline-axis__tick-dash")
@@ -6275,7 +6387,6 @@
 			.attr("x2", TIMELINE_AXIS_X + 8)
 			.attr("y1", axisTopStart)
 			.attr("y2", axisTopStart);
-		const tickChip = axisGroup.append("rect").attr("class", "timeline-axis__label-chip");
 		const tickLabel = axisGroup
 			.append("text")
 			.attr("class", "timeline-axis__tick-label")
@@ -6284,7 +6395,6 @@
 			.attr("dy", "0.32em")
 			.attr("text-anchor", "end")
 			.text(`${TIMELINE_START_GT} Gt`);
-		fitChipToLabel(tickChip, tickLabel);
 
 		const axisLine = axisGroup
 			.append("line")
@@ -6293,7 +6403,6 @@
 			.attr("x2", TIMELINE_AXIS_X)
 			.attr("y1", bandBottom)
 			.attr("y2", axisTopStart);
-		const markerChip = axisGroup.append("rect").attr("class", "timeline-axis__label-chip");
 		const axisMarkerLabel = axisGroup
 			.append("text")
 			.attr("class", "timeline-axis__marker-label")
@@ -6302,7 +6411,6 @@
 			.attr("dy", "0.32em")
 			.attr("text-anchor", "end")
 			.text(`${TIMELINE_START_GT} Gt`);
-		fitChipToLabel(markerChip, axisMarkerLabel);
 
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, endGraph, 24);
@@ -6317,8 +6425,6 @@
 			linkPathFromGeom,
 			axisLine,
 			axisMarkerLabel,
-			markerChip,
-			fitChipToLabel,
 			axisTopStart,
 			axisTopEnd
 		};
@@ -6399,7 +6505,6 @@
 			const gtValue = Math.round(lerp(TIMELINE_START_GT, TIMELINE_END_GT, t) * 10) / 10;
 			r.axisLine.attr("y2", axisTopY);
 			r.axisMarkerLabel.attr("y", axisTopY).text(`${gtValue} Gt`);
-			r.fitChipToLabel(r.markerChip, r.axisMarkerLabel);
 		}
 	}
 
@@ -6425,11 +6530,11 @@
 		ScrollTrigger.create({
 			trigger: section,
 			start: "top top",
-			// Finish the scrub 115vh before the section's actual (grown) bottom, so
-			// the scrub timeline itself is unchanged and the extra 115vh becomes a
-			// held final state (75vh static hold + 40vh fade-out below) before the
+			// Finish the scrub 92vh before the section's actual (grown) bottom, so
+			// the scrub timeline itself is unchanged and the extra 92vh becomes a
+			// held final state (60vh static hold + 32vh fade-out below) before the
 			// section unpins.
-			end: "bottom bottom+=115vh",
+			end: "bottom bottom+=92vh",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
 			onUpdate: (self) => drawTimeline(self.progress),
@@ -6437,11 +6542,11 @@
 		});
 		drawTimeline(0);
 
-		// After the 75vh static hold, scrub #timeline's own fade-out over the
-		// final 40vh before the section unpins into the portfolio section.
+		// After the 60vh static hold, scrub #timeline's own fade-out over the
+		// final 32vh before the section unpins into the portfolio section.
 		ScrollTrigger.create({
 			trigger: section,
-			start: "bottom bottom+=40vh",
+			start: "bottom bottom+=32vh",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
