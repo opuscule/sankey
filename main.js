@@ -13,22 +13,29 @@
 	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 	const narrativeSection = document.getElementById("sankey-narrative");
+	const impactsLayoutEl = document.querySelector(".impacts-layout");
 	// Queried lazily (not cached at module load): the .viewport-frame div sits
 	// after this <script> tag in the DOM, so it doesn't exist yet when this
 	// file first parses.
 	let viewportFrame = null;
-	// Shared with setSankeyInteraction (chart-side) and applyBeatProgress
-	// (scroll-side) below -- plain module bindings rather than fields on
-	// `state`, since applyBeatProgress(0) runs synchronously during
-	// setupNarrativeBeats(), before `const state` exists.
+	// .viewport-frame punctuates every "the scene has gone interactive" moment
+	// across sections. Each section owns a pair of these plain module
+	// bindings (rather than fields on `state`) and flips them from its own
+	// scroll handler; updateViewportFrame() just ORs them together. Plain
+	// bindings avoid a temporal-dead-zone crash: applyBeatProgress(0) runs
+	// synchronously during setupNarrativeBeats(), before `const state` exists.
 	let chartIsInteractive = false;
 	let narrativeExiting = false;
+	let impactsIsInteractive = false;
+	let impactsExiting = false;
 	function updateViewportFrame() {
 		if (!viewportFrame) {
 			viewportFrame = document.querySelector(".viewport-frame");
 		}
 		if (viewportFrame) {
-			viewportFrame.classList.toggle("is-active", chartIsInteractive && !narrativeExiting);
+			const sankeyActive = chartIsInteractive && !narrativeExiting;
+			const impactsActive = impactsIsInteractive && !impactsExiting;
+			viewportFrame.classList.toggle("is-active", sankeyActive || impactsActive);
 		}
 	}
 
@@ -606,6 +613,13 @@
 			IMPACTS_WALK_BOUNDS[beat.id] = { start, end: cursor / IMPACTS_WALK_TOTAL_VH };
 		});
 	}
+	// Raw progress (0-1) within .impacts-walk's own scroll runway where the
+	// pinned .impacts-layout starts fading out, finishing at 1 so it is
+	// already invisible before it un-pins and would otherwise scroll up. The
+	// "handoff" beat above starts the interactive dwell at ~0.913, so this
+	// leaves room to explore before the fade begins.
+	const IMPACTS_EXIT_START = 0.965;
+
 	// Section progress -> 0-1 progress within a single named beat.
 	const walkT = (p, id) => {
 		const bounds = IMPACTS_WALK_BOUNDS[id];
@@ -2993,6 +3007,7 @@
 		model.forEach((theme) => {
 			const col = document.createElement("div");
 			col.className = "impacts-roster__col";
+			col.dataset.theme = theme.slug;
 			const colTitle = document.createElement("h4");
 			colTitle.className = "impacts-roster__title";
 			colTitle.textContent = theme.label;
@@ -3211,6 +3226,8 @@
 		}
 
 		state.impactsHandedOff = p >= handoffStart;
+		impactsIsInteractive = state.impactsHandedOff;
+		updateViewportFrame();
 
 		if (!state.impactsHandedOff && state.impactsWalkChartStale) {
 			state.impactsWalkChartStale = false;
@@ -3219,6 +3236,22 @@
 
 		drawImpactsWalkCopy(p);
 		drawImpactsWalkChart(p);
+	}
+
+	// Fades the whole pinned stage out at the very end of its scroll runway
+	// (linear, no ease) so #climate-impacts is invisible by the time it
+	// un-pins, instead of visibly scrolling up. Kept separate from
+	// drawImpactsWalk() itself, which is also called with a bare `1` by the
+	// static (reduced-motion / mobile) fallbacks below -- those want the
+	// finished, fully-visible end state, not a faded-out one.
+	function applyImpactsExitFade(progress) {
+		const p = clamp01(progress);
+		const exitT = clamp01((p - IMPACTS_EXIT_START) / (1 - IMPACTS_EXIT_START));
+		impactsExiting = exitT > 0;
+		if (impactsLayoutEl) {
+			impactsLayoutEl.style.opacity = String(1 - exitT);
+		}
+		updateViewportFrame();
 	}
 
 	function impactsWalkRosterKey() {
@@ -3355,8 +3388,14 @@
 					end: "bottom bottom",
 					scrub: true,
 					invalidateOnRefresh: true,
-					onUpdate: (self) => drawImpactsWalk(self.progress),
-					onRefresh: (self) => drawImpactsWalk(self.progress)
+					onUpdate: (self) => {
+						drawImpactsWalk(self.progress);
+						applyImpactsExitFade(self.progress);
+					},
+					onRefresh: (self) => {
+						drawImpactsWalk(self.progress);
+						applyImpactsExitFade(self.progress);
+					}
 				});
 
 				return () => {
@@ -6128,6 +6167,11 @@
 	// linearly interpolated between them (easeInOut over the scroll range).
 	const TIMELINE_TARGET_SCENARIO = "2040A";
 	// Scroll windows as fractions of the #timeline scroll range (section ~384vh).
+	// Fades .timeline-layout in over the first ~38vh, once it's already sticky-
+	// locked at top:0 (the section-to-section slide happens before this
+	// ScrollTrigger's progress 0), so #timeline appears via crossfade rather
+	// than visibly sliding up into place.
+	const TL_OPEN_IN = [0, 0.1];
 	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~144vh of 256vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
@@ -6438,6 +6482,10 @@
 	function drawTimeline(progress) {
 		state.timelineProgress = progress;
 
+		if (state.timelineLayoutEl) {
+			state.timelineLayoutEl.style.opacity = String(windowProgress(progress, TL_OPEN_IN));
+		}
+
 		if (state.timelineCloseEl) {
 			state.timelineCloseEl.style.opacity = String(windowProgress(progress, TL_CLOSE_IN));
 		}
@@ -6527,6 +6575,13 @@
 			drawTimelineFade(1);
 			return;
 		}
+		// GSAP's relative-offset shorthand ("bottom bottom+=92vh") doesn't
+		// understand the vh unit — it parseFloat()s the number and treats it as
+		// raw px, silently shrinking these to ~1/9th of the intended distance.
+		// Compute the px offsets ourselves (as functions, so they stay correct
+		// across invalidateOnRefresh/resize) instead.
+		const vh = (fraction) => `${window.innerHeight * fraction}px`;
+
 		ScrollTrigger.create({
 			trigger: section,
 			start: "top top",
@@ -6534,7 +6589,7 @@
 			// the scrub timeline itself is unchanged and the extra 92vh becomes a
 			// held final state (60vh static hold + 32vh fade-out below) before the
 			// section unpins.
-			end: "bottom bottom+=92vh",
+			end: () => `bottom bottom+=${vh(0.92)}`,
 			scrub: 0.5,
 			invalidateOnRefresh: true,
 			onUpdate: (self) => drawTimeline(self.progress),
@@ -6546,7 +6601,7 @@
 		// final 32vh before the section unpins into the portfolio section.
 		ScrollTrigger.create({
 			trigger: section,
-			start: "bottom bottom+=32vh",
+			start: () => `bottom bottom+=${vh(0.32)}`,
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,

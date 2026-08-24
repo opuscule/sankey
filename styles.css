@@ -516,6 +516,7 @@
 				grid-template-columns: minmax(260px, 30%) minmax(0, 65%);
 				height: 100vh;
 				justify-content: center;
+				opacity: 0;
 				padding: 0 4vw;
 				position: sticky;
 				top: 0;
@@ -1973,7 +1974,7 @@
 				gap: 1.2rem;
 				grid-template-rows: minmax(0, 1fr) auto;
 				height: 100%;
-				padding: 10vh 0 8vh;
+				padding: 10vh 0;
 				position: relative;
 			}
 
@@ -2057,6 +2058,11 @@
 				display: grid;
 				gap: 1.5rem;
 				min-height: 0;
+			}
+
+			.impacts-company-card__brand-header {
+				display: grid;
+				gap: 1.5rem;
 			}
 
 			.impacts-company-card__content[hidden] {
@@ -2203,12 +2209,30 @@
 			}
 
 			.impacts-roster__list {
+				border-top-style: solid;
+				border-top-width: 1px;
 				display: flex;
 				flex-direction: column;
 				gap: 0.3rem;
 				list-style: none;
 				margin: 0;
 				padding: 0;
+				padding-top: 0.75rem;
+			}
+
+			.impacts-roster__col[data-theme="Materials"] .impacts-roster__list,
+			.impacts-roster__col:nth-child(1) .impacts-roster__list {
+				border-top-color: hsl(341.3deg 100% 48.43%);
+			}
+
+			.impacts-roster__col[data-theme="Energy"] .impacts-roster__list,
+			.impacts-roster__col:nth-child(2) .impacts-roster__list {
+				border-top-color: hsl(183.85deg 60.94% 74.9%);
+			}
+
+			.impacts-roster__col[data-theme="Electrification"] .impacts-roster__list,
+			.impacts-roster__col:nth-child(3) .impacts-roster__list {
+				border-top-color: hsl(163.84deg 100% 42.94%);
 			}
 
 			.impacts-businesses__company:hover,
@@ -2932,6 +2956,7 @@
 					gap: 1.5rem;
 					grid-template-columns: 1fr;
 					height: auto;
+					opacity: 1;
 					padding: 0 1rem 2.5rem;
 					position: static;
 					top: auto;
