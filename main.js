@@ -983,8 +983,8 @@
 	const NAV_GROUPS = [
 		{ group: "global-emissions", startSelector: "#global-emissions-picture", endSelector: "#tif-tgif-portfolio" },
 		{ group: "portfolio", startSelector: "#tif-tgif-portfolio", endSelector: "#climate-impacts" },
-		{ group: "climate-impacts", startSelector: "#climate-impacts", endSelector: "#acknowledgements-citations" },
-		{ group: "acknowledgements", startSelector: "#acknowledgements-citations", endSelector: null }
+		{ group: "climate-impacts", startSelector: "#climate-impacts", endSelector: "#conclusion" },
+		{ group: "conclusion", startSelector: "#conclusion", endSelector: null }
 	];
 
 	// Cached per-group link widths (px) and each group's last-known scroll progress (0-1).
@@ -3225,16 +3225,19 @@
 		// Copy 4 hands the column over to the roster, so it clears as the roster arrives.
 		setOpacity(c.copies[3], smoothstep(walkT(p, "copy4-in")) * (1 - rosterIn));
 
+		// Trails the copy out so the two don't leave in lockstep.
+		const nodeOut = smoothstep(clamp01((walkT(p, "copy3-out") - 0.3) / 0.7));
+
 		// The copy starts vertically centred in the column and rises to the top as
-		// the chart carves down to the company's own subgraph.
+		// the chart carves down to the company's own subgraph, then settles back
+		// down toward centre as the node visual fades out, mirroring its entrance.
 		if (c.stack) {
 			const rise = smoothstep(walkT(p, "carve-morph"));
-			c.stack.style.transform = `translateY(${lerp(c.centerOffset || 0, 0, rise)}px)`;
+			const settle = rise * (1 - nodeOut);
+			c.stack.style.transform = `translateY(${lerp(c.centerOffset || 0, 0, settle)}px)`;
 		}
 
 		if (c.node) {
-			// Trails the copy out so the two don't leave in lockstep.
-			const nodeOut = smoothstep(clamp01((walkT(p, "copy3-out") - 0.3) / 0.7));
 			setOpacity(c.node, smoothstep(walkT(p, "node-visual-in")) * (1 - nodeOut));
 		}
 
@@ -3465,16 +3468,24 @@
 		});
 	}
 
-	// --- Hero copy intro (two crossfading panels, locked once .hero-stage has
+	// --- Hero copy intro (three crossfading panels, locked once .hero-stage has
 	// scrolled off #hero-intro's pin). Same in/hold/out beat lengths as the
-	// timeline/impacts/portfolio intros (48/40/40/48/60/80vh) over a 316vh
-	// scrub range + 80vh pinned viewport; their 96vh bg-fade-in lead-in is
-	// dropped since this block has no __bg layer (line 1's fade-in is instead
-	// driven by slideT -- see drawHeroCopyIntro).
-	const HCI_TOTAL_VH = 316;
+	// timeline/impacts/portfolio intros (48/40/40/48/60/80vh), just repeated for
+	// the extra chapter-nav panel inserted between line 1 and line 2, over a
+	// 444vh scrub range + 80vh pinned viewport; the usual 96vh bg-fade-in
+	// lead-in is dropped since this block has no __bg layer (line 1's fade-in
+	// is instead driven by slideT -- see drawHeroCopyIntro).
+	const HCI_TOTAL_VH = 444;
 	const HCI_LINE1_OUT = [88 / HCI_TOTAL_VH, 128 / HCI_TOTAL_VH];
-	const HCI_LINE2_IN = [128 / HCI_TOTAL_VH, 176 / HCI_TOTAL_VH];
-	const HCI_ALL_OUT = [236 / HCI_TOTAL_VH, 1];
+	const HCI_NAV_PARA_IN = [128 / HCI_TOTAL_VH, 152 / HCI_TOTAL_VH];
+	const HCI_NAV_CARD_IN = [
+		[152 / HCI_TOTAL_VH, 166 / HCI_TOTAL_VH],
+		[158 / HCI_TOTAL_VH, 172 / HCI_TOTAL_VH],
+		[164 / HCI_TOTAL_VH, 176 / HCI_TOTAL_VH]
+	];
+	const HCI_NAV_OUT = [216 / HCI_TOTAL_VH, 256 / HCI_TOTAL_VH];
+	const HCI_LINE2_IN = [256 / HCI_TOTAL_VH, 304 / HCI_TOTAL_VH];
+	const HCI_ALL_OUT = [364 / HCI_TOTAL_VH, 1];
 
 	function drawHeroCopyIntro(progress, slideT) {
 		state.heroCopyIntroProgress = progress;
@@ -3486,6 +3497,17 @@
 			// start a 48vh-long fade.
 			const outAmt = windowProgress(progress, HCI_LINE1_OUT);
 			state.heroCopyIntroLine1El.style.opacity = String(slideT * (1 - outAmt));
+		}
+		const navOutAmt = windowProgress(progress, HCI_NAV_OUT);
+		if (state.heroCopyNavParaEl) {
+			const inAmt = windowProgress(progress, HCI_NAV_PARA_IN);
+			state.heroCopyNavParaEl.style.opacity = String(inAmt * (1 - navOutAmt));
+		}
+		if (state.heroCopyNavCardEls) {
+			state.heroCopyNavCardEls.forEach((el, i) => {
+				const inAmt = windowProgress(progress, HCI_NAV_CARD_IN[i] || HCI_NAV_CARD_IN[HCI_NAV_CARD_IN.length - 1]);
+				el.style.opacity = String(inAmt * (1 - navOutAmt));
+			});
 		}
 		if (state.heroCopyIntroLine2El) {
 			const inAmt = windowProgress(progress, HCI_LINE2_IN);
@@ -3527,6 +3549,8 @@
 		}
 		state.heroCopyIntroLine1El = document.querySelector(".hero-copy-intro .hero-copy-2");
 		state.heroCopyIntroLine2El = document.querySelector(".hero-copy-intro .hero-copy-3");
+		state.heroCopyNavParaEl = document.querySelector(".hero-copy-intro .hero-copy-nav__intro");
+		state.heroCopyNavCardEls = Array.from(document.querySelectorAll(".hero-copy-intro .hero-copy-nav__card"));
 		setupHeroCopyIntroScroll();
 	}
 
@@ -5038,6 +5062,9 @@
 			if (!introDone) {
 				const artReady = tReveal > 0 ? 1 : 0;
 				const emissionsSlotCx = introCards.find((card) => card.stage === 7)?.slotCx ?? 0;
+				// Shared height-settle timing for every bar, keyed to stage 6's
+				// window since it's the first column to peel off and fade.
+				const heightSettle = unstackSettle(6, tUnstack);
 
 				introCards.forEach((card) => {
 					const { stage, photoGeom, barScreen } = card;
@@ -5092,10 +5119,16 @@
 						bx = x;
 						by = lerp(by, packedCol.y0, slide);
 						bw = lerp(bw, stripeW, slide);
-						// Target a shared height (not each stage's own packedCol span) so
-						// all seven bars land flush at the same bottom edge -- per-stage
-						// spans can drift slightly apart from the min-node-height floor.
+						// Equalized height for the merged "rainbow bar" look -- real
+						// per-stage packed columns aren't actually equal (more sub-nodes
+						// means more nodePadding closed up when packed). Unlike the
+						// x-position settle above (staggered per stage), all seven
+						// heights snap to their real packed value together, timed to
+						// the *first* column's peel (stage 6, which starts earliest) --
+						// so nothing visibly resizes after a bar has already begun to
+						// fade into its real .sankey-node column.
 						bh = lerp(bh, sankeyExtentBottom - packedCol.y0, slide);
+						bh = lerp(bh, packedCol.y1 - packedCol.y0, heightSettle);
 					}
 					card.barRect
 						.attr("x", bx)
