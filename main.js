@@ -1,8 +1,8 @@
 (function () {
-	const initPath = "init-08192026.json";
-	const baselinesPath = "baselines-08192026.json";
-	const nodeDetailsPath = "node_details-08192026.json";
-	const avoidedPath = "avoided-08192026.json";
+	const initPath = "init-08252026.json";
+	const baselinesPath = "baselines-08252026.json";
+	const nodeDetailsPath = "node_details-08252026.json";
+	const avoidedPath = "avoided-08252026.json";
 	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
@@ -48,6 +48,59 @@
 	};
 	// Remap a 0-1 section progress onto a [start, end] sub-window, clamped outside it.
 	const windowProgress = (value, [start, end]) => clamp01((value - start) / (end - start || 1));
+
+	// Every pinned section's ScrollTrigger used to start at "top top" -- i.e.
+	// only once its (sticky, or now fixed) panel was already locked in place.
+	// That leaves a dead one-viewport-height gap between every pair of
+	// adjacent sections where *neither* section's trigger is running yet
+	// (previous section's "bottom bottom" fires at scrollY = D - vh; next
+	// section's "top top" fires at D). Starting at "top bottom" instead pulls
+	// the trigger's range one viewport height earlier, covering that gap, and
+	// this helper splits the resulting raw progress into `slideT` (0-1 across
+	// that extra viewport height -- used to fade the panel in/out smoothly
+	// across it) and `progress` (0-1 across the rest -- reproduces exactly
+	// what self.progress would have been under the old "top top" start, so
+	// every existing window constant tuned against that convention keeps
+	// working unchanged).
+	const splitEntryProgress = (rawProgress, self) => {
+		// self.end - self.start spans that extra viewport height plus the old
+		// "top top"-to-"bottom bottom" range -- so the extra viewport height,
+		// as a fraction of the total, is exactly viewportHeight / (self.end - self.start).
+		const totalPx = self ? self.end - self.start : 0;
+		const lockFraction = totalPx > 0 ? clamp01(window.innerHeight / totalPx) : 0;
+		const slideT = lockFraction > 0 ? clamp01(rawProgress / lockFraction) : rawProgress > 0 ? 1 : 0;
+		const progress = lockFraction < 1 ? clamp01((rawProgress - lockFraction) / (1 - lockFraction)) : rawProgress;
+		return { slideT, progress };
+	};
+
+	// Pinned panels default to `position: sticky` (styles.css), which visibly
+	// slides each panel into and out of place as it locks/unlocks. Switching
+	// to `position: fixed` removes that motion entirely -- every panel sits at
+	// the same on-screen rect for the whole page and only opacity changes --
+	// but that only works when JS is actually driving per-panel opacity/
+	// visibility; without it every panel would be simultaneously opaque and
+	// stacked on top of each other. Gate it behind a class so the no-JS/no-
+	// GSAP and reduced-motion fallbacks keep today's sticky behavior instead
+	// (mirrors the `dev-scrub` class-toggle pattern below).
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	const PINS_FIXED = !prefersReducedMotion && Boolean(window.gsap && window.ScrollTrigger);
+	if (PINS_FIXED) {
+		document.documentElement.classList.add("pins-fixed");
+	}
+
+	// A fixed pin at opacity 0 is still hit-tested, still tab-focusable, and
+	// still in the accessibility tree -- visibility:hidden removes it from all
+	// three in one property. (Not display:none, which would zero out
+	// getBoundingClientRect() and break the D3 resize paths that read it.)
+	// Route every pin-level opacity write through this.
+	const setPinOpacity = (el, opacity) => {
+		if (!el) {
+			return;
+		}
+		const o = clamp01(opacity);
+		el.style.opacity = String(o);
+		el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+	};
 
 	// --- Scene timeline (single source of truth) ------------------------------
 	// One scroll clock drives both the copy beats and the Sankey choreography.
@@ -306,38 +359,41 @@
 			return (1 - localProgress) / (1 - fadeOutStart);
 		};
 
-		const applyBeatProgress = (progress) => {
+		const applyBeatProgress = (progress, slideT) => {
 			const globalPercent = clamp01(progress / ANIM_SPAN) * 100;
 			beatEls.forEach((el, index) => {
 				const opacity = Math.max(0, Math.min(1, getBeatOpacity(globalPercent, SCENES[index])));
 				gsap.set(el, { autoAlpha: opacity, filter: "blur(0px)" });
 			});
 
-			// Fade the whole pinned narrative out at the very end of its scroll
-			// runway (linear, no ease -- matches the beat fades above) so it is
-			// invisible by the time it un-pins, instead of visibly scrolling up.
+			// Fade the whole pinned narrative in/out at the very edges of its
+			// scroll runway (linear, no ease -- matches the beat fades above):
+			// slideT covers the entry (fully in by the time the panel locks),
+			// exitT covers the end, so it's never abruptly popping in or out.
 			const exitT = clamp01((progress - NARRATIVE_EXIT_START) / (1 - NARRATIVE_EXIT_START));
 			narrativeExiting = exitT > 0;
-			if (sankeyLayoutEl) {
-				gsap.set(sankeyLayoutEl, { opacity: 1 - exitT });
-			}
+			setPinOpacity(sankeyLayoutEl, slideT * (1 - exitT));
 			updateViewportFrame();
 		};
 
 		gsap.set(beatEls, { autoAlpha: 0, filter: "blur(0px)" });
-		applyBeatProgress(0);
+		applyBeatProgress(0, 0);
 
 		if (DEV_SCRUB !== null) {
-			devState.beatsHook = applyBeatProgress;
+			devState.beatsHook = (progress) => applyBeatProgress(progress, 1);
 			devApply();
 			return;
 		}
 
 		ScrollTrigger.create({
 			trigger: "#sankey-narrative",
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
-			onUpdate: (self) => applyBeatProgress(self.progress)
+			invalidateOnRefresh: true,
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				applyBeatProgress(progress, slideT);
+			}
 		});
 	}
 
@@ -914,7 +970,6 @@
 		initImpactsIntroSection();
 		initImpactsWalk();
 		initClosingTransitionSection();
-		setupAcknowledgementsVideoScrub();
 		initThemesSection();
 		initTimelineIntroSection();
 		initTimelineSection();
@@ -3238,19 +3293,17 @@
 		drawImpactsWalkChart(p);
 	}
 
-	// Fades the whole pinned stage out at the very end of its scroll runway
-	// (linear, no ease) so #climate-impacts is invisible by the time it
-	// un-pins, instead of visibly scrolling up. Kept separate from
-	// drawImpactsWalk() itself, which is also called with a bare `1` by the
+	// Fades the whole pinned stage in/out at the edges of its scroll runway
+	// (linear, no ease): slideT covers the entry (fully in by the time the
+	// panel locks), exitT covers the end. Kept separate from drawImpactsWalk()
+	// itself, which is also called with a bare `1` (and no slideT) by the
 	// static (reduced-motion / mobile) fallbacks below -- those want the
 	// finished, fully-visible end state, not a faded-out one.
-	function applyImpactsExitFade(progress) {
+	function applyImpactsEdgeFades(progress, slideT) {
 		const p = clamp01(progress);
 		const exitT = clamp01((p - IMPACTS_EXIT_START) / (1 - IMPACTS_EXIT_START));
 		impactsExiting = exitT > 0;
-		if (impactsLayoutEl) {
-			impactsLayoutEl.style.opacity = String(1 - exitT);
-		}
+		setPinOpacity(impactsLayoutEl, slideT * (1 - exitT));
 		updateViewportFrame();
 	}
 
@@ -3384,17 +3437,19 @@
 			"(min-width: 901px)": () => {
 				const scrubST = ScrollTrigger.create({
 					trigger: walkEl,
-					start: "top top",
+					start: "top bottom",
 					end: "bottom bottom",
 					scrub: true,
 					invalidateOnRefresh: true,
 					onUpdate: (self) => {
-						drawImpactsWalk(self.progress);
-						applyImpactsExitFade(self.progress);
+						const { slideT, progress } = splitEntryProgress(self.progress, self);
+						drawImpactsWalk(progress);
+						applyImpactsEdgeFades(progress, slideT);
 					},
 					onRefresh: (self) => {
-						drawImpactsWalk(self.progress);
-						applyImpactsExitFade(self.progress);
+						const { slideT, progress } = splitEntryProgress(self.progress, self);
+						drawImpactsWalk(progress);
+						applyImpactsEdgeFades(progress, slideT);
 					}
 				});
 
@@ -3414,20 +3469,23 @@
 	// scrolled off #hero-intro's pin). Same in/hold/out beat lengths as the
 	// timeline/impacts/portfolio intros (48/40/40/48/60/80vh) over a 316vh
 	// scrub range + 80vh pinned viewport; their 96vh bg-fade-in lead-in is
-	// dropped since this block has no __bg layer.
+	// dropped since this block has no __bg layer (line 1's fade-in is instead
+	// driven by slideT -- see drawHeroCopyIntro).
 	const HCI_TOTAL_VH = 316;
-	const HCI_LINE1_IN = [0, 48 / HCI_TOTAL_VH];
 	const HCI_LINE1_OUT = [88 / HCI_TOTAL_VH, 128 / HCI_TOTAL_VH];
 	const HCI_LINE2_IN = [128 / HCI_TOTAL_VH, 176 / HCI_TOTAL_VH];
 	const HCI_ALL_OUT = [236 / HCI_TOTAL_VH, 1];
 
-	function drawHeroCopyIntro(progress) {
+	function drawHeroCopyIntro(progress, slideT) {
 		state.heroCopyIntroProgress = progress;
 		const allOut = windowProgress(progress, HCI_ALL_OUT);
 		if (state.heroCopyIntroLine1El) {
-			const inAmt = windowProgress(progress, HCI_LINE1_IN);
+			// Line 1 doubles as this block's "first visible thing" (no __bg layer
+			// here), so it uses slideT instead of its own [0, 48vh] window: fully
+			// in by the time the panel locks, instead of waiting until then to
+			// start a 48vh-long fade.
 			const outAmt = windowProgress(progress, HCI_LINE1_OUT);
-			state.heroCopyIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+			state.heroCopyIntroLine1El.style.opacity = String(slideT * (1 - outAmt));
 		}
 		if (state.heroCopyIntroLine2El) {
 			const inAmt = windowProgress(progress, HCI_LINE2_IN);
@@ -3441,19 +3499,25 @@
 			return;
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
-			drawHeroCopyIntro(1);
+			drawHeroCopyIntro(1, 1);
 			return;
 		}
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawHeroCopyIntro(self.progress),
-			onRefresh: (self) => drawHeroCopyIntro(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawHeroCopyIntro(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawHeroCopyIntro(progress, slideT);
+			}
 		});
-		drawHeroCopyIntro(0);
+		drawHeroCopyIntro(0, 0);
 	}
 
 	function initHeroCopyIntroSection() {
@@ -3471,19 +3535,20 @@
 	// sequential bg-in 96vh, line1-in 48vh, hold 40vh, line1-out 40vh,
 	// line2-in 48vh, hold 60vh, line2+bg fade-out together over the final 80vh).
 	const II_TOTAL_VH = 412;
-	const II_BG_IN = [0, 96 / II_TOTAL_VH];
 	const II_LINE1_IN = [96 / II_TOTAL_VH, 144 / II_TOTAL_VH];
 	const II_LINE1_OUT = [184 / II_TOTAL_VH, 224 / II_TOTAL_VH];
 	const II_LINE2_IN = [224 / II_TOTAL_VH, 272 / II_TOTAL_VH];
 	const II_ALL_OUT = [332 / II_TOTAL_VH, 1];
 
-	function drawImpactsIntro(progress) {
+	function drawImpactsIntro(progress, slideT) {
 		state.impactsIntroProgress = progress;
-		const bgIn = windowProgress(progress, II_BG_IN);
 		const allOut = windowProgress(progress, II_ALL_OUT);
-		if (state.impactsIntroBgEl) {
-			state.impactsIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
-		}
+		// The whole pin fades as a unit at entry/exit (slideT*(1-allOut) is 1
+		// throughout the main content hold, so it's a no-op there -- this is
+		// what used to be the bg element's own opacity, and what line2 used to
+		// share via its own "* (1-allOut)" term; both are now free rides on the
+		// pin's opacity instead of being multiplied in twice).
+		setPinOpacity(state.impactsIntroPinEl, slideT * (1 - allOut));
 		if (state.impactsIntroLine1El) {
 			const inAmt = windowProgress(progress, II_LINE1_IN);
 			const outAmt = windowProgress(progress, II_LINE1_OUT);
@@ -3491,7 +3556,7 @@
 		}
 		if (state.impactsIntroLine2El) {
 			const inAmt = windowProgress(progress, II_LINE2_IN);
-			state.impactsIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+			state.impactsIntroLine2El.style.opacity = String(inAmt);
 		}
 	}
 
@@ -3501,19 +3566,25 @@
 			return;
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
-			drawImpactsIntro(1);
+			drawImpactsIntro(1, 1);
 			return;
 		}
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawImpactsIntro(self.progress),
-			onRefresh: (self) => drawImpactsIntro(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawImpactsIntro(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawImpactsIntro(progress, slideT);
+			}
 		});
-		drawImpactsIntro(0);
+		drawImpactsIntro(0, 0);
 	}
 
 	function initImpactsIntroSection() {
@@ -3521,23 +3592,24 @@
 		if (!section) {
 			return;
 		}
-		state.impactsIntroBgEl = document.querySelector(".impacts-intro .impacts-intro__bg");
+		state.impactsIntroPinEl = document.querySelector(".impacts-intro .impacts-intro__pin");
 		state.impactsIntroLine1El = document.querySelector(".impacts-intro .impacts-intro__line--1");
 		state.impactsIntroLine2El = document.querySelector(".impacts-intro .impacts-intro__line--2");
 		setupImpactsIntroScroll();
 	}
 
-	// --- Closing transition (night sky hand-off, locked #closing-transition) --
+	// --- Closing transition (night sky hand-off + closing video, one merged pin
+	// on #closing-transition) --
 	// Hands the persistent #site-bg starfield off to a section-local canvas that
 	// brightens toward the real opening frame of the closing video, while 4
-	// headline lines crossfade over the top. 900vh scroll range: a short lead-in
-	// (sky only), then 4 sequential in/hold/out line windows, then a tail
-	// crossfade into closing-transition-frame.jpg (the video's real frame 0)
-	// before the video section takes over.
-	// The sticky pin (80vh viewport) releases at (CT_TOTAL_VH-80)/CT_TOTAL_VH =
-	// 640/720 and then scrolls away over the section's final 80vh. Everything
-	// below must finish settling comfortably before that release point, or the
-	// pin ends up mid-fade while it's already physically scrolling off-screen.
+	// headline lines crossfade over the top (phase 1), then hard-cuts into the
+	// closing video (phase 2) within the SAME sticky pin, so the whole sequence
+	// reads as one continuous shot instead of two separate scroll-jacked
+	// sections. Phase 1's choreography (this block's constants + progress
+	// windows) is untouched from its original design; see CT_PHASE1_VH /
+	// CT_VIDEO_VH / CT_DESKTOP_TOTAL_VH below for how the two phases share the
+	// merged section's scroll range on desktop. Mobile keeps phase 1 only (no
+	// video) at the original 720vh -- see setupClosingTransitionScroll().
 	const CT_TOTAL_VH = 720;
 	const CT_LINE1_IN = [32 / CT_TOTAL_VH, 64 / CT_TOTAL_VH];
 	const CT_LINE1_OUT = [120 / CT_TOTAL_VH, 152 / CT_TOTAL_VH];
@@ -3547,9 +3619,25 @@
 	const CT_LINE3_OUT = [392 / CT_TOTAL_VH, 424 / CT_TOTAL_VH];
 	const CT_LINE4_IN = [440 / CT_TOTAL_VH, 472 / CT_TOTAL_VH];
 	const CT_LINE4_OUT = [528 / CT_TOTAL_VH, 560 / CT_TOTAL_VH];
-	// Crossfade completes by 608/720, leaving a 32vh fully-settled hold before
-	// the 640/720 release so the handoff into the video happens on a static frame.
+	// Crossfade completes by 608/720 -- that's the hard-cut point into the video.
 	const CT_CROSSFADE = [560 / CT_TOTAL_VH, 608 / CT_TOTAL_VH];
+
+	// Merged pin (desktop): phase 1's real scroll allotment is the vh at which
+	// the crossfade above finishes -- feeding scrolledVh/CT_TOTAL_VH into the
+	// unmodified drawClosingTransitionText() below makes the crossfade land at
+	// exactly 1.0 right as phase 1 runs out. CT_VIDEO_VH is carried over
+	// unchanged from the old standalone .acknowledgements-video wrapper's
+	// min-height, to preserve the existing video scrub pacing. Keep these in
+	// sync with .closing-transition's min-height (1016vh desktop / 720vh
+	// mobile) in styles.css.
+	const CT_PHASE1_VH = CT_CROSSFADE[1] * CT_TOTAL_VH; // 608
+	const CT_VIDEO_VH = 360;
+	// The sky canvas is unconditionally opaque (no opacity of its own), so the
+	// pin needs an explicit exit fade or it would cover #acknowledgements-
+	// citations forever after the video ends. Desktop only -- see the mobile
+	// decision note on setupClosingTransitionScroll().
+	const CT_EXIT_VH = 48;
+	const CT_DESKTOP_TOTAL_VH = CT_PHASE1_VH + CT_VIDEO_VH + CT_EXIT_VH; // 1016
 
 	// Gradient stops the canvas interpolates between as progress goes 0 -> 1.
 	// FROM matches night-sky-bg-static.html's gradient exactly (the persistent
@@ -3579,6 +3667,48 @@
 			const outAmt = windowProgress(progress, outWindow);
 			el.style.opacity = String(inAmt * (1 - outAmt));
 		}
+	}
+
+	function setClosingTransitionVideoPhase(isVideoPhase) {
+		if (state.closingTransitionIsVideoPhase === isVideoPhase) {
+			return;
+		}
+		state.closingTransitionIsVideoPhase = isVideoPhase;
+		if (state.closingTransitionPinEl) {
+			state.closingTransitionPinEl.classList.toggle("is-video-phase", isVideoPhase);
+		}
+	}
+
+	// Desktop-only merged onUpdate: drives phase 1 (sky/text/frame) below the
+	// hard-cut point, then hands off to scrubbing the video's currentTime for
+	// phase 2, all within the section's single ScrollTrigger. splitEntryProgress
+	// recovers the same post-lock progress every other pinned section uses;
+	// slideT and the tail CT_EXIT_VH window drive the pin's own entry/exit fade.
+	function updateClosingTransitionMerged(self) {
+		const { slideT, progress } = splitEntryProgress(self.progress, self);
+		const scrolledVh = progress * CT_DESKTOP_TOTAL_VH;
+		const enteringVideo = scrolledVh > CT_PHASE1_VH;
+
+		if (!enteringVideo) {
+			drawClosingTransitionText(scrolledVh / CT_TOTAL_VH);
+		} else if (!state.closingTransitionIsVideoPhase) {
+			// Settle phase-1 visuals at their finished state exactly once, on the
+			// tick that crosses the boundary, instead of rewriting frame/line
+			// opacity every tick for the rest of the video-scrub phase.
+			drawClosingTransitionText(CT_CROSSFADE[1]);
+		}
+		setClosingTransitionVideoPhase(enteringVideo);
+
+		if (enteringVideo) {
+			const video = state.closingTransitionVideoEl;
+			if (video && !state.closingTransitionReduceMotion && isFinite(video.duration) && video.duration > 0) {
+				const phase2Progress = clamp01((scrolledVh - CT_PHASE1_VH) / CT_VIDEO_VH);
+				video.currentTime = phase2Progress * video.duration;
+			}
+		}
+
+		const exitT = clamp01((scrolledVh - (CT_DESKTOP_TOTAL_VH - CT_EXIT_VH)) / CT_EXIT_VH);
+		setPinOpacity(state.closingTransitionPinEl, slideT * (1 - exitT));
 	}
 
 	function buildClosingTransitionStars(width, height) {
@@ -3674,6 +3804,9 @@
 		state.closingTransitionRaf = requestAnimationFrame(drawClosingTransitionSky);
 	}
 
+	// Single ScrollTrigger per breakpoint. Desktop drives the merged two-phase
+	// (sky/text/frame -> hard cut -> video scrub) sequence; mobile keeps phase 1
+	// only (no video) at the section's original pacing.
 	function setupClosingTransitionScroll() {
 		const section = document.getElementById("closing-transition");
 		if (!section) {
@@ -3683,16 +3816,46 @@
 			drawClosingTransitionText(1);
 			return;
 		}
-		ScrollTrigger.create({
-			trigger: section,
-			start: "top top",
-			end: "bottom bottom",
-			scrub: 0.5,
-			invalidateOnRefresh: true,
-			onUpdate: (self) => drawClosingTransitionText(self.progress),
-			onRefresh: (self) => drawClosingTransitionText(self.progress)
+
+		state.closingTransitionReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		ScrollTrigger.matchMedia({
+			"(min-width: 901px)": () => {
+				if (state.closingTransitionVideoEl && !state.closingTransitionVideoEl.src) {
+					state.closingTransitionVideoEl.src = "closing-video-opt-v1.mp4";
+				}
+				setClosingTransitionVideoPhase(false);
+				const st = ScrollTrigger.create({
+					trigger: section,
+					start: "top bottom",
+					end: "bottom bottom",
+					scrub: 0.5,
+					invalidateOnRefresh: true,
+					onUpdate: updateClosingTransitionMerged,
+					onRefresh: updateClosingTransitionMerged
+				});
+				drawClosingTransitionText(0);
+				return () => {
+					st.kill();
+				};
+			},
+			"(max-width: 900px)": () => {
+				setClosingTransitionVideoPhase(false);
+				const st = ScrollTrigger.create({
+					trigger: section,
+					start: "top top",
+					end: "bottom bottom",
+					scrub: 0.5,
+					invalidateOnRefresh: true,
+					onUpdate: (self) => drawClosingTransitionText(self.progress),
+					onRefresh: (self) => drawClosingTransitionText(self.progress)
+				});
+				drawClosingTransitionText(0);
+				return () => {
+					st.kill();
+				};
+			}
 		});
-		drawClosingTransitionText(0);
 	}
 
 	function initClosingTransitionSection() {
@@ -3700,12 +3863,22 @@
 		if (!section) {
 			return;
 		}
+		state.closingTransitionPinEl = document.querySelector("#closing-transition .closing-transition__pin");
 		state.closingTransitionCanvasEl = document.querySelector("#closing-transition .closing-transition__sky");
 		state.closingTransitionFrameEl = document.querySelector("#closing-transition .closing-transition__frame");
+		state.closingTransitionVideoEl = document.querySelector("#closing-transition .closing-transition__video");
 		state.closingTransitionLine1El = document.querySelector("#closing-transition .closing-transition__line--1");
 		state.closingTransitionLine2El = document.querySelector("#closing-transition .closing-transition__line--2");
 		state.closingTransitionLine3El = document.querySelector("#closing-transition .closing-transition__line--3");
 		state.closingTransitionLine4El = document.querySelector("#closing-transition .closing-transition__line--4");
+		state.closingTransitionIsVideoPhase = false;
+
+		if (state.closingTransitionVideoEl) {
+			// Paused videos render nothing in some browsers until seeked once metadata is ready.
+			state.closingTransitionVideoEl.addEventListener("loadedmetadata", () => {
+				state.closingTransitionVideoEl.currentTime = 0.01;
+			});
+		}
 
 		if (state.closingTransitionCanvasEl) {
 			state.closingTransitionCtx = state.closingTransitionCanvasEl.getContext("2d");
@@ -3717,46 +3890,6 @@
 		}
 
 		setupClosingTransitionScroll();
-	}
-
-	// Scroll-scrubs closing-video-opt-v1.mp4 by mapping scroll progress to currentTime; desktop only.
-	function setupAcknowledgementsVideoScrub() {
-		const wrapperEl = document.querySelector(".acknowledgements-video");
-		const video = document.querySelector(".acknowledgements-video__el");
-		if (!wrapperEl || !video) {
-			return;
-		}
-
-		// Paused videos render nothing in some browsers until seeked once metadata is ready.
-		video.addEventListener("loadedmetadata", () => {
-			video.currentTime = 0.01;
-		});
-
-		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
-			return;
-		}
-
-		ScrollTrigger.matchMedia({
-			"(min-width: 901px)": () => {
-				const scrubST = ScrollTrigger.create({
-					trigger: wrapperEl,
-					start: "top top",
-					end: "bottom bottom",
-					scrub: true,
-					invalidateOnRefresh: true,
-					onUpdate: (self) => {
-						if (isFinite(video.duration)) {
-							video.currentTime = self.progress * video.duration;
-						}
-					}
-				});
-
-				return () => {
-					scrubST.kill();
-				};
-			}
-		});
 	}
 
 	function setupScenarioLeadFades() {
@@ -4959,7 +5092,10 @@
 						bx = x;
 						by = lerp(by, packedCol.y0, slide);
 						bw = lerp(bw, stripeW, slide);
-						bh = lerp(bh, packedCol.y1 - packedCol.y0, slide);
+						// Target a shared height (not each stage's own packedCol span) so
+						// all seven bars land flush at the same bottom edge -- per-stage
+						// spans can drift slightly apart from the min-node-height floor.
+						bh = lerp(bh, sankeyExtentBottom - packedCol.y0, slide);
 					}
 					card.barRect
 						.attr("x", bx)
@@ -5099,10 +5235,15 @@
 							// ease here desynchronizes graphics from copy. Scenes apply
 							// their own smoothstep internally.
 							ease: "none",
-							onUpdate: () => drawMaster(motionState.progress),
+							// "top bottom" (matching the beats ScrollTrigger) means
+							// motionState.progress is the raw, pre-lock progress --
+							// splitEntryProgress recovers the same post-lock progress
+							// applyBeatProgress uses, keeping the chart and copy beats
+							// on the same clock.
+							onUpdate: () => drawMaster(splitEntryProgress(motionState.progress, layoutScrollTrigger).progress),
 							scrollTrigger: {
 								trigger: "#sankey-narrative",
-								start: "top top",
+								start: "top bottom",
 								end: "bottom bottom",
 								scrub: 0.8,
 								invalidateOnRefresh: true
@@ -5347,13 +5488,10 @@
 	const P_FINALE_END =
 		(THEMES_TRAVEL_VH + FINALE_LEAD_FADE_VH + FINALE_ANIM_VH) / THEMES_SCROLL_VH;
 
-	// The layout only becomes visible once the section is fully pinned (its
-	// sticky top:0 has already engaged, so this window is scrubbed with zero
-	// motion) — carved out of the front of THEMES_TRAVEL_VH rather than added
-	// on top, so it doesn't shift any of the fractions above or the section's
-	// CSS min-height.
-	const ENTRY_FADE_VH = 48;
-	const P_ENTRY_END = ENTRY_FADE_VH / THEMES_SCROLL_VH;
+	// The layout's fade-in is now driven by slideT (see drawThemes), running
+	// during the section-to-section slide itself so it's already fully
+	// visible by the time #portfolio-themes locks, instead of only starting a
+	// 48vh fade once already pinned.
 
 	// The themes roster comes from init's intervention block, which is already
 	// fetched at page load; reuse it rather than pulling the file down twice.
@@ -5620,7 +5758,7 @@
 		renderStageHeaders(headersGroup, graph, 24);
 
 		state.themesRendered = { nodeSelection, linkSelection, graph };
-		drawThemes(state.themesProgress || 0);
+		drawThemes(state.themesProgress || 0, state.themesSlideT ?? 0);
 	}
 
 	// Split scroll progress into one equal window per theme. Within the active
@@ -5790,8 +5928,9 @@
 
 	// Drive the whole section: the four-theme walk, then the pinned finale
 	// (lead crossfade -> re-light everything -> sweep links -> hold).
-	function drawThemes(progress) {
+	function drawThemes(progress, slideT) {
 		state.themesProgress = progress;
+		state.themesSlideT = slideT;
 		const model = state.themesModel;
 		if (!model || !model.length) {
 			return;
@@ -5803,20 +5942,19 @@
 			state.themesLayoutEl = document.querySelector(".themes-layout");
 		}
 
-		// Entry: the layout is invisible while the section approaches (so the
-		// ordinary scroll that carries it up from below the fold isn't seen),
-		// then fades in over ENTRY_FADE_VH once already pinned in place. Exit:
+		// Entry: the layout's fade-in runs during the section-to-section slide
+		// itself (driven by slideT), so it's already fully visible by the time
+		// the section locks in place instead of only starting a fade there. Exit:
 		// past the finale, the pinned layout holds static for the first half of
 		// the hold budget, then dissolves to the shared black background over the
 		// second half so the section disappears instead of visibly unsticking.
 		if (state.themesLayoutEl) {
-			const entryT = clamp01(progress / P_ENTRY_END);
 			const holdLocal =
 				progress <= P_FINALE_END
 					? 0
 					: clamp01((progress - P_FINALE_END) / (1 - P_FINALE_END));
 			const exitFadeT = clamp01((holdLocal - 0.5) / 0.5);
-			state.themesLayoutEl.style.opacity = String(entryT * (1 - exitFadeT));
+			setPinOpacity(state.themesLayoutEl, slideT * (1 - exitFadeT));
 		}
 
 		if (progress < P_THEMES_END) {
@@ -6002,14 +6140,20 @@
 
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawThemes(self.progress),
-			onRefresh: (self) => drawThemes(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawThemes(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawThemes(progress, slideT);
+			}
 		});
-		drawThemes(0);
+		drawThemes(0, 0);
 	}
 
 	async function initThemesSection() {
@@ -6030,7 +6174,7 @@
 				if (!window.gsap || !window.ScrollTrigger) {
 					applyThemesReducedMotion();
 				} else {
-					drawThemes(state.themesProgress || 0);
+					drawThemes(state.themesProgress || 0, state.themesSlideT ?? 0);
 				}
 			});
 		} catch (error) {
@@ -6043,19 +6187,20 @@
 	// range + 80vh pinned viewport): bg-in 96vh, line1-in 48vh, hold 40vh,
 	// line1-out 40vh, line2-in 48vh, hold 60vh, line2+bg fade-out over the final 80vh.
 	const TLI_TOTAL_VH = 412;
-	const TLI_BG_IN = [0, 96 / TLI_TOTAL_VH];
 	const TLI_LINE1_IN = [96 / TLI_TOTAL_VH, 144 / TLI_TOTAL_VH];
 	const TLI_LINE1_OUT = [184 / TLI_TOTAL_VH, 224 / TLI_TOTAL_VH];
 	const TLI_LINE2_IN = [224 / TLI_TOTAL_VH, 272 / TLI_TOTAL_VH];
 	const TLI_ALL_OUT = [332 / TLI_TOTAL_VH, 1];
 
-	function drawTimelineIntro(progress) {
+	function drawTimelineIntro(progress, slideT) {
 		state.timelineIntroProgress = progress;
-		const bgIn = windowProgress(progress, TLI_BG_IN);
 		const allOut = windowProgress(progress, TLI_ALL_OUT);
-		if (state.timelineIntroBgEl) {
-			state.timelineIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
-		}
+		// The whole pin fades as a unit at entry/exit (slideT*(1-allOut) is 1
+		// throughout the main content hold, so it's a no-op there -- this is
+		// what used to be the bg element's own opacity, and what line2 used to
+		// share via its own "* (1-allOut)" term; both are now free rides on the
+		// pin's opacity instead of being multiplied in twice).
+		setPinOpacity(state.timelineIntroPinEl, slideT * (1 - allOut));
 		if (state.timelineIntroLine1El) {
 			const inAmt = windowProgress(progress, TLI_LINE1_IN);
 			const outAmt = windowProgress(progress, TLI_LINE1_OUT);
@@ -6063,7 +6208,7 @@
 		}
 		if (state.timelineIntroLine2El) {
 			const inAmt = windowProgress(progress, TLI_LINE2_IN);
-			state.timelineIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+			state.timelineIntroLine2El.style.opacity = String(inAmt);
 		}
 	}
 
@@ -6073,19 +6218,25 @@
 			return;
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
-			drawTimelineIntro(1);
+			drawTimelineIntro(1, 1);
 			return;
 		}
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawTimelineIntro(self.progress),
-			onRefresh: (self) => drawTimelineIntro(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimelineIntro(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimelineIntro(progress, slideT);
+			}
 		});
-		drawTimelineIntro(0);
+		drawTimelineIntro(0, 0);
 	}
 
 	function initTimelineIntroSection() {
@@ -6093,7 +6244,7 @@
 		if (!section) {
 			return;
 		}
-		state.timelineIntroBgEl = document.querySelector("#timeline-intro .timeline-intro__bg");
+		state.timelineIntroPinEl = document.querySelector("#timeline-intro .timeline-intro__pin");
 		state.timelineIntroLine1El = document.querySelector("#timeline-intro .timeline-intro__line--1");
 		state.timelineIntroLine2El = document.querySelector("#timeline-intro .timeline-intro__line--2");
 		setupTimelineIntroScroll();
@@ -6104,19 +6255,20 @@
 	// bg fade-in 96vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
 	// hold 60vh, then line-2 + bg fade out together over the final 80vh.
 	const PI_TOTAL_VH = 412;
-	const PI_BG_IN = [0, 96 / PI_TOTAL_VH];
 	const PI_LINE1_IN = [96 / PI_TOTAL_VH, 144 / PI_TOTAL_VH];
 	const PI_LINE1_OUT = [184 / PI_TOTAL_VH, 224 / PI_TOTAL_VH];
 	const PI_LINE2_IN = [224 / PI_TOTAL_VH, 272 / PI_TOTAL_VH];
 	const PI_ALL_OUT = [332 / PI_TOTAL_VH, 1];
 
-	function drawPortfolioIntro(progress) {
+	function drawPortfolioIntro(progress, slideT) {
 		state.portfolioIntroProgress = progress;
-		const bgIn = windowProgress(progress, PI_BG_IN);
 		const allOut = windowProgress(progress, PI_ALL_OUT);
-		if (state.portfolioIntroBgEl) {
-			state.portfolioIntroBgEl.style.opacity = String(bgIn * (1 - allOut));
-		}
+		// The whole pin fades as a unit at entry/exit (slideT*(1-allOut) is 1
+		// throughout the main content hold, so it's a no-op there -- this is
+		// what used to be the bg element's own opacity, and what line2 used to
+		// share via its own "* (1-allOut)" term; both are now free rides on the
+		// pin's opacity instead of being multiplied in twice).
+		setPinOpacity(state.portfolioIntroPinEl, slideT * (1 - allOut));
 		if (state.portfolioIntroLine1El) {
 			const inAmt = windowProgress(progress, PI_LINE1_IN);
 			const outAmt = windowProgress(progress, PI_LINE1_OUT);
@@ -6124,7 +6276,7 @@
 		}
 		if (state.portfolioIntroLine2El) {
 			const inAmt = windowProgress(progress, PI_LINE2_IN);
-			state.portfolioIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+			state.portfolioIntroLine2El.style.opacity = String(inAmt);
 		}
 	}
 
@@ -6134,19 +6286,25 @@
 			return;
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
-			drawPortfolioIntro(1);
+			drawPortfolioIntro(1, 1);
 			return;
 		}
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			end: "bottom bottom",
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawPortfolioIntro(self.progress),
-			onRefresh: (self) => drawPortfolioIntro(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawPortfolioIntro(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawPortfolioIntro(progress, slideT);
+			}
 		});
-		drawPortfolioIntro(0);
+		drawPortfolioIntro(0, 0);
 	}
 
 	function initPortfolioIntroSection() {
@@ -6154,7 +6312,7 @@
 		if (!section) {
 			return;
 		}
-		state.portfolioIntroBgEl = document.querySelector("#tif-tgif-portfolio .portfolio-intro__bg");
+		state.portfolioIntroPinEl = document.querySelector("#tif-tgif-portfolio .portfolio-intro__pin");
 		state.portfolioIntroLine1El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--1");
 		state.portfolioIntroLine2El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--2");
 		setupPortfolioIntroScroll();
@@ -6167,11 +6325,10 @@
 	// linearly interpolated between them (easeInOut over the scroll range).
 	const TIMELINE_TARGET_SCENARIO = "2040A";
 	// Scroll windows as fractions of the #timeline scroll range (section ~384vh).
-	// Fades .timeline-layout in over the first ~38vh, once it's already sticky-
-	// locked at top:0 (the section-to-section slide happens before this
-	// ScrollTrigger's progress 0), so #timeline appears via crossfade rather
-	// than visibly sliding up into place.
-	const TL_OPEN_IN = [0, 0.1];
+	// .timeline-layout's fade-in (via slideT in drawTimeline) now runs during
+	// the section-to-section slide itself, so it's already fully visible by
+	// the time #timeline locks at top:0, instead of only starting the fade
+	// there.
 	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~144vh of 256vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
@@ -6473,17 +6630,21 @@
 			axisTopEnd
 		};
 
-		drawTimeline(state.timelineProgress || 0);
+		drawTimeline(state.timelineProgress || 0, state.timelineSlideT ?? 0);
 	}
 
 	// Drive the whole section from one scroll clock: crossfade the copy beats,
 	// slide the year strip 2025 -> 2040 through the fixed box, and interpolate the
 	// Sankey geometry between the 2025 and 2040A layouts (easeInOut).
-	function drawTimeline(progress) {
+	function drawTimeline(progress, slideT) {
 		state.timelineProgress = progress;
+		state.timelineSlideT = slideT;
 
 		if (state.timelineLayoutEl) {
-			state.timelineLayoutEl.style.opacity = String(windowProgress(progress, TL_OPEN_IN));
+			// Layout is this section's "first visible thing": driven by slideT
+			// (fully in by the time the panel locks) instead of TL_OPEN_IN's old
+			// [0, 0.1] fade-in that only started once already locked.
+			setPinOpacity(state.timelineLayoutEl, slideT);
 		}
 
 		if (state.timelineCloseEl) {
@@ -6556,12 +6717,25 @@
 		}
 	}
 
-	// Fades the pinned timeline content out (still pinned) over the final 40vh
-	// before the section unpins, so #timeline is fully invisible before
-	// .portfolio-intro's own crossfade begins.
+	// Fades the pinned timeline content out over the final 40vh, so #timeline
+	// is fully invisible before .portfolio-intro's own crossfade begins. This
+	// is a *separate* ScrollTrigger from drawTimeline's, so its own progress
+	// is 0 both "within #timeline but before this fade window" (opacity should
+	// be 1) AND "nowhere near #timeline at all" (opacity should be 0) --
+	// indistinguishable from this trigger's own progress alone. onUpdate never
+	// exposes that ambiguity (this only fires once actually scrolling through
+	// the fade window, by which point drawTimeline's own progress is already
+	// settled at 1), but onRefresh fires unconditionally on every global
+	// ScrollTrigger.refresh() -- including the several that happen in quick
+	// succession right after page load, while still scrolled at the very top.
+	// Multiplying against drawTimeline's own last-computed slideT (rather than
+	// assuming a base of 1) means this can only ever reduce visibility, never
+	// revive it independent of whether the entry trigger thinks it should show
+	// at all -- otherwise an early onRefresh here could stomp .timeline-layout
+	// back to fully opaque while still up in the hero section.
 	function drawTimelineFade(progress) {
 		if (state.timelineLayoutEl) {
-			state.timelineLayoutEl.style.opacity = String(1 - progress);
+			setPinOpacity(state.timelineLayoutEl, (state.timelineSlideT ?? 0) * (1 - progress));
 		}
 	}
 
@@ -6571,7 +6745,7 @@
 			return;
 		}
 		if (!window.gsap || !window.ScrollTrigger) {
-			drawTimeline(1);
+			drawTimeline(1, 1);
 			drawTimelineFade(1);
 			return;
 		}
@@ -6584,7 +6758,7 @@
 
 		ScrollTrigger.create({
 			trigger: section,
-			start: "top top",
+			start: "top bottom",
 			// Finish the scrub 92vh before the section's actual (grown) bottom, so
 			// the scrub timeline itself is unchanged and the extra 92vh becomes a
 			// held final state (60vh static hold + 32vh fade-out below) before the
@@ -6592,10 +6766,16 @@
 			end: () => `bottom bottom+=${vh(0.92)}`,
 			scrub: 0.5,
 			invalidateOnRefresh: true,
-			onUpdate: (self) => drawTimeline(self.progress),
-			onRefresh: (self) => drawTimeline(self.progress)
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimeline(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimeline(progress, slideT);
+			}
 		});
-		drawTimeline(0);
+		drawTimeline(0, 0);
 
 		// After the 60vh static hold, scrub #timeline's own fade-out over the
 		// final 32vh before the section unpins into the portfolio section.

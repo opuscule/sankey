@@ -55,6 +55,7 @@
 
 			:root {
 				color-scheme: light;
+				--color-white: #FFFFFF;
 				--color-hero-highlight: #F2FB37;
 				--max-copy-width: 615px;
 				--color-final-service: #F27A83;
@@ -116,7 +117,7 @@
 			#hero-intro {
 				background:
 					linear-gradient(180deg, var(--color-dark) 0%, rgb(0 0 0 / 0) 70%);
-				color: var(--color-hero-highlight);
+				color: var(--color-white);
 				font-size: 20px;
 				position: relative;
 			}
@@ -171,7 +172,7 @@
 			}
 
 			.hero-headline {
-				color: var(--color-hero-highlight);
+				color: var(--color-white);
 				font-family: "Helvetica Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
 				font-size: clamp(2.2rem, 9vw, 8.1rem);
 				font-weight: 700;
@@ -462,7 +463,10 @@
 				position: absolute;
 				inset: 0;
 				background: var(--color-final-service);
-				opacity: 0;
+				/* Entry/exit fade lives on .timeline-intro__pin's own opacity now
+				   (see drawTimelineIntro in main.js) -- this stays fully opaque
+				   whenever its ancestor pin is visible at all. */
+				opacity: 1;
 				z-index: 0;
 			}
 
@@ -470,6 +474,7 @@
 				display: grid;
 				position: relative;
 				z-index: 1;
+				align-items: center;
 			}
 
 			.timeline-intro__line {
@@ -850,7 +855,7 @@
 			   per-section. */
 			.viewport-frame {
 				position: fixed;
-				inset: -10px;
+				inset: -25px;
 				border: 3px solid #fff;
 				pointer-events: none;
 				z-index: 9999;
@@ -892,7 +897,9 @@
 				position: absolute;
 				inset: 0;
 				background: var(--color-device);
-				opacity: 0;
+				/* Entry/exit fade lives on .portfolio-intro__pin's own opacity now
+				   (see drawPortfolioIntro in main.js). */
+				opacity: 1;
 				z-index: 0;
 			}
 
@@ -1344,9 +1351,16 @@
 
 			/* Night-sky transition: hands off the persistent #site-bg starfield to a
 			   section-local canvas that brightens toward the video's real opening
-			   frame, with 4 headline lines crossfading over the top. */
+			   frame, with 4 headline lines crossfading over the top, then hard-cuts
+			   into the closing video within the same pin. 1016vh = phase 1 (608vh,
+			   through the frame crossfade) + phase 2 (360vh, video scrub) + a 48vh
+			   exit fade (the sky canvas has no opacity of its own, so the pin needs
+			   an explicit fade-out before #acknowledgements-citations) -- keep in
+			   sync with CT_PHASE1_VH/CT_VIDEO_VH/CT_EXIT_VH in main.js. Mobile
+			   override below drops this back to 720vh (phase 1 only, no video, no
+			   exit fade -- mobile keeps this pin sticky rather than fixed). */
 			.closing-transition {
-				min-height: 720vh;
+				min-height: 1016vh;
 				position: relative;
 			}
 
@@ -1375,6 +1389,33 @@
 			.closing-transition__frame {
 				opacity: 0;
 				z-index: 1;
+			}
+
+			.closing-transition__video {
+				background: var(--color-dark);
+				height: 100%;
+				inset: 0;
+				object-fit: cover;
+				opacity: 0;
+				position: absolute;
+				visibility: hidden;
+				width: 100%;
+				z-index: 3;
+			}
+
+			/* Hard cut, no crossfade: toggled once by main.js at the exact scroll
+			   position where the frame image reaches full opacity (matches the
+			   video's real frame 0). */
+			.closing-transition__pin.is-video-phase .closing-transition__sky,
+			.closing-transition__pin.is-video-phase .closing-transition__frame,
+			.closing-transition__pin.is-video-phase .closing-transition__stack {
+				opacity: 0;
+				visibility: hidden;
+			}
+
+			.closing-transition__pin.is-video-phase .closing-transition__video {
+				opacity: 1;
+				visibility: visible;
 			}
 
 			.closing-transition__stack {
@@ -1408,25 +1449,6 @@
 				font-weight: 400;
 				line-height: 1.15;
 				max-width: var(--max-copy-width);
-			}
-
-			.acknowledgements-video {
-				min-height: 360vh;
-			}
-
-			.acknowledgements-video__sticky {
-				background: var(--color-dark);
-				height: 100vh;
-				overflow: hidden;
-				position: sticky;
-				top: 0;
-			}
-
-			.acknowledgements-video__el {
-				display: block;
-				height: 100%;
-				object-fit: cover;
-				width: 100%;
 			}
 
 			.acknowledgements-intro {
@@ -1784,7 +1806,9 @@
 				position: absolute;
 				inset: 0;
 				background: var(--color-final-energy);
-				opacity: 0;
+				/* Entry/exit fade lives on .impacts-intro__pin's own opacity now
+				   (see drawImpactsIntro in main.js). */
+				opacity: 1;
 				z-index: 0;
 			}
 
@@ -2517,6 +2541,46 @@
 				background: var(--color-nav-ack);
 			}
 
+			/* Fixed pins (desktop only; gated by the "pins-fixed" class main.js adds
+			   once it's confirmed GSAP/ScrollTrigger are available and the user
+			   hasn't requested reduced motion -- see PINS_FIXED in main.js). Each of
+			   these pinned panels used to be its own position:sticky box in normal
+			   document flow, so the browser had to physically slide it up into its
+			   locked position and back out again at every section boundary. Fixed
+			   removes that motion entirely: every panel is mounted at the same
+			   on-screen rect for the whole page and only its opacity/visibility
+			   changes (driven by main.js via setPinOpacity). Left/right (not
+			   width:100vw, which would include the scrollbar gutter and shift
+			   every centered layout) replace the width a sticky box would have
+			   gotten for free from being a normal block-level flow child. */
+			@media (min-width: 901px) {
+				.pins-fixed .sankey-layout,
+				.pins-fixed .timeline-intro__pin,
+				.pins-fixed .timeline-layout,
+				.pins-fixed .portfolio-intro__pin,
+				.pins-fixed .themes-layout,
+				.pins-fixed .impacts-intro__pin,
+				.pins-fixed .impacts-layout,
+				.pins-fixed .closing-transition__pin {
+					position: fixed;
+					top: 0;
+					left: 0;
+					right: 0;
+					opacity: 0;
+					visibility: hidden;
+				}
+
+				/* Sticky-inside-sticky nests: both were already exactly the size of
+				   their 100vh sticky parent, so the nested sticky was a no-op. With a
+				   fixed parent it would otherwise be resolving against a box that
+				   never scrolls -- make them ordinary flow children instead. */
+				.pins-fixed #full-sankey,
+				.pins-fixed .timeline-visual {
+					position: relative;
+					top: auto;
+				}
+			}
+
 			@media (max-width: 900px) {
 				#tif-tgif-portfolio {
 					padding-top: 5.2rem;
@@ -2543,6 +2607,7 @@
 					display: flex;
 					flex-direction: column;
 					gap: 1.5rem;
+					align-items: center;
 				}
 
 				.portfolio-intro__line {
@@ -2631,6 +2696,7 @@
 					display: flex;
 					flex-direction: column;
 					gap: 1.5rem;
+					align-items: center;
 				}
 
 				.impacts-intro__line {
@@ -2639,13 +2705,12 @@
 					position: static;
 				}
 
-				.acknowledgements-video {
-					min-height: auto;
+				.closing-transition {
+					min-height: 720vh;
 				}
 
-				.acknowledgements-video__sticky {
-					height: 52vh;
-					position: static;
+				.closing-transition__video {
+					display: none;
 				}
 
 				.acknowledgements-intro {
