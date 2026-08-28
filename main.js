@@ -185,7 +185,7 @@
 			phase: "explore",
 			start: 96,
 			end: 100,
-			copy: "<strong>Select any node</strong> for yourself to see the amount of emissions it contributes today and how it connects to others."
+			copy: "<strong>Select any node</strong> in the visualization to explore its emissions today and see how it connects to the wider system.</strong>"
 		}
 	];
 
@@ -508,6 +508,7 @@
 		selectedNodeId: null,
 		rendered: null,
 		sankeyInteractive: false,
+		scanLinePlayed: false,
 		portfolioRendered: null,
 		scenarioRendered: null,
 		impactsRendered: null,
@@ -981,9 +982,9 @@
 
 	// Boundaries used for the bottom-nav scroll-spy active state.
 	const NAV_GROUPS = [
-		{ group: "global-emissions", startSelector: "#global-emissions-picture", endSelector: "#tif-tgif-portfolio" },
-		{ group: "portfolio", startSelector: "#tif-tgif-portfolio", endSelector: "#climate-impacts" },
-		{ group: "climate-impacts", startSelector: "#climate-impacts", endSelector: "#conclusion" },
+		{ group: "global-emissions", startSelector: "#global-emissions-picture", endSelector: "#tif-tigf-portfolio" },
+		{ group: "portfolio", startSelector: "#tif-tigf-portfolio", endSelector: "#technology-impacts" },
+		{ group: "technology-impacts", startSelector: "#technology-impacts", endSelector: "#conclusion" },
 		{ group: "conclusion", startSelector: "#conclusion", endSelector: null }
 	];
 
@@ -1034,7 +1035,7 @@
 
 	function setupBottomStickyNav() {
 		const nav = document.querySelector(".bottom-sticky-nav");
-		const portfolioSection = document.querySelector("#tif-tgif-portfolio");
+		const portfolioSection = document.querySelector("#tif-tigf-portfolio");
 		if (!nav || !portfolioSection) {
 			return;
 		}
@@ -3665,7 +3666,7 @@
 
 	// Gradient stops the canvas interpolates between as progress goes 0 -> 1.
 	// FROM matches night-sky-bg-static.html's gradient exactly (the persistent
-	// #site-bg starfield visible through #climate-impacts) so the hand-off is
+	// #site-bg starfield visible through #technology-impacts) so the hand-off is
 	// invisible. TO is sampled directly from frame 0 of closing-video-opt-v1.mp4
 	// so the tail crossfade into closing-transition-frame.jpg is seamless.
 	const CT_SKY_FROM = [[0, [4, 5, 10]], [0.55, [5, 5, 6]], [1, [11, 16, 32]]];
@@ -4403,6 +4404,28 @@
 		return { nodes, links, scenario };
 	}
 
+	function playSankeyScanLine() {
+		const scanLine = document.querySelector(".sankey-scan-line");
+		const container = document.getElementById("full-sankey");
+		if (!scanLine || !container || !chart) {
+			return;
+		}
+
+		const containerRect = container.getBoundingClientRect();
+		const chartRect = chart.getBoundingClientRect();
+		const height = chartRect.height * 1.1;
+		const top = chartRect.top - containerRect.top - (height - chartRect.height) / 2;
+		const left = chartRect.left - containerRect.left;
+		const travel = chartRect.width;
+
+		gsap.set(scanLine, { top, left, height, x: 0, opacity: 0 });
+
+		gsap.timeline()
+			.to(scanLine, { opacity: 1, duration: 0.15 })
+			.to(scanLine, { x: travel, duration: 1, ease: "power2.inOut" })
+			.to(scanLine, { opacity: 0, duration: 0.2 });
+	}
+
 	function render() {
 		if (state.rendered?.layoutScrollTrigger) {
 			state.rendered.layoutScrollTrigger.kill();
@@ -4811,27 +4834,17 @@
 
 		// Horizontal stage headers over the chart columns (visible from the
 		// packed state onward, per the mock-up).
-		const columnCenter = (nodes) => {
-			const x0 = d3.min(nodes, (node) => node.x0);
-			const x1 = d3.max(nodes, (node) => node.x1);
-			return (x0 + x1) / 2;
-		};
-		const expandedColumns = Array.from(d3.group(expandedGraph.nodes, (node) => node.stage).entries())
-			.filter(([stage]) => STAGE_META[stage])
-			.map(([stage, nodes]) => ({ stage, cx: columnCenter(nodes) }));
-
-		const headerGroup = svg.append("g").attr("class", "sankey-stage-headers").style("opacity", 0);
+		const headerGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		const headerY = sankeyExtentTop - 26;
-		expandedColumns.forEach((col) => {
-			headerGroup
-				.append("text")
-				.attr("class", "stage-header")
-				.attr("x", Math.max(col.cx, 58))
-				.attr("y", headerY)
-				.attr("text-anchor", "middle")
-				.attr("fill", `var(${stageColorVars[col.stage]})`)
-				.text(STAGE_META[col.stage].label);
-		});
+		const headerSelection = renderStageHeaders(headerGroup, expandedGraph, headerY).style("opacity", 0);
+
+		// Column centers in the "detail" (cars-example zoom) layout, for stages
+		// 1-3 -- lets beat-10/11 slide headers to track their re-spaced columns.
+		const detailCxByStage = new Map(
+			Array.from(stageXBounds(detailGraph).entries())
+				.filter(([stage]) => STAGE_META[stage])
+				.map(([stage, bounds]) => [stage, (bounds.x0 + bounds.x1) / 2])
+		);
 
 		// Scene 9 ("...sum to global emissions"): a "54 Gt" reference caliper
 		// 180px right of the isolated stage-1 column's visible edge -- a
@@ -4888,6 +4901,11 @@
 				// Prefetch the chain data so the first node click can usually
 				// isolate the full chain immediately (still lazy: not on page load).
 				ensureNodeDetails();
+
+				if (!state.scanLinePlayed) {
+					state.scanLinePlayed = true;
+					playSankeyScanLine();
+				}
 			}
 
 			if (!enabled && state.selectedNodeId) {
@@ -5142,11 +5160,11 @@
 			// ---------------- real Sankey ----------------
 			const stageNodeOpacity = [0, 0, 0, 0, 0, 0, 0, 0];
 			const stageLabelOpacity = [0, 0, 0, 0, 0, 0, 0, 0];
+			const stageHeaderOpacity = [0, 0, 0, 0, 0, 0, 0, 0];
 			let layoutPair = "packed-expanded";
 			let layoutT = 0;
 			let forceStartAnchor = false;
 			let linkOpacityFn = () => 0;
-			let headerOpacity = 0;
 			let axisOpacity = 0;
 			let interactiveNow = false;
 
@@ -5163,27 +5181,33 @@
 					LINK_PEAK_OPACITY *
 					ribbonFactor(link.source.stage, tUnstack) *
 					ribbonFactor(link.target.stage, tUnstack);
-				headerOpacity = clamp01((tUnstack - 0.55) / 0.4);
+				{
+					const headerFade = clamp01((tUnstack - 0.55) / 0.4);
+					for (let s = 1; s <= 7; s += 1) {
+						stageHeaderOpacity[s] = headerFade;
+					}
+				}
 			} else if (p < B["lens-focus"].start) {
 				// Scene 8: vertical expand; Final Service labels at the tail.
 				layoutT = smoothstep(clamp01(tExpand / 0.85));
 				for (let s = 1; s <= 7; s += 1) {
 					stageNodeOpacity[s] = 1;
+					stageHeaderOpacity[s] = 1;
 				}
 				stageLabelOpacity[1] = clamp01((tExpand - 0.86) / 0.14);
 				linkOpacityFn = () => LINK_PEAK_OPACITY;
-				headerOpacity = 1;
 			} else if (p < B["cars-example"].start) {
 				// Scene 9: everything but the Final Service lens fades away.
 				layoutT = 1;
 				const focus = smoothstep(clamp01(tFocus / 0.4));
 				stageNodeOpacity[1] = 1;
 				stageLabelOpacity[1] = 1;
+				stageHeaderOpacity[1] = 1;
 				for (let s = 2; s <= 7; s += 1) {
 					stageNodeOpacity[s] = 1 - focus;
+					stageHeaderOpacity[s] = 1 - focus;
 				}
 				linkOpacityFn = () => LINK_PEAK_OPACITY * (1 - focus);
-				headerOpacity = 1 - focus;
 				axisOpacity = focus;
 			} else if (p < B.explore.start) {
 				// Scene 10: zoom to stages 1-3, highlight the Passenger transport chain.
@@ -5197,8 +5221,10 @@
 				stageLabelOpacity[1] = 1;
 				stageLabelOpacity[2] = zoom;
 				stageLabelOpacity[3] = zoom;
+				stageHeaderOpacity[1] = 1;
+				stageHeaderOpacity[2] = zoom;
+				stageHeaderOpacity[3] = zoom;
 				linkOpacityFn = (link) => carsLinkOpacity(link, zoom);
-				headerOpacity = 0;
 			} else {
 				// Scene 11: zoom back out to the full interactive chart.
 				const unzoom = smoothstep(clamp01(tExplore / 0.4));
@@ -5209,9 +5235,9 @@
 				for (let s = 1; s <= 7; s += 1) {
 					stageNodeOpacity[s] = s <= 3 ? 1 : unzoom;
 					stageLabelOpacity[s] = s <= 3 ? 1 : lateLabels;
+					stageHeaderOpacity[s] = s <= 3 ? 1 : unzoom;
 				}
 				linkOpacityFn = (link) => lerp(carsLinkOpacity(link, 1), FAINT_LINK_OPACITY, unzoom);
-				headerOpacity = unzoom;
 				interactiveNow = p >= INTERACTION_START;
 			}
 
@@ -5237,7 +5263,10 @@
 				linkPaths.style("opacity", linkOpacityFn);
 			}
 
-			headerGroup.style("opacity", headerOpacity);
+			const headerZoomT = layoutPair === "expanded-detail" ? layoutT : 0;
+			headerSelection
+				.style("opacity", (d) => stageHeaderOpacity[d.stage] ?? 0)
+				.attr("x", (d) => Math.max(lerp(d.cx, detailCxByStage.get(d.stage) ?? d.cx, headerZoomT), 58));
 			lensAxisGroup.style("opacity", axisOpacity);
 			setSankeyInteraction(interactiveNow);
 		};
@@ -6283,7 +6312,7 @@
 		setupTimelineIntroScroll();
 	}
 
-	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tgif-portfolio) --
+	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tigf-portfolio) --
 	// Sequential windows, fractions of a 412vh scroll range (+80vh pinned viewport):
 	// bg fade-in 96vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
 	// hold 60vh, then line-2 + bg fade out together over the final 80vh.
@@ -6314,7 +6343,7 @@
 	}
 
 	function setupPortfolioIntroScroll() {
-		const section = document.getElementById("tif-tgif-portfolio");
+		const section = document.getElementById("tif-tigf-portfolio");
 		if (!section) {
 			return;
 		}
@@ -6341,13 +6370,13 @@
 	}
 
 	function initPortfolioIntroSection() {
-		const section = document.getElementById("tif-tgif-portfolio");
+		const section = document.getElementById("tif-tigf-portfolio");
 		if (!section) {
 			return;
 		}
-		state.portfolioIntroPinEl = document.querySelector("#tif-tgif-portfolio .portfolio-intro__pin");
-		state.portfolioIntroLine1El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--1");
-		state.portfolioIntroLine2El = document.querySelector("#tif-tgif-portfolio .portfolio-intro__line--2");
+		state.portfolioIntroPinEl = document.querySelector("#tif-tigf-portfolio .portfolio-intro__pin");
+		state.portfolioIntroLine1El = document.querySelector("#tif-tigf-portfolio .portfolio-intro__line--1");
+		state.portfolioIntroLine2El = document.querySelector("#tif-tigf-portfolio .portfolio-intro__line--2");
 		setupPortfolioIntroScroll();
 	}
 
