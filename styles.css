@@ -1383,6 +1383,11 @@
 
 			#themes-sankey-chart .sankey-node text {
 				fill: #fff;
+				opacity: 0.6;
+			}
+			#themes-sankey-chart .sankey-node.is-selected text {
+				fill: #fff;
+				opacity: 1;
 			}
 
 			.section-placeholder {
@@ -2247,8 +2252,11 @@
 			.impacts-layout__visual-shell {
 				display: grid;
 				gap: 1.5rem;
+				height: 100%;
 				justify-items: stretch;
+				min-height: 0;
 				width: min(100%, 1100px);
+				align-items: center;
 			}
 
 			#impacts-sankey-chart {

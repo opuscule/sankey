@@ -1035,8 +1035,8 @@
 
 	function setupBottomStickyNav() {
 		const nav = document.querySelector(".bottom-sticky-nav");
-		const portfolioSection = document.querySelector("#tif-tigf-portfolio");
-		if (!nav || !portfolioSection) {
+		const heroCopyNav = document.querySelector(".hero-copy-nav");
+		if (!nav || !heroCopyNav) {
 			return;
 		}
 
@@ -1046,7 +1046,7 @@
 		}
 
 		ScrollTrigger.create({
-			trigger: portfolioSection,
+			trigger: heroCopyNav,
 			start: "top center",
 			onEnter: () => nav.classList.add("is-visible"),
 			onLeaveBack: () => nav.classList.remove("is-visible")
@@ -2443,7 +2443,7 @@
 		);
 		const bandTop = gtToY(layoutGt);
 
-		const layoutGraph = (nodes, links, spread) => {
+		const layoutGraph = (nodes, links, spread, nodeOrder) => {
 			const graph = {
 				nodes: nodes.map((node) => ({ ...node })),
 				links: links.map((link) => ({
@@ -2451,7 +2451,7 @@
 					avoided: avoidedMap.get(`${link.source}|${link.target}`) || 0
 				}))
 			};
-			d3
+			const sankeyLayout = d3
 				.sankey()
 				.nodeId((d) => d.id)
 				.nodeWidth(20)
@@ -2461,7 +2461,17 @@
 					[28, bandTop],
 					[width - 28, axisBottom]
 				])
-				.iterations(64)(graph);
+				.iterations(64);
+			if (nodeOrder) {
+				// Pin this layout's per-stage node order to a reference layout's
+				// (see fullOrderMap below) so two independently-laid-out graphs never
+				// disagree on which sibling sits above which -- otherwise scroll-lerping
+				// a node's y between the two layouts can cross it past its neighbor.
+				sankeyLayout.nodeSort(
+					(a, b) => (nodeOrder.get(a.id) ?? 999) - (nodeOrder.get(b.id) ?? 999)
+				);
+			}
+			sankeyLayout(graph);
 			if (spread) {
 				spreadStageHeights(graph, bandTop, axisBottom);
 			}
@@ -2472,6 +2482,16 @@
 		// Matches renderImpactsChart: the full graph gets stage-height spreading,
 		// the carved subgraph does not.
 		const fullGraph = layoutGraph(built.nodes, built.links, true);
+
+		const fullOrderMap = new Map();
+		d3.group(fullGraph.nodes, (node) => node.stage).forEach((stageNodes) => {
+			stageNodes
+				.slice()
+				.sort((a, b) => a.y0 - b.y0)
+				.forEach((node, idx) => {
+					fullOrderMap.set(node.id, idx);
+				});
+		});
 
 		const subLinks = built.links.filter((link) =>
 			avoidedMap.has(`${link.source}|${link.target}`)
@@ -2485,7 +2505,8 @@
 			? layoutGraph(
 					built.nodes.filter((node) => subNodeIds.has(node.id)),
 					subLinks,
-					false
+					false,
+					fullOrderMap
 			  )
 			: fullGraph;
 
