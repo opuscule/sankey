@@ -1,8 +1,8 @@
 (function () {
-	const initPath = "init-08312026.json";
-	const baselinesPath = "baselines-08312026.json";
-	const nodeDetailsPath = "node_details-08312026.json";
-	const avoidedPath = "avoided-08312026.json";
+	const initPath = "init-09012026.json";
+	const baselinesPath = "baselines-09012026.json";
+	const nodeDetailsPath = "node_details-09012026.json";
+	const avoidedPath = "avoided-09012026.json";
 	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
@@ -28,6 +28,7 @@
 	let narrativeExiting = false;
 	let impactsIsInteractive = false;
 	let impactsExiting = false;
+	let chapterAnchorLinksInitialized = false;
 	function updateViewportFrame() {
 		if (!viewportFrame) {
 			viewportFrame = document.querySelector(".viewport-frame");
@@ -976,6 +977,7 @@
 		initTimelineSection();
 		initPortfolioIntroSection();
 		setupBottomStickyNav();
+		setupChapterAnchorLinks();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
@@ -987,6 +989,74 @@
 		{ group: "technology-impacts", startSelector: "#technology-impacts", endSelector: "#conclusion" },
 		{ group: "conclusion", startSelector: "#conclusion", endSelector: null }
 	];
+
+	const CHAPTER_SCROLL_TARGETS = {
+		"#global-emissions-picture": { selector: "#sankey-narrative", progress: 0.03 },
+		"#tif-tigf-portfolio": { selector: "#portfolio-themes .themes-layout" },
+		"#technology-impacts": { selector: ".impacts-walk" },
+		"#conclusion": { selector: "#conclusion .acknowledgements-intro__body" }
+	};
+
+	function getDocumentY(element) {
+		return window.scrollY + element.getBoundingClientRect().top;
+	}
+
+	function getChapterScrollY(hash) {
+		const config = CHAPTER_SCROLL_TARGETS[hash];
+		const target = config ? document.querySelector(config.selector) : document.querySelector(hash);
+		if (!target) {
+			return null;
+		}
+
+		if (typeof config?.progress === "number") {
+			const scrollRange = Math.max(target.offsetHeight - window.innerHeight, 0);
+			return getDocumentY(target) + scrollRange * config.progress;
+		}
+
+		return getDocumentY(target) - window.innerHeight * 0.16;
+	}
+
+	function scrollToChapter(hash, options = {}) {
+		const top = getChapterScrollY(hash);
+		if (top === null) {
+			return false;
+		}
+
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const behavior = options.behavior || (reduceMotion ? "auto" : "smooth");
+		window.scrollTo({ top: Math.max(0, top), behavior });
+
+		if (options.updateHash !== false && history.pushState) {
+			history.pushState(null, "", hash);
+		}
+
+		return true;
+	}
+
+	function setupChapterAnchorLinks() {
+		if (chapterAnchorLinksInitialized) {
+			return;
+		}
+		chapterAnchorLinksInitialized = true;
+
+		document.querySelectorAll('a[href^="#"]').forEach((link) => {
+			link.addEventListener("click", (event) => {
+				const hash = link.getAttribute("href");
+				if (!hash || !CHAPTER_SCROLL_TARGETS[hash]) {
+					return;
+				}
+
+				event.preventDefault();
+				scrollToChapter(hash);
+			});
+		});
+
+		if (CHAPTER_SCROLL_TARGETS[window.location.hash]) {
+			requestAnimationFrame(() => {
+				scrollToChapter(window.location.hash, { behavior: "auto", updateHash: false });
+			});
+		}
+	}
 
 	// Cached per-group link widths (px) and each group's last-known scroll progress (0-1).
 	const navProgressWidths = {};
@@ -1035,22 +1105,19 @@
 
 	function setupBottomStickyNav() {
 		const nav = document.querySelector(".bottom-sticky-nav");
-		const heroCopyNav = document.querySelector(".hero-copy-nav");
-		if (!nav || !heroCopyNav) {
+		if (!nav) {
 			return;
 		}
 
+		// Visibility itself is driven by drawHeroCopyIntro's own scroll progress
+		// (see HCI_NAV_VISIBLE_AT) rather than a separate ScrollTrigger here, since
+		// .hero-copy-nav is grid-stacked at the same on-screen position as the
+		// other crossfading panels -- a position-based trigger on it would fire as
+		// soon as the pin engages, not once the last chapter card has faded in.
 		if (!window.gsap || !window.ScrollTrigger) {
 			nav.classList.add("is-visible");
 			return;
 		}
-
-		ScrollTrigger.create({
-			trigger: heroCopyNav,
-			start: "top center",
-			onEnter: () => nav.classList.add("is-visible"),
-			onLeaveBack: () => nav.classList.remove("is-visible")
-		});
 
 		measureNavProgressGeometry();
 
@@ -2038,6 +2105,130 @@
 	// selected it narrows to that company's connected subgraph (only edges with
 	// avoided-emissions data) and carves the avoided amount out of each node and
 	// ribbon as an empty, 1px-bordered region (remaining flow stays filled below).
+	// Shared node/link layout for the impacts sankey: builds a graph clone from
+	// `nodes`/`links`, wires in each link's avoided value from `avoidedMap`, and
+	// lays it out with the params every impacts-chart renderer uses. `nodeOrder`
+	// (id -> index) pins per-stage sibling order to a reference layout (see
+	// buildFullOrderMap) so a company's carved subgraph never disagrees with the
+	// full graph on which sibling sits above which -- used by both the
+	// click-driven renderImpactsChart and the scroll-driven renderImpactsWalkChart
+	// so the two can't drift apart on layout behavior.
+	// d3-sankey computes one global value-to-pixel scale ("ky") per layout call,
+	// sized so that column with the largest total value fills the extent -- and
+	// bakes each node's height as exactly `node.value * ky` (never touched again
+	// by the relaxation passes). That ky is recoverable from any positive-value
+	// node after layout, and is what lets two independently-laid-out graphs be
+	// compared: pass one graph's ky to another as `targetKy` (see below) to make
+	// them share a scale.
+	function sankeyValueScale(graph) {
+		const scaledNode = graph.nodes.find((node) => node.value > 0);
+		return scaledNode ? (scaledNode.y1 - scaledNode.y0) / scaledNode.value : 0;
+	}
+
+	function layoutStageGraph(
+		nodes,
+		links,
+		{
+			width,
+			bandTop,
+			axisBottom,
+			scaleFactor,
+			spread,
+			chartEl,
+			nodeOrder,
+			avoidedMap,
+			targetKy,
+			worldValueById
+		}
+	) {
+		const graph = {
+			nodes: nodes.map((node) => {
+				const clone = { ...node };
+				// A carved subgraph only keeps the edges one company's chain touches,
+				// so left to its own devices d3-sankey would size a node by just the
+				// value flowing over those retained edges -- e.g. "Commercial and
+				// public services" would read as ~5,093 for a company touching every
+				// pathway into it but ~837 for one touching only two. Pinning
+				// `fixedValue` to the node's true world total (from the full,
+				// uncarved graph) makes the same real-world node always occupy the
+				// same height, so only the avoided/remaining split -- not the node's
+				// own size -- varies by company.
+				if (worldValueById && worldValueById.has(node.id)) {
+					clone.fixedValue = worldValueById.get(node.id);
+				}
+				return clone;
+			}),
+			links: links.map((link) => ({
+				...link,
+				avoided: avoidedMap ? avoidedMap.get(`${link.source}|${link.target}`) || 0 : 0
+			}))
+		};
+		const nodePadding = Math.max(4, 9 * scaleFactor);
+		const buildSankeyLayout = (top, bottom) => {
+			const layout = d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(nodePadding)
+				.nodeAlign(d3.sankeyJustify)
+				.extent([
+					[28, top],
+					[width - 28, bottom]
+				])
+				.iterations(64);
+			if (nodeOrder) {
+				layout.nodeSort((a, b) => (nodeOrder.get(a.id) ?? 999) - (nodeOrder.get(b.id) ?? 999));
+			}
+			return layout;
+		};
+
+		buildSankeyLayout(bandTop, axisBottom)(graph);
+
+		// A carved single-company subgraph only contains that company's own chain,
+		// so d3-sankey's automatic per-graph normalization would otherwise size the
+		// very same real-world node very differently across companies, depending on
+		// how much of the world's flow that company's chain happens to touch. When
+		// the caller hands us the full graph's scale, re-run the layout at a
+		// corrected extent height so this subgraph shares it instead, then centre
+		// the (typically smaller) result within the original band.
+		if (targetKy) {
+			const currentKy = sankeyValueScale(graph);
+			if (currentKy > 0 && Math.abs(currentKy - targetKy) > 1e-9) {
+				let neededHeight = 0;
+				d3.group(graph.nodes, (node) => node.layer).forEach((columnNodes) => {
+					const columnValue = d3.sum(columnNodes, (node) => node.value);
+					const needed = targetKy * columnValue + (columnNodes.length - 1) * nodePadding;
+					neededHeight = Math.max(neededHeight, needed);
+				});
+				const bandHeight = axisBottom - bandTop;
+				neededHeight = Math.min(neededHeight, bandHeight);
+				const scaledTop = bandTop + (bandHeight - neededHeight) / 2;
+				buildSankeyLayout(scaledTop, scaledTop + neededHeight)(graph);
+			}
+		}
+
+		if (spread) {
+			spreadStageHeights(graph, bandTop, axisBottom);
+		}
+		spreadNodesForLabels(chartEl, graph, bandTop, axisBottom + 8);
+		return graph;
+	}
+
+	// Per-stage top-to-bottom order (id -> index) of a laid-out graph, used to
+	// pin a second, independently-laid-out graph's sibling order to this one.
+	function buildFullOrderMap(fullGraph) {
+		const map = new Map();
+		d3.group(fullGraph.nodes, (node) => node.stage).forEach((stageNodes) => {
+			stageNodes
+				.slice()
+				.sort((a, b) => a.y0 - b.y0)
+				.forEach((node, idx) => {
+					map.set(node.id, idx);
+				});
+		});
+		return map;
+	}
+
 	function renderImpactsChart(chartEl, options = {}) {
 		if (!chartEl || !state.initData || !state.baselinesData) {
 			return;
@@ -2109,22 +2300,6 @@
 			? state.portfolioBusinessNodeMap.get(businessId) || null
 			: null;
 
-		// Subgraph = only the edges the company avoids (plus their endpoint nodes).
-		let graphNodes = fullGraph.nodes;
-		let graphLinks = fullGraph.links;
-		if (carve) {
-			const subLinks = fullGraph.links.filter((link) =>
-				avoidedMap.has(`${link.source}|${link.target}`)
-			);
-			const subNodeIds = new Set();
-			subLinks.forEach((link) => {
-				subNodeIds.add(link.source);
-				subNodeIds.add(link.target);
-			});
-			graphLinks = subLinks;
-			graphNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
-		}
-
 		const bounds = chartEl.getBoundingClientRect();
 		const width = Math.max(820, Math.floor(bounds.width));
 		const height = Math.max(480, Math.floor(bounds.height));
@@ -2132,6 +2307,7 @@
 			height,
 			scenarioRequest.scenarioId
 		);
+		const bandTop = gtToY(layoutGt);
 
 		d3.select(chartEl).selectAll("*").remove();
 
@@ -2141,32 +2317,47 @@
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("pointer-events", "none");
 
-		const graph = {
-			nodes: graphNodes.map((node) => ({ ...node })),
-			links: graphLinks.map((link) => ({
-				...link,
-				avoided: avoidedMap.get(`${link.source}|${link.target}`) || 0
-			}))
-		};
+		// Lay out the full graph first (even when carving down to a company) so the
+		// carved subgraph's per-stage node order can be pinned to it below --
+		// otherwise d3-sankey free-sorts the smaller subgraph on its own and a
+		// company's rows would reshuffle depending on whether the chart carved
+		// straight to them or arrived via the full graph. Matches
+		// renderImpactsWalkChart, which pins order the same way.
+		const fullLaidOut = layoutStageGraph(fullGraph.nodes, fullGraph.links, {
+			width,
+			bandTop,
+			axisBottom,
+			scaleFactor,
+			spread: true,
+			chartEl,
+			avoidedMap
+		});
 
-		d3
-			.sankey()
-			.nodeId((d) => d.id)
-			.nodeWidth(20)
-			.nodePadding(Math.max(4, 9 * scaleFactor))
-			.nodeAlign(d3.sankeyJustify)
-			.extent([
-				[28, gtToY(layoutGt)],
-				[width - 28, axisBottom]
-			])
-			.iterations(64)(graph);
-
-		// Align every stage top *and* bottom within the GT-scaled band so columns are
-		// equal height; run before the avoided sub-height math so ribbons stay aligned.
-		if (!carve) {
-			spreadStageHeights(graph, gtToY(layoutGt), axisBottom);
+		// Subgraph = only the edges the company avoids (plus their endpoint nodes).
+		let graph = fullLaidOut;
+		if (carve) {
+			const subLinks = fullGraph.links.filter((link) =>
+				avoidedMap.has(`${link.source}|${link.target}`)
+			);
+			const subNodeIds = new Set();
+			subLinks.forEach((link) => {
+				subNodeIds.add(link.source);
+				subNodeIds.add(link.target);
+			});
+			const subNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
+			graph = layoutStageGraph(subNodes, subLinks, {
+				width,
+				bandTop,
+				axisBottom,
+				scaleFactor,
+				spread: false,
+				chartEl,
+				nodeOrder: buildFullOrderMap(fullLaidOut),
+				avoidedMap,
+				targetKy: sankeyValueScale(fullLaidOut),
+				worldValueById: new Map(fullLaidOut.nodes.map((node) => [node.id, node.value]))
+			});
 		}
-		spreadNodesForLabels(chartEl, graph, gtToY(layoutGt), axisBottom + 8);
 
 		// Per-node avoided amount, summed on the node's height-defining side so it
 		// aligns with the carved ribbons entering/leaving that side.
@@ -2443,55 +2634,29 @@
 		);
 		const bandTop = gtToY(layoutGt);
 
-		const layoutGraph = (nodes, links, spread, nodeOrder) => {
-			const graph = {
-				nodes: nodes.map((node) => ({ ...node })),
-				links: links.map((link) => ({
-					...link,
-					avoided: avoidedMap.get(`${link.source}|${link.target}`) || 0
-				}))
-			};
-			const sankeyLayout = d3
-				.sankey()
-				.nodeId((d) => d.id)
-				.nodeWidth(20)
-				.nodePadding(Math.max(4, 9 * scaleFactor))
-				.nodeAlign(d3.sankeyJustify)
-				.extent([
-					[28, bandTop],
-					[width - 28, axisBottom]
-				])
-				.iterations(64);
-			if (nodeOrder) {
-				// Pin this layout's per-stage node order to a reference layout's
-				// (see fullOrderMap below) so two independently-laid-out graphs never
-				// disagree on which sibling sits above which -- otherwise scroll-lerping
-				// a node's y between the two layouts can cross it past its neighbor.
-				sankeyLayout.nodeSort(
-					(a, b) => (nodeOrder.get(a.id) ?? 999) - (nodeOrder.get(b.id) ?? 999)
-				);
-			}
-			sankeyLayout(graph);
-			if (spread) {
-				spreadStageHeights(graph, bandTop, axisBottom);
-			}
-			spreadNodesForLabels(impactsChart, graph, bandTop, axisBottom + 8);
-			return graph;
-		};
+		const layoutGraph = (nodes, links, spread, nodeOrder, targetKy, worldValueById) =>
+			layoutStageGraph(nodes, links, {
+				width,
+				bandTop,
+				axisBottom,
+				scaleFactor,
+				spread,
+				chartEl: impactsChart,
+				nodeOrder,
+				avoidedMap,
+				targetKy,
+				worldValueById
+			});
 
 		// Matches renderImpactsChart: the full graph gets stage-height spreading,
-		// the carved subgraph does not.
+		// the carved subgraph does not, and the carve shares the full graph's
+		// value-to-pixel scale AND each node's full-world value, so the morph
+		// between them only shrinks the avoided/remaining split -- not the node's
+		// own size -- and a node ends at the same height it started at.
 		const fullGraph = layoutGraph(built.nodes, built.links, true);
-
-		const fullOrderMap = new Map();
-		d3.group(fullGraph.nodes, (node) => node.stage).forEach((stageNodes) => {
-			stageNodes
-				.slice()
-				.sort((a, b) => a.y0 - b.y0)
-				.forEach((node, idx) => {
-					fullOrderMap.set(node.id, idx);
-				});
-		});
+		const fullOrderMap = buildFullOrderMap(fullGraph);
+		const worldKy = sankeyValueScale(fullGraph);
+		const worldValueById = new Map(fullGraph.nodes.map((node) => [node.id, node.value]));
 
 		const subLinks = built.links.filter((link) =>
 			avoidedMap.has(`${link.source}|${link.target}`)
@@ -2506,7 +2671,9 @@
 					built.nodes.filter((node) => subNodeIds.has(node.id)),
 					subLinks,
 					false,
-					fullOrderMap
+					fullOrderMap,
+					worldKy,
+					worldValueById
 			  )
 			: fullGraph;
 
@@ -2624,6 +2791,15 @@
 				});
 		});
 
+		// Per-link avoided share, mirroring avoidedRatioById above -- used to grow
+		// each link's avoided ribbon band the same way a node's avoided cap grows.
+		const linkAvoidedRatioById = new Map();
+		carveGraph.links.forEach((link) => {
+			const total = Math.max(0, toFiniteNumber(link.value, 0));
+			const avoided = Math.max(0, Math.min(total, toFiniteNumber(link.avoided, 0)));
+			linkAvoidedRatioById.set(linkKey(link), total > 0 ? avoided / total : 0);
+		});
+
 		const svg = d3
 			.select(impactsChart)
 			.attr("viewBox", `0 0 ${width} ${height}`)
@@ -2674,21 +2850,28 @@
 			return "rgba(208, 222, 235, 0.38)";
 		};
 
-		const linkGen = d3.sankeyLinkHorizontal();
-		const linkPathFromGeom = (geom) =>
-			linkGen({ source: { x1: geom.sx }, target: { x0: geom.tx }, y0: geom.y0, y1: geom.y1 });
-
 		const linksGroup = svg
 			.append("g")
 			.attr("fill", "none")
 			.attr("stroke-opacity", 1)
 			.attr("class", "sankey-links");
+		// Filled "remaining" band + outlined "avoided" band, mirroring
+		// renderImpactsChart's carved links (main.js impacts-link-*). Both are
+		// always appended (unlike the click path's width>0.25 gate) so the avoided
+		// band can grow in from zero as drawImpactsWalkChart's ripple reveals it.
 		const linkSelection = linksGroup
-			.selectAll("path")
+			.selectAll("g.impacts-link")
 			.data(linkData, (d) => d.id)
-			.join("path")
-			.attr("class", "sankey-link")
-			.style("stroke", linkStroke);
+			.join("g")
+			.attr("class", "impacts-link");
+		linkSelection.append("path").attr("class", "impacts-link-remaining").style("fill", linkStroke);
+		linkSelection
+			.append("path")
+			.attr("class", "impacts-link-avoided")
+			.style("stroke", (d) => {
+				const colorVar = stageColorVars[d.source?.stage];
+				return colorVar ? `var(${colorVar})` : null;
+			});
 
 		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
 		const nodeSelection = nodesGroup
@@ -2701,6 +2884,18 @@
 		// grow it downward from zero. Geometry is applied in drawImpactsWalkChart.
 		nodeSelection.append("rect").attr("class", "impacts-node-avoided").attr("x", 0).attr("y", 0);
 		nodeSelection.append("rect").attr("class", "impacts-node-remaining").attr("x", 0);
+
+		// Intervention node: a full-height outline marking the company's
+		// placement, mirroring a click-selected node in the main chart. Sized in
+		// drawImpactsWalkChart, opacity fades in with the carve morph like the
+		// stage headers below.
+		const interventionNodeId = state.portfolioBusinessNodeMap.get(IMPACTS_WALK_COMPANY) || null;
+		nodeSelection
+			.filter((d) => interventionNodeId && d.id === interventionNodeId)
+			.append("rect")
+			.attr("class", "impacts-node-intervention")
+			.attr("x", 0)
+			.attr("y", 0);
 
 		nodeSelection
 			.append("title")
@@ -2735,8 +2930,8 @@
 			carveLinkOf,
 			nodePresence,
 			linkPresence,
-			linkPathFromGeom,
 			avoidedRatioById,
+			linkAvoidedRatioById,
 			rippleOrderById
 		};
 
@@ -2806,6 +3001,12 @@
 			return staggeredReveal(local, order.index, order.count, 0.45);
 		};
 
+		// A link's avoided band reveals on whichever endpoint's ripple has
+		// reached it -- usually the downstream (target) side, but links whose
+		// target has no ripple entry (e.g. the last stage) fall back to source.
+		const revealForLink = (link) =>
+			Math.max(link.target ? revealFor(link.target) : 0, link.source ? revealFor(link.source) : 0);
+
 		r.nodeSelection.each(function (d) {
 			const group = d3.select(this);
 			const geom = geomFor(d.id);
@@ -2820,27 +3021,49 @@
 				.attr("width", geom.w)
 				.attr("y", avoidedH)
 				.attr("height", Math.max(0, geom.h - avoidedH));
+			group
+				.select("rect.impacts-node-intervention")
+				.attr("width", geom.w)
+				.attr("height", geom.h)
+				.style("opacity", t);
 			group.selectAll("text").attr("y", geom.h / 2);
 		});
 
-		r.linkSelection
-			.attr("d", (d) => {
-				const a = r.fullLinkOf(d.key);
-				const b = r.carveLinkOf(d.key);
-				return r.linkPathFromGeom({
-					sx: lerp(a.sx, b.sx, t),
-					tx: lerp(a.tx, b.tx, t),
-					y0: lerp(a.y0, b.y0, t),
-					y1: lerp(a.y1, b.y1, t)
-				});
-			})
-			.attr("stroke-width", (d) =>
-				Math.max(0, lerp(r.fullLinkOf(d.key).width, r.carveLinkOf(d.key).width, t))
-			)
-			.style("opacity", (d) => {
-				const [inFull, inCarve] = r.linkPresence(d.key);
-				return lerp(inFull, inCarve, t);
-			});
+		// Filled "remaining" band + outlined "avoided" band (avoided at top),
+		// mirroring renderImpactsChart's carved links. The avoided band's width
+		// is a ratio of the lerped total width, revealed by the same ripple
+		// timing as the node it grows out of -- see revealForLink above.
+		r.linkSelection.each(function (d) {
+			const group = d3.select(this);
+			const a = r.fullLinkOf(d.key);
+			const b = r.carveLinkOf(d.key);
+			const sx = lerp(a.sx, b.sx, t);
+			const tx = lerp(a.tx, b.tx, t);
+			const sCenter = lerp(a.y0, b.y0, t);
+			const tCenter = lerp(a.y1, b.y1, t);
+			const w = Math.max(0, lerp(a.width, b.width, t));
+			const [inFull, inCarve] = r.linkPresence(d.key);
+			group.style("opacity", lerp(inFull, inCarve, t));
+
+			const ratio = (r.linkAvoidedRatioById.get(d.key) || 0) * revealForLink(d);
+			const avoidedW = w * ratio;
+			const sTop = sCenter - w / 2;
+			const tTop = tCenter - w / 2;
+
+			group
+				.select("path.impacts-link-remaining")
+				.attr(
+					"d",
+					impactsRibbonArea(sx, tx, sTop + avoidedW, sTop + w, tTop + avoidedW, tTop + w)
+				);
+			group
+				.select("path.impacts-link-avoided")
+				.attr(
+					"d",
+					avoidedW > 0.25 ? impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW) : null
+				)
+				.style("opacity", avoidedW > 0.25 ? 1 : 0);
+		});
 	}
 
 	function findNodeLabelById(nodeId) {
@@ -2926,10 +3149,32 @@
 
 	// The card sentence is also used verbatim as beat 2 of the walkthrough copy,
 	// so it lives in one place rather than being duplicated per call site.
+
+	
+	function formatImpactsAmountHtml(amountText) {
+		const match = /^(-?[\d.]+)\s*Gt$/i.exec(String(amountText).trim());
+		if (!match) {
+			return `<strong class="impacts-company-card__sentence-accent">${amountText}</strong>`;
+		}
+		const gtValue = parseFloat(match[1]);
+		if (Number.isNaN(gtValue)) {
+			return `<strong class="impacts-company-card__sentence-accent">${amountText}</strong>`;
+		}
+		if (Math.abs(gtValue) < 1) {
+			const mtValue = gtValue * 1000;
+			const mtText = Number.isInteger(mtValue) ? mtValue.toString() : mtValue.toFixed(2);
+			return (
+				`<strong class="impacts-company-card__sentence-accent">${mtText} Mt</strong> ` +
+				`CO2e (${match[1]} Gt CO2e)`
+			);
+		}
+		return `<strong class="impacts-company-card__sentence-accent">${match[1]} Gt</strong> CO2e`;
+	}
+
 	function impactsSentenceHtml(technologyLabel, amountText) {
 		return (
-			`When deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
-			`<strong class="impacts-company-card__sentence-accent">${amountText}</strong> in 2040.`
+			`If deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
+			`${formatImpactsAmountHtml(amountText)} in 2040.`
 		);
 	}
 
@@ -2970,6 +3215,11 @@
 			if (card.nodePercentage) {
 				card.nodePercentage.hidden = true;
 				card.nodePercentage.textContent = "";
+			}
+			if (card.learnMoreLinks?.length) {
+				card.learnMoreLinks.forEach((link) => {
+					link.hidden = true;
+				});
 			}
 			card.prompt.hidden = true;
 			card.content.hidden = false;
@@ -3054,6 +3304,14 @@
 				card.overview.append(p);
 			});
 		}
+
+		if (card.learnMoreLinks?.length) {
+			const url = String(selection?.url || "").trim();
+			card.learnMoreLinks.forEach((link) => {
+				link.hidden = !url;
+				link.href = url || "#";
+			});
+		}
 	}
 
 	function setActiveImpactsTab(tabId) {
@@ -3111,6 +3369,7 @@
 					technologyLabel: company.technologyLabel,
 					bullets: company.bullets || [],
 					overview: company.overview || [],
+					url: company.url || "",
 					businessId: company.businessId,
 					nodeId: company.nodeId
 				});
@@ -3177,6 +3436,7 @@
 				nodePercentage: cardRoot.querySelector("[data-impacts-card-node-percentage]"),
 				bullets: cardRoot.querySelector("[data-impacts-card-bullets]"),
 				overview: cardRoot.querySelector("[data-impacts-card-overview]"),
+				learnMoreLinks: Array.from(cardRoot.querySelectorAll("[data-impacts-card-learn-more]")),
 				tabs: Array.from(cardRoot.querySelectorAll("[data-impacts-tab]")),
 				panels: Array.from(cardRoot.querySelectorAll("[data-impacts-panel]"))
 			};
@@ -3508,6 +3768,9 @@
 	const HCI_NAV_OUT = [216 / HCI_TOTAL_VH, 256 / HCI_TOTAL_VH];
 	const HCI_LINE2_IN = [256 / HCI_TOTAL_VH, 304 / HCI_TOTAL_VH];
 	const HCI_ALL_OUT = [364 / HCI_TOTAL_VH, 1];
+	// Bottom sticky nav should only appear once the LAST chapter card has
+	// finished fading in, not whenever this panel becomes the pinned one.
+	const HCI_NAV_VISIBLE_AT = HCI_NAV_CARD_IN[HCI_NAV_CARD_IN.length - 1][1];
 
 	function drawHeroCopyIntro(progress, slideT) {
 		state.heroCopyIntroProgress = progress;
@@ -3534,6 +3797,9 @@
 		if (state.heroCopyIntroLine2El) {
 			const inAmt = windowProgress(progress, HCI_LINE2_IN);
 			state.heroCopyIntroLine2El.style.opacity = String(inAmt * (1 - allOut));
+		}
+		if (state.bottomStickyNavEl) {
+			state.bottomStickyNavEl.classList.toggle("is-visible", progress >= HCI_NAV_VISIBLE_AT);
 		}
 	}
 
@@ -3573,6 +3839,7 @@
 		state.heroCopyIntroLine2El = document.querySelector(".hero-copy-intro .hero-copy-3");
 		state.heroCopyNavParaEl = document.querySelector(".hero-copy-intro .hero-copy-nav__intro");
 		state.heroCopyNavCardEls = Array.from(document.querySelectorAll(".hero-copy-intro .hero-copy-nav__card"));
+		state.bottomStickyNavEl = document.querySelector(".bottom-sticky-nav");
 		setupHeroCopyIntroScroll();
 	}
 
@@ -3759,22 +4026,27 @@
 
 	function buildClosingTransitionStars(width, height) {
 		const rand = (a, b) => Math.random() * (b - a) + a;
-		const total = Math.max(400, Math.round((width * height) / 620));
-		const opening = Math.max(90, Math.round((width * height) / 14000));
+		// Density/brightness tuned up (2026-08-31) to match the real density of
+		// closing-transition-frame.jpg -- the plain d/620 count read visibly
+		// sparser than that photo once the crossfade handed off to it.
+		const total = Math.max(900, Math.round((width * height) / 230));
+		const opening = Math.max(160, Math.round((width * height) / 6000));
 		const stars = [];
 		for (let i = 0; i < total; i++) {
 			const early = i < opening;
 			const size = early
-				? (Math.random() < 0.82 ? 1 : Math.random() < 0.97 ? 2 : 3)
-				: (Math.random() < 0.9 ? 1 : 2);
+				? (Math.random() < 0.78 ? 1 : Math.random() < 0.96 ? 2 : 3)
+				: (Math.random() < 0.84 ? 1 : Math.random() < 0.97 ? 2 : 3);
 			const tint = Math.random() < 0.25 ? "255,241,221" : Math.random() < 0.5 ? "209,224,255" : "255,255,255";
 			stars.push({
 				x: Math.random() * width,
 				y: Math.random() * height,
 				size,
 				tint,
-				baseAlpha: early ? (size === 1 ? rand(0.25, 0.55) : rand(0.45, 0.8)) : rand(0.3, 0.95),
-				appearAt: early ? 0 : Math.pow(Math.random(), 0.55) * 0.9,
+				baseAlpha: early ? (size === 1 ? rand(0.3, 0.6) : rand(0.5, 0.85)) : rand(0.35, 1),
+				// Ceiling leaves room for the +0.22 fade window below to fully resolve
+				// (life 1) by skyT===1, instead of some stars still appearing at the cap.
+				appearAt: early ? 0 : Math.pow(Math.random(), 0.55) * 0.78,
 				phase: rand(0, Math.PI * 2),
 				speed: rand(0.6, 1.5),
 				amplitude: rand(0.08, 0.2)
@@ -3810,6 +4082,11 @@
 		}
 
 		const p = state.closingTransitionProgress || 0;
+		// p freezes at CT_CROSSFADE[1] once the video phase takes over (never hits
+		// 1), so resolve the gradient/star convergence against CT_CROSSFADE[0]
+		// instead -- guarantees the canvas is fully settled before the crossfade
+		// into closing-transition-frame.jpg even starts.
+		const skyT = windowProgress(p, [0, CT_CROSSFADE[0]]);
 		const mix = (c1, c2, t) => `rgb(${c1.map((v, i) => Math.round(lerp(v, c2[i], t))).join(",")})`;
 
 		const grad = ctx.createLinearGradient(0, 0, 0, h);
@@ -3823,14 +4100,14 @@
 					break;
 				}
 			}
-			grad.addColorStop(stop, mix(fromColor, CT_SKY_TO[i][1], p));
+			grad.addColorStop(stop, mix(fromColor, CT_SKY_TO[i][1], skyT));
 		}
 		ctx.fillStyle = grad;
 		ctx.fillRect(0, 0, w, h);
 
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		for (const star of state.closingTransitionStars || []) {
-			const life = star.appearAt === 0 ? 1 : windowProgress(p, [star.appearAt, Math.min(1, star.appearAt + 0.22)]);
+			const life = star.appearAt === 0 ? 1 : windowProgress(skyT, [star.appearAt, Math.min(1, star.appearAt + 0.22)]);
 			if (life <= 0.01) {
 				continue;
 			}
@@ -5661,12 +5938,14 @@
 			const overview = [company?.par1, company?.par2]
 				.map((entry) => String(entry || "").trim())
 				.filter(Boolean);
+			const url = String(company?.url || "").trim();
 			theme.companies.push({
 				label,
 				nodeId,
 				technologyLabel,
 				bullets,
 				overview,
+				url,
 				businessId: normalizeBusinessSlug(company?.company || company?.company_label)
 			});
 			if (nodeId) {

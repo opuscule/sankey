@@ -33,14 +33,8 @@
 
 		<link rel="stylesheet" href="styles.css" />
 
-		<!-- Intro title-card photo covers (used by the Sankey narrative overlay) -->
-		<link rel="preload" as="image" href="final-service.webp" />
-		<link rel="preload" as="image" href="sector.webp" />
-		<link rel="preload" as="image" href="equipment.webp" />
-		<link rel="preload" as="image" href="device.webp" />
-		<link rel="preload" as="image" href="final-energy.webp" />
-		<link rel="preload" as="image" href="fuel.webp" />
-		<link rel="preload" as="image" href="emissions.webp" />
+		<!-- The globe is visible immediately; later narrative covers load on demand. -->
+		<link rel="preload" as="image" href="globe-v2.webp" />
 		<link rel="icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-32x32.png" sizes="32x32" />
 		<link rel="icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-192x192.png" sizes="192x192" />
 		<link rel="apple-touch-icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-180x180.png" />
@@ -319,14 +313,17 @@
 															<p class="impacts-node-visual__savings" data-impacts-card-node-percentage></p>
 														</div>
 													</div>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="analysis" hidden>
 													<ul class="impacts-tabs__bullets" data-impacts-card-bullets></ul>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="overview" hidden>
 													<div class="impacts-tabs__prose" data-impacts-card-overview></div>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
 												</div>
 											</div>
 										</div>
@@ -403,10 +400,14 @@
 				<li class="bottom-sticky-nav__item bottom-sticky-nav__item--label">Real World Climate Impact At Scale</li>
 				<li><a class="bottom-sticky-nav__item" href="#global-emissions-picture" data-nav-group="global-emissions">Global Emissions Picture</a></li>
 				<li><a class="bottom-sticky-nav__item" href="#tif-tigf-portfolio" data-nav-group="portfolio">TIF &amp; TIGF Portfolio</a></li>
-				<li><a class="bottom-sticky-nav__item" href="#technology-impacts" data-nav-group="technology-impacts">Climate Impacts</a></li>
+				<li><a class="bottom-sticky-nav__item" href="#technology-impacts" data-nav-group="technology-impacts">Technology Impacts</a></li>
 				<li><a class="bottom-sticky-nav__item" href="#conclusion" data-nav-group="conclusion">Conclusion</a></li>
 			</ul>
 		</nav>
+
+		<div class="tech-impacts-note">
+
+		</div>
 
 		<script>
 			document.documentElement.classList.remove("no-js");
@@ -705,5 +706,8 @@
 		<script src="main.js"></script>
 
 		<div class="viewport-frame"></div>
+		<div class="tech_impacts_toast">
+			
+		</div>
 	</body>
 </html>

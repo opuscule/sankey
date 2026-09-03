@@ -1,0 +1,51 @@
+{
+  "profile": "option-b",
+  "generated_at": "2026-09-01T21:07:14",
+  "scenario_map": {
+    "2025": {
+      "kind": "source_csv"
+    },
+    "2040A": {
+      "kind": "scenario",
+      "slug": "CurrentPolicies"
+    }
+  },
+  "round_digits": 4,
+  "sources": {
+    "source_csv": "data/input/2025 Sankey Data - from_to_updated.csv",
+    "canonical_subflows": "data/generated/subflows/subflows.canonical.csv",
+    "nodes_csv": "data/input/nodes.csv",
+    "companies_csv": "data/input/companies.csv",
+    "themes_csv": "data/input/themes.csv",
+    "name_map": "data/reference/node_name_map.csv"
+  },
+  "stats": {
+    "baselines.json": {
+      "links": 341,
+      "pairs_per_scenario": {
+        "2025": 341,
+        "2040A": 341
+      }
+    },
+    "init.json": {
+      "nodes": 117,
+      "companies": 21,
+      "themes": 3
+    },
+    "node_details.json": {
+      "nodes": 117,
+      "populated": 117
+    },
+    "avoided.json": {
+      "companies": 21
+    },
+    "portfolio.json": {
+      "companies_placed": 21,
+      "nodes_touched": "90/117",
+      "links_touched": "293/341"
+    }
+  },
+  "notes": [
+    "init.json: company 'SPAN' par2 names 'Heated space', a node renamed to 'Heating system'; the label it points at does not exist in this bundle (copy is authored upstream)"
+  ]
+}
