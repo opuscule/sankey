@@ -138,15 +138,36 @@
 				position: relative;
 			}
 
+			/* Framing per the V3 mock-up: the disc is wider than the frame is tall,
+			   so it reads as a horizon -- top arc just inside the top edge, cropped
+			   off the bottom. Anchored by its TOP edge, not its center: the disc's
+			   height relative to the viewport changes with the aspect ratio, so a
+			   percentage center would slide that arc up and down between screens.
+
+			   earth-softfade.webp is a 1750px square whose painted disc fills only
+			   73.7% of that width and starts 12.57% down (the rest is the soft fade
+			   to transparent), so the box has to be sized well past 100vw for the
+			   disc itself to fill the frame: 130vw box -> ~96vw of visible earth.
+			   Re-measure those two fractions if the asset is ever re-exported.
+
+			   height:auto is required -- the img's height attribute (there to give
+			   the box an aspect ratio before the webp decodes) is otherwise applied
+			   as a presentational hint and squashes the globe to 1750px tall. */
 			.hero-globe {
+				height: auto;
 				left: 50%;
-				max-width: min(96vw, 1560px);
+				max-width: none;
 				opacity: 0;
 				position: absolute;
-				top: 52%;
-				transform: translate(-50%, -50%);
+				/* --globe-arc-top is where the disc's own top arc lands (negative =
+				   cropped above the frame). The subtraction cancels the asset's
+				   transparent header so that stays true at any aspect ratio:
+				   0.1257 x 130vw = 16.34vw. Tune the arc, not the raw top. */
+				--globe-arc-top: 10vh;
+				top: calc(var(--globe-arc-top) - 16.34vw);
+				transform: translateX(-50%);
 				transform-origin: 50% 50%;
-				width: 92vw;
+				width: 98vw;
 				will-change: transform, opacity;
 				z-index: 1;
 			}
@@ -155,7 +176,7 @@
 				left: 50%;
 				opacity: 0;
 				position: absolute;
-				top: 20vh;
+				top: 24vh;
 				transform: translateX(-50%);
 				width: 200px;
 				will-change: transform, opacity;
@@ -184,7 +205,11 @@
 			.hero-headline {
 				color: var(--color-white);
 				font-family: "Helvetica Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
-				font-size: clamp(2.2rem, 9vw, 8.1rem);
+				/* "Climate Impact" -- the widest of the three hard-broken lines --
+				   measures 11.33x the font size in Helvetica Extended, so anything
+				   above ~7.8vw wraps it to a fourth line. This keeps the mock-up's
+				   three lines at ~88% of the frame width all the way up to 2250px. */
+				font-size: clamp(2.2rem, 7.8vw, 11rem);
 				font-weight: 700;
 				left: 0;
 				letter-spacing: -0.02em;
@@ -196,7 +221,7 @@
 				text-align: center;
 				text-transform: uppercase;
 				text-wrap: balance;
-				top: 30vh;
+				top: 35vh;
 				will-change: transform, opacity;
 				z-index: 5;
 
@@ -530,9 +555,9 @@
 			}
 
 			/* --- Timeline intro (bg fade + crossfading headline, locked in place) -- */
-			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
+			/* 468vh = 388vh scrubbed fade sequence + 80vh pinned viewport. */
 			#timeline-intro {
-				min-height: 492vh;
+				min-height: 468vh;
 			}
 
 			.timeline-intro__pin {
@@ -989,9 +1014,9 @@
 				padding: 0;
 			}
 
-			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
+			/* 468vh = 388vh scrubbed fade sequence + 80vh pinned viewport. */
 			.portfolio-intro {
-				min-height: 492vh;
+				min-height: 468vh;
 			}
 
 			.portfolio-intro__pin {
@@ -2075,9 +2100,9 @@
 				stroke-width: 1;
 			}
 
-			/* 492vh = 412vh scrubbed fade sequence + 80vh pinned viewport. */
+			/* 468vh = 388vh scrubbed fade sequence + 80vh pinned viewport. */
 			.impacts-intro {
-				min-height: 492vh;
+				min-height: 468vh;
 			}
 
 			.impacts-intro__pin {
@@ -2843,14 +2868,13 @@
 				position: absolute;
 				left: 0;
 				bottom: calc(100% + 10px);
-				max-width: 260px;
-				padding: 12px 14px;
-				background: rgba(2, 14, 29, 0.92);
+				padding: 16px 14px 12px;
 				backdrop-filter: blur(8px);
 				border: 1px solid rgba(115, 170, 220, 0.22);
 				color: #fff;
 				font-size: 13px;
 				line-height: 1.4;
+				width: 360px;
 			}
 
 			.tech_impacts_tooltip.is-open .tech_impacts_tooltip__content {
@@ -3286,9 +3310,11 @@
 					gap: 1rem;
 					grid-template-columns: 1fr;
 				}
+				/* Same top-edge anchoring as desktop (GSAP owns the transform, so the
+				   vertical centering can't live there): 0.1257 x 150vw = 18.86vw. */
 				.hero-globe {
-					max-width: 160vw;
-					top: 51%;
+					max-width: none;
+					top: calc(23vh - 18.86vw);
 					width: 150vw;
 				}
 
@@ -3300,6 +3326,8 @@
 				.hero-headline {
 					font-size: clamp(2.1rem, 13.6vw, 4.7rem);
 					line-height: 0.9;
+					padding-left: 2rem;
+					padding-right: 2rem;
 				}
 
 				.hero-subtitle {

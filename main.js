@@ -1036,7 +1036,7 @@
 		const behavior = options.behavior || (reduceMotion ? "auto" : "smooth");
 		window.scrollTo({ top: Math.max(0, top), behavior });
 
-		if (options.updateHash !== false && history.pushState) {
+		if (options.updateHash && history.pushState) {
 			history.pushState(null, "", hash);
 		}
 
@@ -1052,7 +1052,12 @@
 		document.querySelectorAll('a[href^="#"]').forEach((link) => {
 			link.addEventListener("click", (event) => {
 				const hash = link.getAttribute("href");
-				if (!hash || !CHAPTER_SCROLL_TARGETS[hash]) {
+				if (!hash || hash === "#") {
+					return;
+				}
+
+				const top = getChapterScrollY(hash);
+				if (top === null) {
 					return;
 				}
 
@@ -1061,10 +1066,13 @@
 			});
 		});
 
-		if (CHAPTER_SCROLL_TARGETS[window.location.hash]) {
-			requestAnimationFrame(() => {
-				scrollToChapter(window.location.hash, { behavior: "auto", updateHash: false });
-			});
+		if (window.location.hash) {
+			const hash = window.location.hash;
+			if (getChapterScrollY(hash) !== null) {
+				requestAnimationFrame(() => {
+					scrollToChapter(hash, { behavior: "auto" });
+				});
+			}
 		}
 	}
 
@@ -3948,14 +3956,18 @@
 	}
 
 	// Bg fade + two crossfading lines, locked .impacts-intro (mirrors the
-	// portfolio/timeline intros: 412vh scrub range + 80vh pinned viewport,
-	// sequential bg-in 96vh, line1-in 48vh, hold 40vh, line1-out 40vh,
+	// portfolio/timeline intros: 388vh scrub range + 80vh pinned viewport,
+	// sequential bg-in 72vh, line1-in 48vh, hold 40vh, line1-out 40vh,
 	// line2-in 48vh, hold 60vh, line2+bg fade-out together over the final 80vh).
-	const II_TOTAL_VH = 412;
-	const II_LINE1_IN = [96 / II_TOTAL_VH, 144 / II_TOTAL_VH];
-	const II_LINE1_OUT = [184 / II_TOTAL_VH, 224 / II_TOTAL_VH];
-	const II_LINE2_IN = [224 / II_TOTAL_VH, 272 / II_TOTAL_VH];
-	const II_ALL_OUT = [332 / II_TOTAL_VH, 1];
+	// Gap between the pin finishing its fade-in and line-1 starting to appear
+	// (the leading "bg-in" span below) felt too long; cut it 25% (96vh -> 72vh)
+	// and shift every later boundary left by the same 24vh so the rest of the
+	// sequence's durations are untouched (see the matching 468vh CSS min-height).
+	const II_TOTAL_VH = 388;
+	const II_LINE1_IN = [72 / II_TOTAL_VH, 120 / II_TOTAL_VH];
+	const II_LINE1_OUT = [160 / II_TOTAL_VH, 200 / II_TOTAL_VH];
+	const II_LINE2_IN = [200 / II_TOTAL_VH, 248 / II_TOTAL_VH];
+	const II_ALL_OUT = [308 / II_TOTAL_VH, 1];
 
 	function drawImpactsIntro(progress, slideT) {
 		state.impactsIntroProgress = progress;
@@ -6776,14 +6788,18 @@
 	}
 
 	// --- Timeline intro (bg fade + two crossfading lines, locked #timeline-intro) --
-	// Same sequential window shape as the portfolio/impacts intros (412vh scrub
-	// range + 80vh pinned viewport): bg-in 96vh, line1-in 48vh, hold 40vh,
+	// Same sequential window shape as the portfolio/impacts intros (388vh scrub
+	// range + 80vh pinned viewport): bg-in 72vh, line1-in 48vh, hold 40vh,
 	// line1-out 40vh, line2-in 48vh, hold 60vh, line2+bg fade-out over the final 80vh.
-	const TLI_TOTAL_VH = 412;
-	const TLI_LINE1_IN = [96 / TLI_TOTAL_VH, 144 / TLI_TOTAL_VH];
-	const TLI_LINE1_OUT = [184 / TLI_TOTAL_VH, 224 / TLI_TOTAL_VH];
-	const TLI_LINE2_IN = [224 / TLI_TOTAL_VH, 272 / TLI_TOTAL_VH];
-	const TLI_ALL_OUT = [332 / TLI_TOTAL_VH, 1];
+	// Gap between the pin finishing its fade-in and line-1 starting to appear
+	// (the leading "bg-in" span below) felt too long; cut it 25% (96vh -> 72vh)
+	// and shift every later boundary left by the same 24vh so the rest of the
+	// sequence's durations are untouched (see the matching 468vh CSS min-height).
+	const TLI_TOTAL_VH = 388;
+	const TLI_LINE1_IN = [72 / TLI_TOTAL_VH, 120 / TLI_TOTAL_VH];
+	const TLI_LINE1_OUT = [160 / TLI_TOTAL_VH, 200 / TLI_TOTAL_VH];
+	const TLI_LINE2_IN = [200 / TLI_TOTAL_VH, 248 / TLI_TOTAL_VH];
+	const TLI_ALL_OUT = [308 / TLI_TOTAL_VH, 1];
 
 	function drawTimelineIntro(progress, slideT) {
 		state.timelineIntroProgress = progress;
@@ -6848,14 +6864,18 @@
 	}
 
 	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tigf-portfolio) --
-	// Sequential windows, fractions of a 412vh scroll range (+80vh pinned viewport):
-	// bg fade-in 96vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
+	// Sequential windows, fractions of a 388vh scroll range (+80vh pinned viewport):
+	// bg fade-in 72vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
 	// hold 60vh, then line-2 + bg fade out together over the final 80vh.
-	const PI_TOTAL_VH = 412;
-	const PI_LINE1_IN = [96 / PI_TOTAL_VH, 144 / PI_TOTAL_VH];
-	const PI_LINE1_OUT = [184 / PI_TOTAL_VH, 224 / PI_TOTAL_VH];
-	const PI_LINE2_IN = [224 / PI_TOTAL_VH, 272 / PI_TOTAL_VH];
-	const PI_ALL_OUT = [332 / PI_TOTAL_VH, 1];
+	// Gap between the pin finishing its fade-in and line-1 starting to appear
+	// (the leading "bg-in" span below) felt too long; cut it 25% (96vh -> 72vh)
+	// and shift every later boundary left by the same 24vh so the rest of the
+	// sequence's durations are untouched (see the matching 468vh CSS min-height).
+	const PI_TOTAL_VH = 388;
+	const PI_LINE1_IN = [72 / PI_TOTAL_VH, 120 / PI_TOTAL_VH];
+	const PI_LINE1_OUT = [160 / PI_TOTAL_VH, 200 / PI_TOTAL_VH];
+	const PI_LINE2_IN = [200 / PI_TOTAL_VH, 248 / PI_TOTAL_VH];
+	const PI_ALL_OUT = [308 / PI_TOTAL_VH, 1];
 
 	function drawPortfolioIntro(progress, slideT) {
 		state.portfolioIntroProgress = progress;

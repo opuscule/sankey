@@ -55,7 +55,12 @@
 		 
 		<section id="hero-intro" aria-label="Opening hero scene">
 			<div class="hero-stage">
-				<img class="hero-globe" src="earth-softfade.webp" alt="Earth globe visual" />
+				<!-- width/height are the asset's intrinsic pixels: they give the box a
+					 known aspect ratio before the webp decodes, so GSAP resolves the
+					 CSS translate(-50%, -50%) against the real height on its first
+					 parse. Without them the vertical half-offset parses as 0 and the
+					 globe sits half its own height too low. -->
+				<img class="hero-globe" src="earth-softfade.webp" width="1750" height="1750" alt="Earth globe visual" />
 				<div class="hero-logo" aria-hidden="true">
 					<svg id="logo--light" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="262.547" height="46.656" viewBox="0 0 262.547 46.656">
 						<defs>
@@ -556,7 +561,15 @@
 				} else {
 					const heroLoadTimeline = gsap.timeline({ defaults: { ease: "power2.out" } });
 					heroLoadTimeline
-						.fromTo(heroGlobe, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.72 })
+						// x/y/xPercent/yPercent are pinned explicitly rather than left to
+						// GSAP's parse of the CSS translateX(-50%): as a percentage it
+						// re-resolves against the element's live size on every render, so
+						// the centering can't be baked in wrong (or go stale on resize).
+						.fromTo(
+							heroGlobe,
+							{ opacity: 0, scale: 0.96, x: 0, y: 0, xPercent: -50, yPercent: 0 },
+							{ opacity: 1, scale: 1, duration: 0.72 }
+						)
 						.fromTo(heroLogo, { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.52 }, "-=0.28")
 						.fromTo(heroHeadline, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.74 }, "-=0.24");
 
@@ -579,8 +592,11 @@
 					// snap on the first scroll. .fromTo() with the guaranteed resting
 					// post-entrance values makes that initial render deterministic.
 					heroScrollTimeline
-						.fromTo(heroGlobe, { scale: 1 }, { scale: 1.32, duration: 1, ease: "power1.inOut" }, 0)
-						.fromTo(heroGlobe, { yPercent: 0 }, { yPercent: -158, duration: 0.82, ease: "power2.in" }, 0.18)
+						// The globe rises only -- it holds the size it settles at after the
+						// entrance, so scale is deliberately untouched here. scale:1 is
+						// pinned in the from-state anyway so a scrub that renders while
+						// heroLoadTimeline is still easing 0.96 -> 1 can't leave it mid-grow.
+						.fromTo(heroGlobe, { xPercent: -50, yPercent: 0, scale: 1 }, { yPercent: -158, duration: 0.82, ease: "power2.in" }, 0.18)
 						.fromTo(heroGlobe, { opacity: 1 }, { opacity: 0, duration: 0.55, ease: "power1.in" }, 0.45)
 						.fromTo(heroLogo, { y: 0 }, { y: () => -heroHeadline.offsetHeight * 1.18, duration: 1, ease: "none" }, 0)
 						.fromTo(heroHeadline, { yPercent: 0 }, { yPercent: -118, duration: 1, ease: "none" }, 0)
