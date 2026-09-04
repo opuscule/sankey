@@ -34,7 +34,7 @@
 		<link rel="stylesheet" href="styles.css" />
 
 		<!-- The globe is visible immediately; later narrative covers load on demand. -->
-		<link rel="preload" as="image" href="globe-v2.webp" />
+		<link rel="preload" as="image" href="earth-softfade.webp" />
 		<link rel="icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-32x32.png" sizes="32x32" />
 		<link rel="icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-192x192.png" sizes="192x192" />
 		<link rel="apple-touch-icon" href="https://capricornllc.com/wp-content/uploads/2023/01/cropped-capricorn-Site-Identity-180x180.png" />
@@ -55,7 +55,7 @@
 		 
 		<section id="hero-intro" aria-label="Opening hero scene">
 			<div class="hero-stage">
-				<img class="hero-globe" src="globe-v2.webp" alt="Earth globe visual" />
+				<img class="hero-globe" src="earth-softfade.webp" alt="Earth globe visual" />
 				<div class="hero-logo" aria-hidden="true">
 					<svg id="logo--light" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="262.547" height="46.656" viewBox="0 0 262.547 46.656">
 						<defs>
@@ -97,7 +97,7 @@
 				<h1 class="hero-headline">Real World<br />Clim<span>a</span>te Impact<br /><span>A</span>t Scale</h1>
 				<div class="hero-copy">
 					<p class="hero-subtitle">
-						Explore how climate technologies across the TIF and TIGF portfolios are forecast to alter the trajectory of global emissions over the next 15 years.
+						Explore how climate technologies across the TIF &amp; TIGF portfolios are forecast to alter the trajectory of global emissions over the next 15 years.
 					</p>
 				</div>
 				</div>
@@ -116,17 +116,17 @@
 
 
 							<div class="hero-copy-nav">
-								<p class="hero-copy-nav__intro">The following experience is presented in three distinct chapters. Scroll to continue or select a chapter from the navigation below at any time.</p>
+								<p class="hero-copy-nav__intro">The following experience is presented in three distinct chapters. Scroll to continue or select a chapter from the navigation bar below at any time.</p>
 
 								<div class="hero-copy-nav__grid">
 									<div class="hero-copy-nav__card" data-nav-group="global-emissions">
-										<a href="#global-emissions-picture">Global Emissions Picture</a>
+										<a href="#global-emissions-landscape">Global Emissions Landscape</a>
 										<p>Explore how emissions flow through the global economic system.</p>
 									</div>
 
 									<div class="hero-copy-nav__card" data-nav-group="portfolio">
-										<a href="#tif-tigf-portfolio">TIF &amp; TIGF Portfolio</a>
-										<p>See where TIF and TIGF portfolio companies are developing solutions across this system.</p>
+										<a href="#tif-tigf-portfolio">TIF &amp; TIGF Portfolios</a>
+										<p>See where TIF &amp; TIGF portfolio companies are developing solutions across this system.</p>
 									</div>
 
 									<div class="hero-copy-nav__card" data-nav-group="technology-impacts">
@@ -134,6 +134,7 @@
 										<p>Explore how these solutions could reshape global emissions flows by 2040.</p>
 									</div>
 								</div>
+								<p class="hero-copy-nav__note">NOTE TO USERS: This page includes forward-looking, third-party-modeled data regarding hypothetical technology and emissions outcomes. Please review the disclosures in the "<a href="#conclusion">Conclusion</a>" section before relying on the information presented.</p>
 							</div>
 
 
@@ -147,7 +148,7 @@
 
 							<div class="hero-copy-3">
 								<p>
-									Centered on the portfolios of the <strong style="color:var(--color-white);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-white);">Technology Growth Impact Fund (TIGF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
+									Centered on the portfolios of the <strong style="color:var(--color-white);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-white);">Technology Growth Impact Fund (TIGF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj, Julian Allwood, and Jonathan Cullen and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
 								</p>
 								<p>
 									The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.
@@ -161,7 +162,7 @@
 				</div>
 		</section>
 		<main id="app">
-			<div id="global-emissions-picture" class="section-anchor" aria-hidden="true"></div>
+			<div id="global-emissions-landscape" class="section-anchor" aria-hidden="true"></div>
 
 			<section id="sankey-narrative" aria-label="Global emissions narrative and Sankey chart">
 				<div class="sankey-layout">
@@ -189,7 +190,7 @@
 					<div class="timeline-intro__bg" aria-hidden="true"></div>
 					<div class="timeline-intro__stack">
 						<p class="timeline-intro__line timeline-intro__line--1">The next step is to turn to the future &mdash; to 2040.</p>
-						<p class="timeline-intro__line timeline-intro__line--2">That&rsquo;s the world we have a laser-like focus on at Capricorn, since it&rsquo;s the global emissions picture we are on a mission to change.</p>
+						<p class="timeline-intro__line timeline-intro__line--2">That&rsquo;s the world we have a laser-like focus on at Capricorn, since it&rsquo;s the global emissions landscape we are on a mission to change.</p>
 					</div>
 				</div>
 			</section>
@@ -199,13 +200,14 @@
 				<div class="timeline-layout">
 					<div class="timeline-copy" aria-label="Timeline narrative text">
 						<div class="timeline-panel" aria-hidden="true">
+							<p class="timeline-opening">The total amount of global emissions is forecast to increase to 57Gt CO2e by 2040.</p>
 							<div class="timeline-yearstrip">
 								<div class="timeline-yearbox"></div>
 								<div class="timeline-years">
 									<!-- Year items are rendered from main.js -->
 								</div>
 							</div>
-							<p class="timeline-closing">On the one hand AI continues to drive demand for energy, increasing emissions, while on the other, a business-as-usual pace of technology adoption plays a mitigating role, even without drastic policy changes.</p>
+							<p class="timeline-closing">This forecast comes from three independent climate-economy models using the Network for Greening the Financial System (NGFS) Phase 5 Current Policies scenario, which assumes only the policies already in force today. Electricity continues to get cleaner and transport emissions decrease, but growth in industry, materials, buildings, and waste offsets these gains. Node values are the 2025 baseline scaled by each sector's modeled 2025-to-2040 growth factor.</p>
 						</div>
 					</div>
 
@@ -221,8 +223,8 @@
 					<div class="portfolio-intro__pin">
 						<div class="portfolio-intro__bg" aria-hidden="true"></div>
 						<div class="portfolio-intro__stack">
-							<p class="portfolio-intro__line portfolio-intro__line--1">This is our starting point for exploring the investments of the Technology Impact Fund and Technology Growth Impact Fund.</p>
-							<p class="portfolio-intro__line portfolio-intro__line--2">It’s the landscape of global emissions where we are contributing new solutions to accelerate decarbonization.</p>
+							<p class="portfolio-intro__line portfolio-intro__line--1">This is our starting point for exploring the investments of the Technology Impact Fund and Technology Impact Growth Fund.</p>
+							<p class="portfolio-intro__line portfolio-intro__line--2">It&apos;s the landscape of global emissions where we are contributing new solutions to accelerate decarbonization.</p>
 						</div>
 					</div>
 				</div>
@@ -233,9 +235,9 @@
 				<div class="themes-layout">
 					<div class="themes-copy">
 						<div class="themes-lead-stack">
-							<p class="themes-lead">Consider three themes within the TIF and TIGF portfolio:</p>
+							<p class="themes-lead">Consider three themes within the TIF &amp; TIGF portfolios:</p>
 						</div>
-						<div class="themes-info" aria-live="polite"><p class="themes-finale-lead">Together, the technologies in the TIF and TIGF portfolios touch many parts of the global economy.</p><!-- theme info blocks injected by main.js --></div>
+						<div class="themes-info" aria-live="polite"><p class="themes-finale-lead">Together, the technologies in the TIF &amp; TIGF portfolios touch many parts of the global economy.</p><!-- theme info blocks injected by main.js --></div>
 						<div class="themes-roster" aria-label="Companies by theme"><!-- theme columns injected by main.js --></div>
 					</div>
 					<div class="themes-visual">
@@ -252,7 +254,7 @@
 					<div class="impacts-intro__pin">
 						<div class="impacts-intro__bg" aria-hidden="true"></div>
 						<div class="impacts-intro__stack">
-							<p class="impacts-intro__line impacts-intro__line--1">The technologies in TIF/TIGF's portfolio impact the 2040 global emissions picture by avoiding emissions that would otherwise occur.</p>
+							<p class="impacts-intro__line impacts-intro__line--1">The technologies in TIF &amp; TIGF's portfolio impact the 2040 Global Emissions Landscape by avoiding emissions that would otherwise occur.</p>
 							<p class="impacts-intro__line impacts-intro__line--2">Here, we show the largest potential avoided emissions, assuming that the technology scales to its maximum, transforming the market it targets.</p>
 						</div>
 					</div>
@@ -268,7 +270,7 @@
 										<p class="impacts-walk__copy" data-impacts-walk-copy="1">Let's take Fervo's enhanced geothermal system (EGS) technology as an example, which <strong>avoids future emissions</strong> by replacing fossil fuel baseload power generation.</p>
 										<p class="impacts-walk__copy" data-impacts-walk-copy="2"></p>
 										<p class="impacts-walk__copy" data-impacts-walk-copy="3">These avoided emissions ripple across the global economy.</p>
-										<p class="impacts-walk__copy" data-impacts-walk-copy="4"><strong>Select any company</strong> in TIF/TIGF's portfolio to see how its technology is forecast to impact the global emissions picture.</p>
+										<p class="impacts-walk__copy" data-impacts-walk-copy="4"><strong>Select any company</strong> in TIF &amp; TIGF's portfolio to see how its technology is forecast to impact the Global Emissions Landscape.</p>
 									</div>
 
 									<div class="impacts-node-visual impacts-walk__node" data-impacts-walk-node>
@@ -313,17 +315,17 @@
 															<p class="impacts-node-visual__savings" data-impacts-card-node-percentage></p>
 														</div>
 													</div>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="analysis" hidden>
 													<ul class="impacts-tabs__bullets" data-impacts-card-bullets></ul>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="overview" hidden>
 													<div class="impacts-tabs__prose" data-impacts-card-overview></div>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Learn More</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
 												</div>
 											</div>
 										</div>
@@ -338,6 +340,7 @@
 							</div>
 
 							<div class="impacts-businesses">
+								<div class="impacts-scan-line" aria-hidden="true"></div>
 								<div class="impacts-businesses__pin" aria-label="Portfolio companies">
 									<div class="impacts-roster" data-impacts-roster>
 										<!-- company columns injected by main.js -->
@@ -361,7 +364,7 @@
 					<img class="closing-transition__frame" src="closing-transition-frame.jpg" alt="" aria-hidden="true" />
 					<video class="closing-transition__video" muted playsinline preload="auto" aria-hidden="true"></video>
 					<div class="closing-transition__stack">
-						<p class="closing-transition__line closing-transition__line--1">Taken together, the technologies across the TIF and TIGF portfolios have the potential to meaningfully reduce the world&rsquo;s emissions trajectory by 2040.</p>
+						<p class="closing-transition__line closing-transition__line--1">Taken together, the technologies across the TIF &amp; TIGF portfolios have the potential to meaningfully reduce the world&rsquo;s emissions trajectory by 2040.</p>
 						<p class="closing-transition__line closing-transition__line--2">The precise outcome will depend on how quickly these technologies scale, where they are deployed, and what they replace.</p>
 						<p class="closing-transition__line closing-transition__line--3">But the direction is clear: thoughtful investment can help turn climate innovation into real-world emissions reductions at global scale.</p>
 						<p class="closing-transition__line closing-transition__line--4">Thank you for joining us. We look forward to continuing that journey with you.</p>
@@ -372,22 +375,102 @@
 
 			<section id="conclusion" aria-label="Acknowledgements and Citations">
 				<div class="acknowledgements-intro">
-					<h2 class="acknowledgements-intro__body">Acknowledgements and Citations</h2>
+					<div class="acknowledgements-intro__pin">
+						<div class="acknowledgements-intro__bg" aria-hidden="true"></div>
+						<div class="acknowledgements-intro__stack">
+							<h2 class="acknowledgements-intro__body">Acknowledgements and Citations</h2>
+						</div>
+					</div>
 				</div>
 
-				<div class="acknowledgements-layout">
-					<div class="acknowledgements-layout__copy">
-						<p class="acknowledgements-layout__lead">This interactive experience was created by Capricorn Investment Group.</p>
-						<p class="acknowledgements-layout__meta">September 2026</p>
-						<p class="acknowledgements-layout__meta">&copy; Capricorn Investment Group</p>
-
-						<h3 class="acknowledgements-layout__subhead">Partners</h3>
-						<ul class="acknowledgements-layout__partners" aria-label="Project partners">
-							<li><span>Management &amp; Narrative</span><strong>Tideline</strong></li>
-							<li><span>Research &amp; Data</span><strong>Rho Impact</strong></li>
-							<li><span>Design</span><strong>Great Jones Studio</strong></li>
-							<li><span>Animation</span><strong>Opuscule</strong></li>
+			
+				<div class="methodology-layout">
+					<nav class="methodology-layout__toc" aria-label="Methodology contents">
+						<ul>
+							<li><a href="#methodology-built">How the Emissions Map was Built</a></li>
+							<li><a href="#methodology-references">References</a></li>
+							<li><a href="#methodology-disclaimers">Disclaimers</a></li>
+							<li><a href="#methodology-important-disclosures">Important Disclosures</a></li>
+							<li><a href="#credits">Credits</a></li>
 						</ul>
+					</nav>
+
+					<div class="methodology-layout__content">
+						<section id="methodology-built" class="methodology-content">
+							<h3>How the Emissions Map was Built</h3>
+
+							<h4>The framework</h4>
+							<p>The map is built on the framework published in <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">Bajzelj et al. (2013)</a> and the sources compiled there. That work divides total annual anthropogenic greenhouse gas emissions, including energy, process, and land-use change emissions, into seven views of the same global total. Each is a lens on where those emissions come from: the final service being bought, the economic sector that delivers it, the equipment used, the powered device inside that equipment, the final form of energy, the fuel, and the gas released. Emissions from land follow a parallel chain, from service through sector to land use and land management. Flows connect the nodes in one lens to the nodes in an adjacent lens, showing, for example, how emissions from a sector are connected to particular equipment. The original data was compiled for 2010 from IEA fuel-combustion statistics and EDGAR v4.2, with the allocations between nodes derived by triangulation across industry, government, and academic sources.</p>
+
+							<h4>The 2025 data update</h4>
+							<p>The underlying data was updated to a present-day base year as part of this project. Energy emissions, process emissions, and agriculture, forestry and land-use change emissions were all updated from the sources cited below. Two nodes were added to represent computing: digital infrastructure equipment at the equipment level, and computing infrastructure, covering data centers, cryptocurrency, and AI, at the device level. An electric motor flow to cars and buses was added so that the electricity they use resolves to the grid rather than to a combustion engine. How emissions flow between the nodes of adjacent lenses was reviewed throughout rather than carried over: those flows were updated where newer data supported a different allocation, and retained where no better evidence existed. The result is a global total of approximately 54 Gt CO2e.</p>
+
+							<h4>The 2040 projection</h4>
+							<p>Projecting the map to 2040 uses the NGFS Phase 5 Scenarios Database under its Current Policies scenario, which carries forward only the climate policy legislated and in force today and assumes no new commitments beyond it. That is an assumption about policy rather than about technology: clean technology continues to be deployed and to improve at the pace current policies support. Sector emissions for 2025 and 2040 were obtained from the average across the three core integrated assessment models: GCAM 6.0, MESSAGEix-GLOBIOM 2.0-M-R12, and REMIND-MAgPIE 3.3-4.8. Each sector was then reduced to a 2025-to-2040 growth factor and applied to the corresponding sector node in the 2025 map. The 2040 map keeps the allocations established for 2025. The projected global total is 56.6 Gt CO2e.</p>
+
+							<h4>Connections across the map</h4>
+							<p>The underlying data describes connections between adjacent nodes, one lens to the next. It records how much flows from one node to the next, but not which onward connection any particular incoming flow feeds. The continuous flows shown in the Experience span all seven lenses, by assuming that each flow arriving at a node spreads across the connections leaving it in proportion to their size. Combinations that are not physically sensible, such as demand for illumination entering the residential sector and leaving through a hot water system, are ruled out at the sector lens.</p>
+						</section>
+
+						<section id="methodology-references" class="methodology-content">
+							<h3>References</h3>
+							<ol class="methodology-content__references">
+								<li><strong>Bajzelj, B., Allwood, J. M., and Cullen, J. M.</strong> (2013). Designing Climate Change Mitigation Plans That Add Up. <em>Environmental Science &amp; Technology</em> 47(14), 8062&ndash;8069. <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">doi:10.1021/es400399h</a></li>
+								<li><strong>IEA datasets.</strong> <a href="https://www.iea.org/data-and-statistics/data-product/greenhouse-gas-emissions-from-energy-highlights" target="_blank" rel="noopener">GHG Emissions from Energy</a> (2024); <a href="https://www.iea.org/data-and-statistics/data-product/world-energy-statistics-balances" target="_blank" rel="noopener">World Energy Statistics and Balances</a>; World Energy Balances 2019 (<a href="https://doi.org/10.1787/3a876031-en" target="_blank" rel="noopener">doi:10.1787/3a876031-en</a>); CO2 Emissions from Fuel Combustion 2019 (<a href="https://doi.org/10.1787/2a701673-en" target="_blank" rel="noopener">doi:10.1787/2a701673-en</a>)</li>
+								<li><strong>IEA reports.</strong> <a href="https://www.iea.org/reports/world-energy-outlook-2024" target="_blank" rel="noopener">World Energy Outlook 2024</a>; <a href="https://www.iea.org/reports/road-transport" target="_blank" rel="noopener">Road Transport 2023</a>; <a href="https://www.iea.org/reports/electricity-2024" target="_blank" rel="noopener">Electricity 2024</a>; <a href="https://www.iea.org/reports/energy-and-ai" target="_blank" rel="noopener">Energy and AI 2025</a></li>
+								<li><strong>IEA energy system topic pages and data charts.</strong> <a href="https://www.iea.org/topics" target="_blank" rel="noopener">iea.org/topics</a>, <a href="https://www.iea.org/data-and-statistics/charts" target="_blank" rel="noopener">iea.org/data-and-statistics/charts</a></li>
+								<li><a href="https://edgar.jrc.ec.europa.eu/" target="_blank" rel="noopener"><strong>EDGAR</strong></a>, Emissions Database for Global Atmospheric Research, 2024 release. European Commission Joint Research Centre</li>
+								<li><a href="https://www.ngfs.net/ngfs-scenarios-portal/" target="_blank" rel="noopener"><strong>NGFS Phase 5 Scenarios Database</strong></a>, Current Policies scenario. GCAM 6.0, MESSAGEix-GLOBIOM 2.0-M-R12, and REMIND-MAgPIE 3.3-4.8, accessed through the <a href="https://data.ece.iiasa.ac.at/ngfs/" target="_blank" rel="noopener">IIASA Scenario Explorer</a></li>
+								<li><strong>IPCC</strong> (2021), <a href="https://www.ipcc.ch/report/ar6/wg1/" target="_blank" rel="noopener">Sixth Assessment Report, Working Group I</a>. GWP-100 characterization factors</li>
+								<li><strong>FAO, <a href="https://www.fao.org/faostat/en/" target="_blank" rel="noopener">FAOSTAT</a>.</strong> Emissions Totals; Forestry Production and Trade; Food Balances</li>
+								<li><strong>UNFCCC</strong>, <a href="https://di.unfccc.int/flex_annex1" target="_blank" rel="noopener">Greenhouse Gas Inventory Database, Annex I</a></li>
+								<li><strong>USGS National Minerals Information Center</strong>, <a href="https://www.usgs.gov/centers/national-minerals-information-center/aluminum-statistics-and-information" target="_blank" rel="noopener">Aluminum</a> and <a href="https://www.usgs.gov/centers/national-minerals-information-center/lime-statistics-and-information" target="_blank" rel="noopener">Lime</a> statistics and information</li>
+								<li><strong>Pendrill, F. et al.</strong> (2019). Agricultural and forestry trade drives large share of tropical deforestation emissions. <em>Global Environmental Change</em> 56, 1&ndash;10. <a href="https://doi.org/10.1016/j.gloenvcha.2019.03.002" target="_blank" rel="noopener">doi:10.1016/j.gloenvcha.2019.03.002</a></li>
+								<li><strong>Friedlingstein, P. et al.</strong> (2025). Global Carbon Budget 2024. <em>Earth System Science Data</em> 17, 965&ndash;1039. <a href="https://doi.org/10.5194/essd-17-965-2025" target="_blank" rel="noopener">doi:10.5194/essd-17-965-2025</a></li>
+								<li><strong>Purohit, P. and H&ouml;glund-Isaksson, L.</strong> (2017). Global emissions of fluorinated greenhouse gases 2005&ndash;2050 with abatement potentials and costs. <em>Atmospheric Chemistry and Physics</em> 17, 2795&ndash;2816. <a href="https://doi.org/10.5194/acp-17-2795-2017" target="_blank" rel="noopener">doi:10.5194/acp-17-2795-2017</a></li>
+								<li><strong>International Fertilizer Association</strong> (2022). <a href="https://ifastat.org/fertilizer-reports-analysis/fertilizer-use-by-crop-fubc" target="_blank" rel="noopener">Fertilizer Use by Crop and Country</a> for the 2017&ndash;2018 period</li>
+								<li><strong>European Solvents Industry Group</strong> (2017). <a href="https://www.esig.org/wp-content/uploads/2020/01/ESIG-advocacy-document-triptic_WEB.pdf" target="_blank" rel="noopener">Solvents and ESIG</a></li>
+								<li><strong>US Department of Transportation, Federal Highway Administration.</strong> <a href="https://nhts.ornl.gov/" target="_blank" rel="noopener">National Household Travel Survey</a>, 2022</li>
+								<li><strong>Eurostat</strong>, <a href="https://ec.europa.eu/eurostat/web/main/data/database" target="_blank" rel="noopener">Air Transport Performance</a>.</li>
+							</ol>
+						</section>
+
+						<section id="methodology-disclaimers" class="methodology-content methodology-content--legal">
+							<h3>Disclaimers</h3>
+
+							<h4>About the Data and Modeling</h4>
+							<p>The underlying emissions data, avoided-emissions estimates, and 2040 projections were developed using Koi, a forecasting platform built by Rho Impact, drawing on the systems modeling work of Bojana Bajz&#380;elj, Julian Allwood, and Jonathan Cullen and incorporating updated public data sources. This information was provided to Capricorn Investment Group, LLC (&ldquo;Capricorn&rdquo;) by Rho Impact, and Capricorn has not independently verified, audited, or otherwise validated the accuracy, completeness, or methodology of the underlying data or modeling. Capricorn relies on Rho Impact as the source for this information and disclaims responsibility for any errors, omissions, or inaccuracies contained in it.</p>
+							<p>Detailed model inputs, baseline assumptions, and sources for each technology referenced above are available in the accompanying Appendix, built on Koi, Rho Impact&rsquo;s forecasting platform. The same reliance and no-independent verification disclosures set out above apply to that appendix.</p>
+							<p>Estimates of avoided emissions associated with portfolio companies in the Technology Impact Fund and Technology Growth Impact Fund are hypothetical and forward-looking. They assume that a given technology scales to its maximum potential and displaces a specific incumbent technology or process; actual outcomes will depend on the pace and location of deployment and may differ materially from what is shown. These estimates do not represent audited results, are not a measure of realized fund performance, and should not be relied on as such.</p>
+							<p>This experience is provided for informational and illustrative purposes only. It does not constitute investment advice, a recommendation, or an offer to buy or sell any security or fund interest. Prospective and current investors should refer to the applicable fund&rsquo;s offering documents for complete information regarding the Technology Impact Fund and Technology Impact Growth Fund.</p>
+
+							<h4>About the Appendix</h4>
+							<p>The technology models in the Appendix were built and are maintained on Koi, a climate-impact forecasting platform developed by Rho Impact, an independent third party. Koi&rsquo;s own validation process, referenced here as &ldquo;fully validated,&rdquo; reflects Rho Impact&rsquo;s internal model review and does not constitute independent verification by Capricorn Investment Group, LLC (&ldquo;Capricorn&rdquo;). Capricorn has not audited the baseline assumptions, solution intensities, market-sizing inputs, or source data underlying these models and relies on Rho Impact for their accuracy and completeness.</p>
+							<p>The portfolio companies referenced in this Appendix have not reviewed, validated, or endorsed the models, assumptions, or figures attributed to them. Mapping a company to a model reflects Rho Impact&rsquo;s assessment that the company&rsquo;s technology falls within that model&rsquo;s scope; it does not reflect the company&rsquo;s own estimate of its emissions impact, and the company has not confirmed the accuracy of the baseline, solution, or market assumptions used. Company names and logos are used for identification purposes only and do not imply the company&rsquo;s participation in, agreement with, or endorsement of this analysis.</p>
+							<p>Estimated emissions displacement is modeled at the technology level using assumptions about addressable market size, market capture, and per-unit displacement, rather than company-specific operational data. A company is mapped to a model because its technology falls within that model&rsquo;s scope, not because Rho Impact or Capricorn has forecast that specific outcome for that company. Actual outcomes will depend on regulatory pathways, deployment timelines, capital availability, competitive dynamics, and other factors, and may differ materially from these estimates.</p>
+							<p>The Appendix is provided for informational purposes only, does not constitute investment advice or a recommendation, and should be read together with the Disclosures related to the Sankey visualization.</p>
+						</section>
+
+						<section id="methodology-important-disclosures" class="methodology-content methodology-content--legal">
+							<h3>Important Disclosures</h3>
+							<p>Capricorn Investment Group, LLC (&ldquo;Capricorn&rdquo;) is registered as an investment adviser with the U.S. Securities and Exchange Commission (&ldquo;SEC&rdquo;). Registration does not imply any level of skill or training and does not constitute an endorsement of the firm by the SEC. Nothing on this page constitutes an offer to sell, or a solicitation of an offer to buy, any security or interest in any fund, including the Technology Impact Fund or the Technology Impact Growth Fund. Any such offer or solicitation will be made only through the applicable fund&rsquo;s limited partnership agreement and other governing documents to qualified investors, and only in jurisdictions where permitted by law.</p>
+							<p>This page references specific portfolio companies for illustrative purposes. This is not a complete list of the fund&rsquo;s investments, and it should not be assumed that any investment identified was or will be profitable, or that the technologies referenced will achieve the emissions reductions modeled. The referenced companies have not reviewed, validated, or endorsed the figures or models attributed to them, and their inclusion does not imply their participation in or agreement with this analysis. A complete list of the funds&rsquo; investments is available upon request.</p>
+							<p>Statements regarding future emissions, technology adoption, market scale, or climate outcomes are forward-looking and reflect assumptions as of September 2026 that are subject to significant uncertainty. Actual results may differ materially. Past or projected environmental impact is not indicative of future financial performance. For more information about Capricorn&rsquo;s advisory business, services, and fees, please refer to our Form ADV and Form CRS available <a href="https://adviserinfo.sec.gov/firm/summary/147417" target="_blank" rel="noopener">here</a> or upon request.</p>
+							<p>Company and product names, logos, and trademarks referenced herein are the property of their respective owners. Their use does not imply endorsement of, or affiliation with, Capricorn beyond the investment relationship described. The information, data, and projections presented reflect assumptions and inputs as of September 2026 and are subject to change without notice. Capricorn undertakes no obligation to update this content to reflect subsequent events or developments.</p>
+						</section>
+						<section id="credits" class="methodology-content">
+							<h3>Credits</h3>
+							<p class="acknowledgements-layout__lead">This interactive experience was created by Capricorn Investment Group.</p>
+							<p class="acknowledgements-layout__meta">September 2026 &copy; Capricorn Investment Group</p>
+
+							<h4 class="acknowledgements-layout__subhead">Partners</h4>
+							<ul class="acknowledgements-layout__partners" aria-label="Project partners">
+								<li><span>Management &amp; Narrative</span><strong>Tideline</strong></li>
+								<li><span>Research &amp; Data</span><strong>Rho Impact</strong></li>
+								<li><span>Design</span><strong>Great Jones Studio</strong></li>
+								<li><span>Animation</span><strong>Opuscule</strong></li>
+							</ul>
+						</section>
 					</div>
 				</div>
 			</section>
@@ -398,8 +481,8 @@
 		<nav class="bottom-sticky-nav" aria-label="Section navigation">
 			<ul class="bottom-sticky-nav__list">
 				<li class="bottom-sticky-nav__item bottom-sticky-nav__item--label">Real World Climate Impact At Scale</li>
-				<li><a class="bottom-sticky-nav__item" href="#global-emissions-picture" data-nav-group="global-emissions">Global Emissions Picture</a></li>
-				<li><a class="bottom-sticky-nav__item" href="#tif-tigf-portfolio" data-nav-group="portfolio">TIF &amp; TIGF Portfolio</a></li>
+				<li><a class="bottom-sticky-nav__item" href="#global-emissions-landscape" data-nav-group="global-emissions">Global Emissions Landscape</a></li>
+				<li><a class="bottom-sticky-nav__item" href="#tif-tigf-portfolio" data-nav-group="portfolio">TIF &amp; TIGF Portfolios</a></li>
 				<li><a class="bottom-sticky-nav__item" href="#technology-impacts" data-nav-group="technology-impacts">Technology Impacts</a></li>
 				<li><a class="bottom-sticky-nav__item" href="#conclusion" data-nav-group="conclusion">Conclusion</a></li>
 			</ul>
@@ -413,11 +496,12 @@
 			document.documentElement.classList.remove("no-js");
 		</script>
 
-		<!-- GSAP core + common plugin -->
+		<!-- GSAP core + common plugin. Loaded ahead of d3/d3-sankey (moved below,
+			 next to main.js which is their only consumer) so the hero entrance
+			 animation isn't gated on downloading/executing two scripts it
+			 doesn't need. -->
 		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 		<script>
 			gsap.registerPlugin(ScrollTrigger);
 
@@ -487,12 +571,19 @@
 						}
 					});
 
+					// heroLoadTimeline (above) may still be mid-flight when this scrub
+					// timeline first renders (its ScrollTrigger renders immediately on
+					// creation, at the current scroll position). .to() would capture
+					// whatever live value the globe happens to be at that instant as
+					// its implicit start, which is indeterminate and causes a visible
+					// snap on the first scroll. .fromTo() with the guaranteed resting
+					// post-entrance values makes that initial render deterministic.
 					heroScrollTimeline
-						.to(heroGlobe, { scale: 1.32, duration: 1, ease: "power1.inOut" }, 0)
-						.to(heroGlobe, { yPercent: -158, duration: 0.82, ease: "power2.in" }, 0.18)
-						.to(heroGlobe, { opacity: 0, duration: 0.55, ease: "power1.in" }, 0.45)
-						.to(heroLogo, { y: () => -heroHeadline.offsetHeight * 1.18, duration: 1, ease: "none" }, 0)
-						.to(heroHeadline, { yPercent: -118, duration: 1, ease: "none" }, 0)
+						.fromTo(heroGlobe, { scale: 1 }, { scale: 1.32, duration: 1, ease: "power1.inOut" }, 0)
+						.fromTo(heroGlobe, { yPercent: 0 }, { yPercent: -158, duration: 0.82, ease: "power2.in" }, 0.18)
+						.fromTo(heroGlobe, { opacity: 1 }, { opacity: 0, duration: 0.55, ease: "power1.in" }, 0.45)
+						.fromTo(heroLogo, { y: 0 }, { y: () => -heroHeadline.offsetHeight * 1.18, duration: 1, ease: "none" }, 0)
+						.fromTo(heroHeadline, { yPercent: 0 }, { yPercent: -118, duration: 1, ease: "none" }, 0)
 						.to(heroSubtitle, { opacity: 1, yPercent: -42, duration: 0.58, ease: "none" }, 0.38)
 						.to(heroSubtitle, { yPercent: -96, duration: 0.42, ease: "none" }, 0.66);
 				} 
@@ -702,12 +793,22 @@
 			}
 		</script>
 
+		<!-- d3 / d3-sankey: only main.js needs these, so they load after the
+			 hero-critical scripts above instead of blocking the hero entrance. -->
+		<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
 		<!-- Your app script(s) go below -->
 		<script src="main.js"></script>
 
 		<div class="viewport-frame"></div>
-		<div class="tech_impacts_toast">
-			
+		<div class="tech_impacts_tooltip">
+			<button type="button" aria-expanded="false" aria-controls="tech-impacts-tooltip-content" aria-label="More information">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 0 24 24"><path d="M13.45 13.447c1.415-1.41 2.291-3.361 2.291-5.517v-.067.003-.006c0-2.174-.875-4.143-2.291-5.575l.001.001C12.041.873 10.092-.001 7.939-.001h-.071.004-.006c-2.174 0-4.143.875-5.575 2.291l.001-.001C.877 3.699.001 5.65.001 7.806v.067-.003.006c0 2.174.875 4.143 2.291 5.575l-.001-.001c1.038 1.029 1.68 2.456 1.68 4.033v.023c0 .583.472 1.055 1.055 1.055h5.66a.972.972 0 0 0 .722-.32l.001-.001c.197-.188.32-.453.32-.747v-.005c.027-1.582.678-3.007 1.717-4.044zm-1.539-1.502c-1.183 1.176-1.987 2.731-2.213 4.468l-.004.039h-.537l1.36-6.546c.016-.07.025-.151.025-.233 0-.597-.484-1.08-1.08-1.08-.514 0-.944.359-1.053.84l-.001.007-.607 2.934-.681-2.968c-.117-.474-.538-.82-1.04-.82-.591 0-1.07.479-1.07 1.07 0 .089.011.175.031.257l-.002-.007 1.502 6.509h-.5c-.248-1.772-1.048-3.323-2.218-4.508l.001.001C2.808 10.879 2.18 9.464 2.18 7.902 2.18 4.753 4.733 2.2 7.882 2.2s5.702 2.553 5.702 5.702c0 1.58-.643 3.01-1.68 4.042zm.074 8.299v-.018c0-.583-.472-1.055-1.055-1.055h-.019.001-6.08c-.593 0-1.073.48-1.073 1.073s.48 1.073 1.073 1.073h6.08c.592-.002 1.071-.482 1.073-1.073m-1.968 1.61h-4.47c-.593 0-1.073.48-1.073 1.073S4.954 24 5.547 24h4.47c.58-.016 1.044-.491 1.044-1.073s-.464-1.057-1.043-1.073h-.002z"/></svg>
+			</button>
+			<div class="tech_impacts_tooltip__content" id="tech-impacts-tooltip-content">
+				The Conclusion section includes more information on the forecasting approach and related disclosures.
+			</div>
 		</div>
 	</body>
 </html>

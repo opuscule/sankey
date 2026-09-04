@@ -144,7 +144,7 @@
 			phase: "hold-lenses",
 			start: 34,
 			end: 43,
-			copy: 'They also include the economic <span class="kw kw-sector">sectors</span> that provide those final services, the <span class="kw kw-equipment">equipment</span> that composes each sector, the <span class="kw kw-device">devices</span> that make up equipment, the <span class="kw kw-final-energy">final energy</span> that powers devices, <span class="kw kw-fuel">fuels</span> we use, and the type of greenhouse gas <span class="kw kw-emissions">emissions</span>.'
+			copy: 'They also include the economic <span class="kw kw-sector">sectors</span> that provide those final services, the <span class="kw kw-equipment">equipment</span> that comprises each sector, the <span class="kw kw-device">devices</span> that make up equipment, the <span class="kw kw-final-energy">final energy</span> that powers devices, <span class="kw kw-fuel">fuels</span> we use, and the type of greenhouse gas <span class="kw kw-emissions">emissions</span>.'
 		},
 		{
 			id: "beat-6",
@@ -524,6 +524,7 @@
 		impactsWalkPreselected: false,
 		impactsWalkChartStale: false,
 		impactsHandedOff: false,
+		impactsScanLinePlayed: false,
 		impactsTabId: "avoided",
 		avoidedData: null,
 		avoidedPromise: null,
@@ -655,7 +656,10 @@
 		// dwell is the beat's `vh`, not a leading `hold`. A leading hold here
 		// would push the handoff's start to 1.0 and make the roster and tabs
 		// clickable only at the very last pixel of the runway.
-		{ id: "handoff", hold: 0, vh: 120 }
+		// vh sized so the viewport-frame stays lit (see IMPACTS_EXIT_START,
+		// which fades it out near the very end of this dwell) for >=60vh of
+		// scroll -- 120 only gave ~66vh, which read as far too brief.
+		{ id: "handoff", hold: 0, vh: 160 }
 	];
 	const IMPACTS_WALK_TOTAL_VH = IMPACTS_WALK_BEATS.reduce(
 		(total, beat) => total + beat.hold + beat.vh,
@@ -972,29 +976,35 @@
 		initImpactsIntroSection();
 		initImpactsWalk();
 		initClosingTransitionSection();
+		initAcknowledgementsIntroSection();
 		initThemesSection();
 		initTimelineIntroSection();
 		initTimelineSection();
 		initPortfolioIntroSection();
 		setupBottomStickyNav();
+		initTechImpactsTooltip();
 		setupChapterAnchorLinks();
+		setupMethodologyToc();
 		setupResize();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
 
 	// Boundaries used for the bottom-nav scroll-spy active state.
 	const NAV_GROUPS = [
-		{ group: "global-emissions", startSelector: "#global-emissions-picture", endSelector: "#tif-tigf-portfolio" },
+		{ group: "global-emissions", startSelector: "#global-emissions-landscape", endSelector: "#tif-tigf-portfolio" },
 		{ group: "portfolio", startSelector: "#tif-tigf-portfolio", endSelector: "#technology-impacts" },
 		{ group: "technology-impacts", startSelector: "#technology-impacts", endSelector: "#conclusion" },
 		{ group: "conclusion", startSelector: "#conclusion", endSelector: null }
 	];
 
 	const CHAPTER_SCROLL_TARGETS = {
-		"#global-emissions-picture": { selector: "#sankey-narrative", progress: 0.03 },
+		"#global-emissions-landscape": { selector: "#sankey-narrative", progress: 0.03 },
 		"#tif-tigf-portfolio": { selector: "#portfolio-themes .themes-layout" },
 		"#technology-impacts": { selector: ".impacts-walk" },
-		"#conclusion": { selector: "#conclusion .acknowledgements-intro__body" }
+		// The headline itself is inside a fixed pin (see .pins-fixed in styles.css),
+		// so its getDocumentY is meaningless -- aim at the runway instead and land
+		// mid-hold, with the fuel field and headline fully on.
+		"#conclusion": { selector: ".acknowledgements-intro", progress: 0.45 }
 	};
 
 	function getDocumentY(element) {
@@ -1142,6 +1152,79 @@
 					updateNavProgressBar();
 				}
 			});
+		});
+	}
+
+	function setupMethodologyToc() {
+		const toc = document.querySelector(".methodology-layout__toc");
+		if (!toc || !window.gsap || !window.ScrollTrigger) {
+			return;
+		}
+
+		toc.querySelectorAll("a[href^='#']").forEach((link) => {
+			const target = document.querySelector(link.getAttribute("href"));
+			if (!target) {
+				return;
+			}
+
+			ScrollTrigger.create({
+				trigger: target,
+				start: "top center",
+				end: "bottom center",
+				onToggle: (self) => link.classList.toggle("is-active", self.isActive)
+			});
+		});
+	}
+
+	function initTechImpactsTooltip() {
+		const el = document.querySelector(".tech_impacts_tooltip");
+		const button = el?.querySelector("button");
+		if (!el || !button) {
+			return;
+		}
+
+		const closeTooltip = () => {
+			el.classList.remove("is-open");
+			button.setAttribute("aria-expanded", "false");
+		};
+
+		button.addEventListener("click", (event) => {
+			event.stopPropagation();
+			const isOpen = el.classList.toggle("is-open");
+			button.setAttribute("aria-expanded", String(isOpen));
+		});
+
+		document.addEventListener("click", (event) => {
+			if (el.classList.contains("is-open") && !el.contains(event.target)) {
+				closeTooltip();
+			}
+		});
+
+		if (!window.gsap || !window.ScrollTrigger) {
+			el.classList.add("is-visible");
+			return;
+		}
+
+		// Fires exactly where .impacts-intro__pin's own opacity hits 0 -- that
+		// fade-out is scrubbed across the same trigger element, ending at this
+		// same "bottom bottom" point (see setupImpactsIntroScroll's ScrollTrigger).
+		const startEl = document.querySelector(".impacts-intro");
+		const endEl = document.querySelector("#conclusion");
+		if (!startEl) {
+			return;
+		}
+
+		ScrollTrigger.create({
+			trigger: startEl,
+			start: "bottom bottom",
+			endTrigger: endEl || startEl,
+			end: endEl ? "top center" : "bottom bottom",
+			onToggle: (self) => {
+				el.classList.toggle("is-visible", self.isActive);
+				if (!self.isActive) {
+					closeTooltip();
+				}
+			}
 		});
 	}
 
@@ -3147,10 +3230,6 @@
 		return "This technology";
 	}
 
-	// The card sentence is also used verbatim as beat 2 of the walkthrough copy,
-	// so it lives in one place rather than being duplicated per call site.
-
-	
 	function formatImpactsAmountHtml(amountText) {
 		const match = /^(-?[\d.]+)\s*Gt$/i.exec(String(amountText).trim());
 		if (!match) {
@@ -3175,6 +3254,15 @@
 		return (
 			`If deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
 			`${formatImpactsAmountHtml(amountText)} in 2040.`
+		);
+	}
+
+	// Beat 2's own wording (data-impacts-walk-copy="2") -- distinct from the
+	// card sentence above, which stays on its own phrasing.
+	function impactsWalkSentenceHtml(technologyLabel, amountText) {
+		return (
+			`By 2040, emissions are forecasted to be reduced by ${formatImpactsAmountHtml(amountText)} ` +
+			`through the adoption of ${technologyLabel} at transformative scale.`
 		);
 	}
 
@@ -3565,9 +3653,15 @@
 			}
 		}
 
+		const wasHandedOff = state.impactsHandedOff;
 		state.impactsHandedOff = p >= handoffStart;
 		impactsIsInteractive = state.impactsHandedOff;
 		updateViewportFrame();
+
+		if (state.impactsHandedOff && !wasHandedOff && !state.impactsScanLinePlayed) {
+			state.impactsScanLinePlayed = true;
+			playImpactsScanLine();
+		}
 
 		if (!state.impactsHandedOff && state.impactsWalkChartStale) {
 			state.impactsWalkChartStale = false;
@@ -3587,7 +3681,11 @@
 	function applyImpactsEdgeFades(progress, slideT) {
 		const p = clamp01(progress);
 		const exitT = clamp01((p - IMPACTS_EXIT_START) / (1 - IMPACTS_EXIT_START));
-		impactsExiting = exitT > 0;
+		// >= 1, not > 0: the businesses/roster fade out gradually across the
+		// whole exitT 0-1 span (via the pin opacity below), so the frame should
+		// stay lit for that entire fade and only retract once it's finished,
+		// not the instant the fade starts.
+		impactsExiting = exitT >= 1;
 		setPinOpacity(impactsLayoutEl, slideT * (1 - exitT));
 		updateViewportFrame();
 	}
@@ -3699,7 +3797,7 @@
 			});
 			const avoidedGt = metrics.avoidedMt / 1000;
 			const amountText = avoidedGt > 0 ? `${d3.format(".2f")(avoidedGt)} Gt` : "data pending";
-			c.copies[1].innerHTML = impactsSentenceHtml(technologyLabel, amountText);
+			c.copies[1].innerHTML = impactsWalkSentenceHtml(technologyLabel, amountText);
 		}
 	}
 
@@ -3765,6 +3863,7 @@
 		[158 / HCI_TOTAL_VH, 172 / HCI_TOTAL_VH],
 		[164 / HCI_TOTAL_VH, 176 / HCI_TOTAL_VH]
 	];
+	const HCI_NAV_NOTE_IN = [182 / HCI_TOTAL_VH, 196 / HCI_TOTAL_VH];
 	const HCI_NAV_OUT = [216 / HCI_TOTAL_VH, 256 / HCI_TOTAL_VH];
 	const HCI_LINE2_IN = [256 / HCI_TOTAL_VH, 304 / HCI_TOTAL_VH];
 	const HCI_ALL_OUT = [364 / HCI_TOTAL_VH, 1];
@@ -3793,6 +3892,10 @@
 				const inAmt = windowProgress(progress, HCI_NAV_CARD_IN[i] || HCI_NAV_CARD_IN[HCI_NAV_CARD_IN.length - 1]);
 				el.style.opacity = String(inAmt * (1 - navOutAmt));
 			});
+		}
+		if (state.heroCopyNavNoteEl) {
+			const inAmt = windowProgress(progress, HCI_NAV_NOTE_IN);
+			state.heroCopyNavNoteEl.style.opacity = String(inAmt * (1 - navOutAmt));
 		}
 		if (state.heroCopyIntroLine2El) {
 			const inAmt = windowProgress(progress, HCI_LINE2_IN);
@@ -3839,6 +3942,7 @@
 		state.heroCopyIntroLine2El = document.querySelector(".hero-copy-intro .hero-copy-3");
 		state.heroCopyNavParaEl = document.querySelector(".hero-copy-intro .hero-copy-nav__intro");
 		state.heroCopyNavCardEls = Array.from(document.querySelectorAll(".hero-copy-intro .hero-copy-nav__card"));
+		state.heroCopyNavNoteEl = document.querySelector(".hero-copy-intro .hero-copy-nav__note");
 		state.bottomStickyNavEl = document.querySelector(".bottom-sticky-nav");
 		setupHeroCopyIntroScroll();
 	}
@@ -3861,7 +3965,11 @@
 		// what used to be the bg element's own opacity, and what line2 used to
 		// share via its own "* (1-allOut)" term; both are now free rides on the
 		// pin's opacity instead of being multiplied in twice).
-		setPinOpacity(state.impactsIntroPinEl, slideT * (1 - allOut));
+		// Entry fade-in felt too slow/long; compress its scroll distance 20%
+		// (fully faded in by slideT=0.8 instead of 1) without touching the
+		// shared splitEntryProgress lock-fraction other sections rely on.
+		const pinFadeT = clamp01(slideT / 0.8);
+		setPinOpacity(state.impactsIntroPinEl, pinFadeT * (1 - allOut));
 		if (state.impactsIntroLine1El) {
 			const inAmt = windowProgress(progress, II_LINE1_IN);
 			const outAmt = windowProgress(progress, II_LINE1_OUT);
@@ -3946,9 +4054,12 @@
 	const CT_PHASE1_VH = CT_CROSSFADE[1] * CT_TOTAL_VH; // 608
 	const CT_VIDEO_VH = 360;
 	// The sky canvas is unconditionally opaque (no opacity of its own), so the
-	// pin needs an explicit exit fade or it would cover #acknowledgements-
-	// citations forever after the video ends. Desktop only -- see the mobile
-	// decision note on setupClosingTransitionScroll().
+	// pin has to be taken down explicitly or it would cover #conclusion forever
+	// after the video ends. This tail is where that happens -- but as a hard cut
+	// underneath cover, not a fade: .acknowledgements-intro's fuel panel
+	// crossfades in over the held last frame across this same stretch (see
+	// AI_BG_IN below), so fading here would flash the starfield between the two.
+	// Desktop only -- see the mobile decision note on setupClosingTransitionScroll().
 	const CT_EXIT_VH = 48;
 	const CT_DESKTOP_TOTAL_VH = CT_PHASE1_VH + CT_VIDEO_VH + CT_EXIT_VH; // 1016
 
@@ -4020,8 +4131,12 @@
 			}
 		}
 
+		// Hold the video at full opacity through the tail and hard-cut once the
+		// acknowledgements fuel panel is covering it (AI_BG_IN completes at 0.875
+		// of this same window -- both triggers run the same scrub lag, so the
+		// 0.95 threshold always lands under an opaque cover).
 		const exitT = clamp01((scrolledVh - (CT_DESKTOP_TOTAL_VH - CT_EXIT_VH)) / CT_EXIT_VH);
-		setPinOpacity(state.closingTransitionPinEl, slideT * (1 - exitT));
+		setPinOpacity(state.closingTransitionPinEl, slideT * (exitT >= 0.95 ? 0 : 1));
 	}
 
 	function buildClosingTransitionStars(width, height) {
@@ -4213,6 +4328,101 @@
 		}
 
 		setupClosingTransitionScroll();
+	}
+
+	// --- Acknowledgements intro (fuel panel crossfade out of the closing video) --
+	// Same scene as the closing transition above, which is why it lives here: this
+	// section's trigger deliberately starts 64vh EARLIER than the usual
+	// "top bottom", so its first beat overlaps .closing-transition's tail and the
+	// fuel panel washes in over the video's held last frame instead of the video
+	// fading to the starfield first. After that it behaves like every other color-
+	// background intro (.impacts-intro et al): headline in, brief hold, headline
+	// out as .methodology-layout -- also --color-fuel -- scrolls up underneath, so
+	// the color field never breaks and ordinary scrolling resumes to the page foot.
+	//
+	// 384vh total = 64vh pre-roll crossfade + 100vh to the section's own lock point
+	// + 220vh of section beat (see .acknowledgements-intro's 320vh min-height).
+	// Windows are measured against the trigger's raw progress rather than through
+	// splitEntryProgress, which assumes the pre-lock run is exactly one viewport
+	// height -- the 64vh offset breaks that assumption.
+	const AI_TOTAL_VH = 384;
+	const AI_BG_IN = [0, 56 / AI_TOTAL_VH];
+	const AI_BODY_IN = [164 / AI_TOTAL_VH, 212 / AI_TOTAL_VH];
+	const AI_BODY_OUT = [284 / AI_TOTAL_VH, 336 / AI_TOTAL_VH];
+	// Once the headline is out, take the whole (fixed) pin down before
+	// .methodology-layout reaches the top of the viewport, so it can't paint over
+	// the TOC and isn't left mounted in the a11y tree for the rest of the page.
+	// Invisible: .acknowledgements-intro is .is-fuel by now, so the panel fades
+	// into an identically colored field.
+	const AI_PIN_OUT = [336 / AI_TOTAL_VH, 1];
+
+	// The flow block behind the pin only takes the fuel background once the panel
+	// itself is opaque; before that it has to stay transparent or it slides up over
+	// the still-playing video (#conclusion paints above .closing-transition__pin).
+	// Toggled once at the boundary, like setClosingTransitionVideoPhase.
+	function setAcknowledgementsIntroFuel(isFuel) {
+		if (state.ackIntroIsFuel === isFuel) {
+			return;
+		}
+		state.ackIntroIsFuel = isFuel;
+		if (state.ackIntroSectionEl) {
+			state.ackIntroSectionEl.classList.toggle("is-fuel", isFuel);
+		}
+	}
+
+	function drawAcknowledgementsIntro(progress) {
+		state.ackIntroProgress = progress;
+		const bgAmt = windowProgress(progress, AI_BG_IN);
+		if (state.ackIntroBgEl) {
+			state.ackIntroBgEl.style.opacity = String(bgAmt);
+		}
+		setAcknowledgementsIntroFuel(bgAmt >= 0.99);
+		// Riding the panel's own fade keeps the pin visibility:hidden before the
+		// crossfade starts and again after the release, so it never hit-tests or
+		// paints over the methodology TOC links.
+		setPinOpacity(state.ackIntroPinEl, bgAmt * (1 - windowProgress(progress, AI_PIN_OUT)));
+		if (state.ackIntroBodyEl) {
+			const inAmt = windowProgress(progress, AI_BODY_IN);
+			const outAmt = windowProgress(progress, AI_BODY_OUT);
+			state.ackIntroBodyEl.style.opacity = String(inAmt * (1 - outAmt));
+		}
+	}
+
+	function setupAcknowledgementsIntroScroll() {
+		const section = state.ackIntroSectionEl;
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawAcknowledgementsIntro(1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			// 64vh earlier than "top bottom" so the crossfade overlaps the closing
+			// pin's tail. MUST be a function returning px -- GSAP parseFloat()s
+			// "+=64vh" and silently uses 64 as px.
+			start: () => `top bottom+=${window.innerHeight * 0.64}px`,
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawAcknowledgementsIntro(self.progress),
+			onRefresh: (self) => drawAcknowledgementsIntro(self.progress)
+		});
+		drawAcknowledgementsIntro(0);
+	}
+
+	function initAcknowledgementsIntroSection() {
+		const section = document.querySelector(".acknowledgements-intro");
+		if (!section) {
+			return;
+		}
+		state.ackIntroSectionEl = section;
+		state.ackIntroPinEl = section.querySelector(".acknowledgements-intro__pin");
+		state.ackIntroBgEl = section.querySelector(".acknowledgements-intro__bg");
+		state.ackIntroBodyEl = section.querySelector(".acknowledgements-intro__body");
+		state.ackIntroIsFuel = false;
+		setupAcknowledgementsIntroScroll();
 	}
 
 	function setupScenarioLeadFades() {
@@ -4721,6 +4931,27 @@
 		gsap.timeline()
 			.to(scanLine, { opacity: 1, duration: 0.15 })
 			.to(scanLine, { x: travel, duration: 1, ease: "power2.inOut" })
+			.to(scanLine, { opacity: 0, duration: 0.2 });
+	}
+
+	function playImpactsScanLine() {
+		if (!window.gsap) {
+			return;
+		}
+
+		const scanLine = document.querySelector(".impacts-scan-line");
+		const container = document.querySelector(".impacts-businesses");
+		if (!scanLine || !container) {
+			return;
+		}
+
+		const rect = container.getBoundingClientRect();
+
+		gsap.set(scanLine, { top: 0, left: 0, height: rect.height, x: 0, opacity: 0 });
+
+		gsap.timeline()
+			.to(scanLine, { opacity: 1, duration: 0.15 })
+			.to(scanLine, { x: rect.width, duration: 1, ease: "power2.inOut" })
 			.to(scanLine, { opacity: 0, duration: 0.2 });
 	}
 
@@ -6562,7 +6793,11 @@
 		// what used to be the bg element's own opacity, and what line2 used to
 		// share via its own "* (1-allOut)" term; both are now free rides on the
 		// pin's opacity instead of being multiplied in twice).
-		setPinOpacity(state.timelineIntroPinEl, slideT * (1 - allOut));
+		// Entry fade-in felt too slow/long; compress its scroll distance 20%
+		// (fully faded in by slideT=0.8 instead of 1) without touching the
+		// shared splitEntryProgress lock-fraction other sections rely on.
+		const pinFadeT = clamp01(slideT / 0.8);
+		setPinOpacity(state.timelineIntroPinEl, pinFadeT * (1 - allOut));
 		if (state.timelineIntroLine1El) {
 			const inAmt = windowProgress(progress, TLI_LINE1_IN);
 			const outAmt = windowProgress(progress, TLI_LINE1_OUT);
@@ -6630,7 +6865,11 @@
 		// what used to be the bg element's own opacity, and what line2 used to
 		// share via its own "* (1-allOut)" term; both are now free rides on the
 		// pin's opacity instead of being multiplied in twice).
-		setPinOpacity(state.portfolioIntroPinEl, slideT * (1 - allOut));
+		// Entry fade-in felt too slow/long; compress its scroll distance 20%
+		// (fully faded in by slideT=0.8 instead of 1) without touching the
+		// shared splitEntryProgress lock-fraction other sections rely on.
+		const pinFadeT = clamp01(slideT / 0.8);
+		setPinOpacity(state.portfolioIntroPinEl, pinFadeT * (1 - allOut));
 		if (state.portfolioIntroLine1El) {
 			const inAmt = windowProgress(progress, PI_LINE1_IN);
 			const outAmt = windowProgress(progress, PI_LINE1_OUT);
@@ -6693,6 +6932,7 @@
 	// there.
 	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~144vh of 256vh)
 	const TL_CLOSE_IN = [0.8, 0.9];
+	const TL_OPEN_OUT = [0.32, 0.42];
 	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
 	// and grows to TL_END_FRAC (full) by 2040, so the rising envelope reads as the
 	// rising emissions total. Tunable; could instead be derived from GT totals.
@@ -7013,6 +7253,11 @@
 			state.timelineCloseEl.style.opacity = String(windowProgress(progress, TL_CLOSE_IN));
 		}
 
+		if (state.timelineOpenEl) {
+			const openFadeOut = windowProgress(progress, TL_OPEN_OUT);
+			state.timelineOpenEl.style.opacity = String(slideT * (1 - openFadeOut));
+		}
+
 		const t = smoothstep(windowProgress(progress, TL_ANIM));
 
 		const years = state.timelineYearEls;
@@ -7158,6 +7403,7 @@
 			return;
 		}
 		state.timelineCloseEl = document.querySelector("#timeline .timeline-closing");
+		state.timelineOpenEl = document.querySelector("#timeline .timeline-opening");
 		state.timelineLayoutEl = document.querySelector("#timeline .timeline-layout");
 
 		const yearsEl = document.querySelector("#timeline .timeline-years");

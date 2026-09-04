@@ -140,13 +140,13 @@
 
 			.hero-globe {
 				left: 50%;
-				max-width: min(92vw, 1120px);
+				max-width: min(96vw, 1560px);
 				opacity: 0;
 				position: absolute;
 				top: 52%;
 				transform: translate(-50%, -50%);
 				transform-origin: 50% 50%;
-				width: 72vw;
+				width: 92vw;
 				will-change: transform, opacity;
 				z-index: 1;
 			}
@@ -281,7 +281,7 @@
 				display: grid;
 				gap: 10px;
 				grid-template-columns: repeat(3, minmax(0, 1fr));
-				max-width: 750px;
+				max-width: 800px;
 				width: 100%;
 			}
 
@@ -316,6 +316,22 @@
 				line-height: 1.4;
 				margin: 0;
 				padding: 10px;
+			}
+
+			.hero-copy-nav__note {
+				color: #fff;
+				font-size: 13px;
+				font-style: italic;
+				line-height: 1.4;
+				margin: 0;
+				max-width: var(--max-copy-width);
+				opacity: 0;
+				text-align: left;
+				width: min(100%, var(--max-copy-width));
+			}
+
+			.hero-copy-nav__note a {
+				color: inherit;
 			}
 
 			/* --- Hero copy intro (three crossfading panels, locked in place once
@@ -611,14 +627,14 @@
 				align-self: center;
 				display: grid;
 				grid-template-columns: auto;
-				grid-template-rows: auto auto auto;
+				grid-template-rows: 1fr 3fr 2fr 3fr 1fr ;
 				max-width: 100%;
 				width: 100%;
 			}
 
 			.timeline-yearstrip {
 				grid-column: 1 / 2;
-				grid-row: 1 / 3;
+				grid-row: 2 / 5;
 				--tl-year-h: 70px;
 				height: calc(var(--tl-year-h) * 5);
 				-webkit-mask-image: linear-gradient(180deg, transparent 0%, #fff 40%, #fff 60%, transparent 100%);
@@ -678,12 +694,23 @@
 				color: #fff;
 			}
 
+			.timeline-opening {
+				color: #fff;
+				font-size: 15px;
+				font-weight: 400;
+				grid-column: 1 / 2;
+				grid-row: 1 / 2;
+				line-height: 1.5;
+				margin: 0;
+				opacity: 0;
+			}
+
 			.timeline-closing {
 				color: #fff;
 				font-size: 15px;
 				font-weight: 400;
 				grid-column: 1 / 2;
-				grid-row: 2 / 3;
+				grid-row: 4 / 6;
 				line-height: 1.5;
 				margin: 0;
 				opacity: 0;
@@ -938,7 +965,8 @@
 				inset: 0;
 			}
 
-			.sankey-scan-line {
+			.sankey-scan-line,
+			.impacts-scan-line {
 				position: absolute;
 				top: 0;
 				left: 0;
@@ -1393,7 +1421,7 @@
 
 			#themes-sankey-chart .sankey-node text {
 				fill: #fff;
-				opacity: 0.6;
+				opacity: 0.54;
 			}
 			#themes-sankey-chart .sankey-node.is-selected text {
 				fill: #fff;
@@ -1444,11 +1472,12 @@
 			   frame, with 4 headline lines crossfading over the top, then hard-cuts
 			   into the closing video within the same pin. 1016vh = phase 1 (608vh,
 			   through the frame crossfade) + phase 2 (360vh, video scrub) + a 48vh
-			   exit fade (the sky canvas has no opacity of its own, so the pin needs
-			   an explicit fade-out before #conclusion) -- keep in
+			   tail during which .acknowledgements-intro's fuel panel crossfades in
+			   over the held last frame; the pin then hard-cuts to hidden underneath
+			   that cover rather than fading to the starfield -- keep in
 			   sync with CT_PHASE1_VH/CT_VIDEO_VH/CT_EXIT_VH in main.js. Mobile
 			   override below drops this back to 720vh (phase 1 only, no video, no
-			   exit fade -- mobile keeps this pin sticky rather than fixed). */
+			   tail -- mobile keeps this pin sticky rather than fixed). */
 			.closing-transition {
 				min-height: 1016vh;
 				position: relative;
@@ -1459,6 +1488,7 @@
 				height: 100vh;
 				overflow: hidden;
 				place-items: center;
+				pointer-events: none;
 				position: sticky;
 				top: 0;
 			}
@@ -1468,6 +1498,7 @@
 				height: 100%;
 				inset: 0;
 				object-fit: cover;
+				pointer-events: none;
 				position: absolute;
 				width: 100%;
 			}
@@ -1487,6 +1518,7 @@
 				inset: 0;
 				object-fit: cover;
 				opacity: 0;
+				pointer-events: none;
 				position: absolute;
 				visibility: hidden;
 				width: 100%;
@@ -1505,7 +1537,7 @@
 
 			.closing-transition__pin.is-video-phase .closing-transition__video {
 				opacity: 1;
-				visibility: visible;
+				visibility: inherit;
 			}
 
 			.closing-transition__stack {
@@ -1542,17 +1574,58 @@
 				max-width: var(--max-copy-width);
 			}
 
+			#conclusion {
+				position: relative;
+				z-index: 10;
+			}
+
+			/* 320vh = 220vh scrubbed beat + 100vh pinned viewport. The block itself
+			   stays transparent until the fuel panel inside the pin has finished
+			   crossfading over the closing video -- otherwise this box slides up
+			   over the still-playing video from the bottom (#conclusion sits above
+			   .closing-transition__pin). main.js adds .is-fuel at that point, which
+			   is what holds the color field after the pin hides and before
+			   .methodology-layout (also --color-fuel) covers the viewport. */
 			.acknowledgements-intro {
-				background: var(--color-fuel);
 				color: var(--color-dark);
-				min-height: 100vh;
+				min-height: 320vh;
+				position: relative;
+			}
+
+			.acknowledgements-intro.is-fuel {
+				background: var(--color-fuel);
+			}
+
+			.acknowledgements-intro__pin {
+				align-items: center;
 				display: grid;
+				height: 100vh;
+				justify-content: center;
+				overflow: hidden;
 				padding: 12vh 6vw;
-				place-content: center;
-				place-items: center;
+				pointer-events: none;
+				position: sticky;
+				top: 0;
+			}
+
+			.acknowledgements-intro__bg {
+				background: var(--color-fuel);
+				inset: 0;
+				/* Driven by drawAcknowledgementsIntro in main.js. */
+				opacity: 0;
+				position: absolute;
+				z-index: 0;
+			}
+
+			.acknowledgements-intro__stack {
+				align-items: center;
+				display: grid;
+				position: relative;
+				z-index: 1;
 			}
 
 			.acknowledgements-intro__body {
+				opacity: 0;
 				font-size: clamp(1.9rem, 4.2vw, 3.4rem);
 				font-weight: 760;
 				letter-spacing: -0.03em;
@@ -1578,6 +1651,7 @@
 			}
 
 			.acknowledgements-layout__lead {
+				color: var(--color-dark);
 				font-size: clamp(1.15rem, 1.8vw, 1.55rem);
 				font-weight: 600;
 				line-height: 1.32;
@@ -1585,20 +1659,24 @@
 			}
 
 			.acknowledgements-layout__meta {
-				color: rgba(255, 255, 255, 0.86);
+				color: rgba(0, 0, 0, 0.7);
 				font-size: clamp(0.98rem, 1.2vw, 1.14rem);
 				font-weight: 500;
 				line-height: 1.35;
 				margin: 0;
 			}
 
+			.acknowledgements-layout__meta + .acknowledgements-layout__meta {
+				margin-top: -0.8rem;
+			}
+
 			.acknowledgements-layout__subhead {
-				color: var(--color-fuel);
+				color: var(--color-dark);
 				font-size: clamp(1.1rem, 1.45vw, 1.35rem);
 				font-weight: 700;
 				letter-spacing: -0.01em;
 				line-height: 1.2;
-				margin: 1.7rem 0 0;
+				margin: 0.6rem 0 -0.4rem;
 			}
 
 			.acknowledgements-layout__partners {
@@ -1617,15 +1695,135 @@
 			}
 
 			.acknowledgements-layout__partners span {
-				color: rgba(255, 255, 255, 0.76);
+				color: rgba(0, 0, 0, 0.7);
 				font-size: clamp(0.95rem, 1.1vw, 1.08rem);
 				font-weight: 500;
 			}
 
 			.acknowledgements-layout__partners strong {
-				color: #fff;
+				color: var(--color-dark);
 				font-size: clamp(1rem, 1.2vw, 1.16rem);
 				font-weight: 700;
+			}
+
+			.methodology-layout {
+				background: var(--color-fuel);
+				color: var(--color-dark);
+				display: grid;
+				gap: 4vw;
+				grid-template-columns: 30% 1fr;
+				padding: 10vh 6vw 14vh;
+			}
+
+			.methodology-layout__toc {
+				align-self: start;
+				position: sticky;
+				top: 3rem;
+			}
+
+			.methodology-layout__toc ul {
+				display: grid;
+				gap: 0.85rem;
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			.methodology-layout__toc a {
+				color: var(--color-dark);
+				display: inline-block;
+				font-size: clamp(0.95rem, 1.05vw, 1.08rem);
+				font-weight: 500;
+				line-height: 1.3;
+				opacity: 0.55;
+				text-decoration: none;
+				transition: opacity 0.2s ease, font-weight 0.2s ease;
+			}
+
+			.methodology-layout__toc a.is-active {
+				font-weight: 700;
+				opacity: 1;
+			}
+
+			.methodology-layout__toc a:hover {
+				opacity: 0.85;
+			}
+
+			.methodology-layout__content {
+				display: grid;
+				gap: 8vh;
+				max-width: 44rem;
+			}
+
+			.methodology-content {
+				display: grid;
+				gap: 1.3rem;
+			}
+
+			.methodology-content h3 {
+				font-size: clamp(1.4rem, 2vw, 1.9rem);
+				font-weight: 760;
+				letter-spacing: -0.02em;
+				line-height: 1.1;
+				margin: 0;
+			}
+
+			.methodology-content h4 {
+				font-size: clamp(1.05rem, 1.3vw, 1.2rem);
+				font-weight: 700;
+				letter-spacing: -0.01em;
+				line-height: 1.2;
+				margin: 0.6rem 0 -0.4rem;
+			}
+
+			.methodology-content p {
+				font-size: clamp(0.98rem, 1.15vw, 1.08rem);
+				line-height: 1.55;
+				margin: 0;
+			}
+
+			.methodology-content a {
+				color: var(--color-dark);
+				text-decoration-color: rgba(0, 0, 0, 0.4);
+				text-underline-offset: 2px;
+			}
+
+			.methodology-content a:hover {
+				text-decoration-color: currentColor;
+			}
+
+			.methodology-content__references {
+				display: grid;
+				gap: 0.9rem;
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				counter-reset: reference;
+			}
+
+			.methodology-content__references li {
+				font-size: 0.92rem;
+				line-height: 1.5;
+			}
+
+			.methodology-content__references li::before {
+				content: counter(reference) ".";
+				counter-increment: reference;
+				font-weight: 700;
+			}
+
+			.methodology-content--legal {
+				gap: 0.9rem;
+			}
+
+			.methodology-content--legal h4 {
+				font-size: 0.98rem;
+			}
+
+			.methodology-content--legal p {
+				color: rgba(0, 0, 0, 0.7);
+				font-size: 0.82rem;
+				line-height: 1.5;
 			}
 
 			.scenarios-intro {
@@ -1952,7 +2150,7 @@
 				align-content: start;
 				display: grid;
 				gap: 2rem;
-				grid-template-rows: auto minmax(0, 1fr);
+				grid-template-rows: 1fr auto;
 				/* Narration only — it is grid-stacked over the card, so even at
 				   opacity 0 it would swallow clicks on the tabs/roster. */
 				pointer-events: none;
@@ -2316,6 +2514,7 @@
 			.impacts-businesses {
 				margin-top: 0;
 				min-height: 0;
+				position: relative;
 			}
 
 			.impacts-businesses__pin {
@@ -2599,6 +2798,65 @@
 				transform: translateY(0);
 			}
 
+			/* Lightbulb disclosure button, visible only while scrolled through
+			   #technology-impacts (see initTechImpactsTooltip in main.js). Fixed
+			   bottom-left, offset enough to clear .bottom-sticky-nav below it. */
+			.tech_impacts_tooltip {
+				position: fixed;
+				left: 20px;
+				bottom: 56px;
+				z-index: 500;
+				opacity: 0;
+				pointer-events: none;
+				transform: translateY(8px);
+				transition: opacity 0.4s ease, transform 0.4s ease;
+			}
+
+			.tech_impacts_tooltip.is-visible {
+				opacity: 1;
+				pointer-events: auto;
+				transform: none;
+			}
+
+			.tech_impacts_tooltip > button {
+				width: 32px;
+				height: 32px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0;
+				background: none;
+				border: 2px solid #fff;
+				border-radius: 50%;
+				color: #fff;
+				cursor: pointer;
+			}
+
+			.tech_impacts_tooltip svg {
+				width: 16px;
+				height: 16px;
+				fill: currentColor;
+			}
+
+			.tech_impacts_tooltip__content {
+				display: none;
+				position: absolute;
+				left: 0;
+				bottom: calc(100% + 10px);
+				max-width: 260px;
+				padding: 12px 14px;
+				background: rgba(2, 14, 29, 0.92);
+				backdrop-filter: blur(8px);
+				border: 1px solid rgba(115, 170, 220, 0.22);
+				color: #fff;
+				font-size: 13px;
+				line-height: 1.4;
+			}
+
+			.tech_impacts_tooltip.is-open .tech_impacts_tooltip__content {
+				display: block;
+			}
+
 			.bottom-sticky-nav__list {
 				display: flex;
 				list-style: none;
@@ -2697,7 +2955,8 @@
 				.pins-fixed .themes-layout,
 				.pins-fixed .impacts-intro__pin,
 				.pins-fixed .impacts-layout,
-				.pins-fixed .closing-transition__pin {
+				.pins-fixed .closing-transition__pin,
+				.pins-fixed .acknowledgements-intro__pin {
 					position: fixed;
 					top: 0;
 					left: 0;
@@ -2849,14 +3108,35 @@
 					display: none;
 				}
 
+				/* Static fallback: no scrub on mobile, show the end-state look. The
+				   fuel background is unconditional here rather than waiting on the
+				   .is-fuel toggle, since there's no crossfade to hand off from. */
 				.acknowledgements-intro {
+					background: var(--color-fuel);
 					min-height: 52vh;
+					padding: 0;
+				}
+
+				.acknowledgements-intro__pin {
+					display: block;
+					height: auto;
+					overflow: visible;
 					padding: 3.5rem 1rem;
+					position: static;
+				}
+
+				.acknowledgements-intro__bg {
+					opacity: 1;
+				}
+
+				.acknowledgements-intro__stack {
+					display: block;
 				}
 
 				.acknowledgements-intro__body {
 					font-size: clamp(1.5rem, 8vw, 2.5rem);
 					max-width: var(--max-copy-width);
+					opacity: 1;
 				}
 
 				.acknowledgements-layout {
@@ -3055,7 +3335,8 @@
 				.hero-copy-2,
 				.hero-copy-3,
 				.hero-copy-nav__intro,
-				.hero-copy-nav__card {
+				.hero-copy-nav__card,
+				.hero-copy-nav__note {
 					opacity: 1;
 				}
 
@@ -3186,6 +3467,10 @@
 				}
 
 				.timeline-panel {
+					opacity: 1;
+				}
+
+				.timeline-opening {
 					opacity: 1;
 				}
 
