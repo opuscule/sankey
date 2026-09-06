@@ -1,5 +1,5 @@
 {
-  "_comment": "Metadata required for initial Sankey render. Two top-level keys: nodes (node metadata) and intervention (company placements + themes). `node` is a single node id (backward-compatible with the single-node template contract; null for multi-node flow locations). `location` is additive: {type: 'node'|'flow'|null, nodes: [...]}; 'flow' locations list 2+ node ids across adjacent levels, e.g. a sector->equipment edge. Each company carries a `theme` id (null = unassigned); theme labels, ordering and descriptions live once in `intervention.themes`. `par1`, `par2` and `par3` are ordered display paragraphs; `bullets` is ordered display copy for the company panel: 0-3 short strings, already stripped of blanks, so render them in order and render nothing when the array is empty. `url` is an external per-company link (null = none); every company currently carries the same shared appendix placeholder rather than a company-specific page.",
+  "_comment": "Metadata required for initial Sankey render. Two top-level keys: nodes (node metadata) and intervention (company placements + themes). `node` is a single node id (backward-compatible with the single-node template contract; null for multi-node flow locations). `location` is additive: {type: 'node'|'flow'|null, nodes: [...]}; 'flow' locations list 2+ node ids across adjacent levels, e.g. a sector->equipment edge. Each company carries a `theme` id (null = unassigned); theme labels, ordering and descriptions live once in `intervention.themes`. `par1`, `par2` and `par3` are ordered display paragraphs; `bullets` is ordered display copy for the company panel: 0-3 short strings, already stripped of blanks, so render them in order and render nothing when the array is empty. `avoided_emissions_sentence` states the company's 2040A avoided figure in prose. It and `themes[].description` are the only two fields in this bundle that contain HTML - both wrap a phrase in <strong> (the sentence's carries a class attribute) and must be rendered as markup; every other string here is plain text and must not be. `url` is an external per-company link (null = none); every company currently carries the same shared appendix placeholder rather than a company-specific page.",
   "nodes": {
     "nodes": [
       {
@@ -1682,6 +1682,7 @@
           "Our model assumes enhanced geothermal can physically displace the entire firm-fossil generation pool, with no binding resource limit.",
           "Widespread adoption depends on drilling rig fleet scale-up and geothermal permitting timelines."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, geothermal power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.3 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1705,6 +1706,7 @@
           "Our model assumes electrolysers run on dedicated renewable power, so hydrogen production carries no operating emissions, and the full fossil pool is displaced.",
           "Widespread adoption depends on dedicated clean electricity at utility scale and closing the cost gap against fossil-based hydrogen."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, green hydrogen has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.03 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1728,6 +1730,7 @@
           "Our model assumes the sodium fuel is made by grid-powered electrolysis at the best efficiency industrial cells document.",
           "Widespread adoption depends on type certification for novel propulsion and low-carbon sodium metal produced at industrial volume."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, sodium-air fuel cell propulsion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">6.76 Mt</strong> CO2e (~0.007 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1751,6 +1754,7 @@
           "Our model assumes the batteries charge only on paired renewable power, never the grid.",
           "Widespread adoption depends on retired vehicle packs reaching volume and renewable generation paired at data-center sites."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, second-life battery storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">92.4 Mt</strong> CO2e (~0.09 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1774,6 +1778,7 @@
           "Our model assumes grid electricity, and every flight fully booked, the assumption that decides whether the technology beats car travel.",
           "Widespread adoption depends on type certification of a manned electric aircraft and charging infrastructure at thousands of community airports."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, electric regional air transport has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">235 Mt</strong> CO2e (~0.24 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1797,6 +1802,7 @@
           "Our model assumes every diesel Class 4 to 6 truck kilometer is replaceable, with charging on the projected grid.",
           "Widespread adoption depends on battery raw-material supply keeping pace and the replacement cycle of long-lived diesel truck fleets."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, medium-duty truck electrification has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">508 Mt</strong> CO2e (~0.51 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1820,6 +1826,7 @@
           "Our model assumes full recovery of curtailed solar and wind at transformative scale, displacing firm-fossil generation at its marginal intensity.",
           "Widespread adoption depends on equipment qualification and the amount of renewable curtailment at the level of distribution."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, solid-state power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">815 Mt</strong> CO2e (~0.82 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1843,6 +1850,7 @@
           "Our model assumes 100% clean power, not grid electricity, for the print process.",
           "Widespread adoption depends on qualifying new designs into long-cycle aerospace and defense programs and reaching cost-competitive production at higher volumes."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, metal additive manufacturing has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">5.40 Mt</strong> CO2e (~0.005 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1866,6 +1874,7 @@
           "Our model assumes grid electricity, and that every electric-car kilometer driven displaces one internal-combustion kilometer.",
           "Widespread adoption depends on solid-state manufacturing reaching automotive volumes and the projected electric fleet materializing."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, solid-state battery technology has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">147 Mt</strong> CO2e (~0.15 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1882,13 +1891,14 @@
         },
         "view": "Full",
         "par1": "SPAN is scaling intelligent residential electrical panels with circuit-level metering and load control.",
-        "par2": "Circuit-level household load management has a direct impact on residential emissions, and the same flow appears under heated space and direct gas use.",
+        "par2": "Circuit-level household load management has a direct impact on residential emissions, and the same flow appears under heating system and direct gas use.",
         "par3": "Circuit-level load management could also make room for EV charging and water heating, and spare homes a service upgrade entirely.",
         "bullets": [
           "Circuit-level load management lets US homes with undersized electrical service replace gas furnaces with electric heat pumps.",
           "Our model assumes every panel-constrained US gas home converts fully with no gas backup, a maximum rather than a forecast.",
           "Widespread adoption depends on a narrower electricity-to-gas price gap and the replacement pace of cold-region gas furnaces."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, circuit-level residential load management has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">50.6 Mt</strong> CO2e (~0.05 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1912,6 +1922,7 @@
           "Our model assumes wide-bandgap devices fully replace silicon in every addressable power-conversion stage by 2040.",
           "Widespread adoption depends on cost savings against silicon devices and reliability qualification in equipment built to run for decades."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, wide-bandgap power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">115 Mt</strong> CO2e (~0.12 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1935,6 +1946,7 @@
           "Our model assumes grid electricity and counts only long congested trips, the narrow segment where flying emits less than driving.",
           "Widespread adoption depends on type certification of a powered-lift aircraft and vertiport electrical capacity in dense cities."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, electric vertical takeoff air transport roughly matches the emissions of efficient urban road passenger transport, with the potential to reduce global emissions marginally (by <strong class=\"impacts-company-card__sentence-accent\">0.0547 Mt</strong> CO2e in 2040).",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1958,6 +1970,7 @@
           "Our model assumes grid electricity, and full replacement of coke-based steel production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and cost parity with refurbishing an existing blast furnace."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, electrochemical ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.78 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -1981,6 +1994,7 @@
           "Our model assumes grid electricity, and full replacement of coke-based steel production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and cost parity with refurbishing an existing blast furnace."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, laser-driven ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.32 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2004,6 +2018,7 @@
           "Our model assumes fusion can physically displace the entire firm-fossil generation pool, with no binding fuel or resource limit.",
           "Widespread adoption depends on first-of-a-kind commercial plant construction and fusion fuel-cycle supply."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, fusion power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.5 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2027,6 +2042,7 @@
           "Our model assumes grid electricity, and that the CO2 from limestone is fully captured and stored, not vented.",
           "Widespread adoption depends on CO2 storage far beyond today's capacity and electricity priced against fossil kiln fuel."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, electrochemical cement production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">350 Mt</strong> CO2e (~0.35 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2050,6 +2066,7 @@
           "Our model assumes every utility-scale ground-mount solar installation could use the earth-mount design, displacing fossil generation, with land not a limit.",
           "Widespread adoption depends on grid interconnection capacity and land acquisition for utility-scale solar."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, utility-scale solar power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.85 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2073,6 +2090,7 @@
           "Our model assumes charging at a grid-average intensity, and that storage can replace all coal- and gas-fired firm power.",
           "Widespread adoption depends on iron-air manufacturing capacity and grid interconnection for long-duration storage."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, long-duration energy storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">2.12 Gt</strong> CO2e in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2096,6 +2114,7 @@
           "Our model assumes grid electricity, and full replacement of coal-fired Pidgeon magnesium production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and on electrolytic magnesium beating the cost of coal-based production."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, electrolytic magnesium production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">28.9 Mt</strong> CO2e (~0.03 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2119,6 +2138,7 @@
           "Our model assumes grid electricity, and that brine-extracted lithium is credited against the global average of all primary lithium production.",
           "Widespread adoption depends on brine-hosted rather than hard-rock deposits and water permitting in arid extraction regions."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, direct lithium extraction has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">43.0 Mt</strong> CO2e (~0.04 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       },
       {
@@ -2142,6 +2162,7 @@
           "Our model assumes grid electricity, and that the addressable pool is only the fossil jet fuel remaining after strong SAF displacement.",
           "Widespread adoption depends on certification beyond the fifty percent blend cap and power priced to close the cost gap."
         ],
+        "avoided_emissions_sentence": "When deployed at a transformative scale, power-to-liquid jet fuel has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">623 Mt</strong> CO2e (~0.62 Gt CO2e) in 2040.",
         "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
       }
     ]

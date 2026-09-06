@@ -1,6 +1,6 @@
 {
   "profile": "option-b",
-  "generated_at": "2026-09-01T21:07:14",
+  "generated_at": "2026-09-04T17:22:30",
   "scenario_map": {
     "2025": {
       "kind": "source_csv"
@@ -45,7 +45,5 @@
       "links_touched": "293/341"
     }
   },
-  "notes": [
-    "init.json: company 'SPAN' par2 names 'Heated space', a node renamed to 'Heating system'; the label it points at does not exist in this bundle (copy is authored upstream)"
-  ]
+  "notes": []
 }

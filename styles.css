@@ -2411,6 +2411,9 @@
 				font-size: 0.95rem;
 				line-height: 1.42;
 				margin: 0;
+				display: flex;
+				align-items: flex-end;
+				height: 100%;
 			}
 
 			.impacts-company-card__sentence strong {
@@ -2879,6 +2882,17 @@
 
 			.tech_impacts_tooltip.is-open .tech_impacts_tooltip__content {
 				display: block;
+			}
+
+			/* Desktop/mouse: reveal on hover, no click needed. Gated to real
+			   hover+precise-pointer devices so a touchscreen tap doesn't leave the
+			   content stuck open via a "sticky hover" state -- touch keeps the
+			   click/tap toggle above (.is-open) as its only way in. */
+			@media (hover: hover) and (pointer: fine) {
+				.tech_impacts_tooltip:hover .tech_impacts_tooltip__content,
+				.tech_impacts_tooltip:focus-within .tech_impacts_tooltip__content {
+					display: block;
+				}
 			}
 
 			.bottom-sticky-nav__list {

@@ -1,8 +1,8 @@
 (function () {
-	const initPath = "init-09012026.json";
-	const baselinesPath = "baselines-09012026.json";
-	const nodeDetailsPath = "node_details-09012026.json";
-	const avoidedPath = "avoided-09012026.json";
+	const initPath = "init-09052026.json";
+	const baselinesPath = "baselines-09052026.json";
+	const nodeDetailsPath = "node_details-09052026.json";
+	const avoidedPath = "avoided-09052026.json";
 	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
@@ -999,8 +999,13 @@
 
 	const CHAPTER_SCROLL_TARGETS = {
 		"#global-emissions-landscape": { selector: "#sankey-narrative", progress: 0.03 },
-		"#tif-tigf-portfolio": { selector: "#portfolio-themes .themes-layout" },
-		"#technology-impacts": { selector: ".impacts-walk" },
+		// Target the exact ScrollTrigger trigger element for each intro (see
+		// setupPortfolioIntroScroll/setupImpactsIntroScroll) so `progress` here
+		// lines up with the same progress value drawPortfolioIntro/drawImpactsIntro
+		// consume. 140/388 sits mid-plateau of PI_LINE1_IN..PI_LINE1_OUT (and the
+		// matching II_ window), i.e. where __line--1 is fully faded in.
+		"#tif-tigf-portfolio": { selector: "#tif-tigf-portfolio", progress: 140 / 388 },
+		"#technology-impacts": { selector: ".impacts-intro", progress: 140 / 388 },
 		// The headline itself is inside a fixed pin (see .pins-fixed in styles.css),
 		// so its getDocumentY is meaningless -- aim at the runway instead and land
 		// mid-hold, with the fuel field and headline fully on.
@@ -2320,6 +2325,40 @@
 		return map;
 	}
 
+	// Resolves a company's carved subgraph from node_details.json's pre-computed
+	// per-node causal chain (the same data source and merge/normalize logic the
+	// main chart's click-to-isolate and the themes finale already use, via
+	// chainLinksFor) rather than filtering baselines.json by avoided.json's
+	// touched-pairs list. Returns null when the company has no mapped node, or
+	// node_details.json hasn't loaded yet, or that node's chain is empty (per its
+	// own _comment: "data not yet generated") -- callers should fall back to the
+	// legacy avoidedMap-filtered carve in any of those cases.
+	function resolveImpactsChainCarve(businessId, nodeById, scenarioKey) {
+		const nodeId = state.portfolioBusinessNodeMap.get(businessId);
+		if (!nodeId) {
+			return null;
+		}
+		const chainLinks = chainLinksFor(nodeId, nodeById, scenarioKey);
+		if (!chainLinks) {
+			return null;
+		}
+
+		const subLinks = chainLinks.map(({ sourceId, targetId, value }) => ({
+			id: `${sourceId}|${targetId}`,
+			source: sourceId,
+			target: targetId,
+			value
+		}));
+		const subNodeIds = new Set();
+		subLinks.forEach((link) => {
+			subNodeIds.add(link.source);
+			subNodeIds.add(link.target);
+		});
+		const subNodes = Array.from(subNodeIds, (id) => nodeById.get(id)).filter(Boolean);
+
+		return { subNodes, subLinks };
+	}
+
 	function renderImpactsChart(chartEl, options = {}) {
 		if (!chartEl || !state.initData || !state.baselinesData) {
 			return;
@@ -2385,6 +2424,22 @@
 
 		const carve = companySelected && avoidedMap.size > 0;
 
+		// node_details.json is a large, lazily-fetched file; when it's not loaded
+		// yet, the chain carve below naturally falls back to the legacy
+		// avoidedMap-filtered carve, then upgrades in place once this resolves --
+		// mirrors the main chart's own click-to-isolate loading pattern.
+		if (carve && !state.nodeDetails) {
+			ensureNodeDetails().then(() => {
+				if (storeInState) {
+					if (state.impactsBusinessId === businessId) {
+						renderImpactsSankey();
+					}
+					return;
+				}
+				renderImpactsChart(chartEl, options);
+			});
+		}
+
 		// The company's intervention node (from init.intervention.companies) gets a
 		// highlight border, mirroring a click-selected node in the main chart.
 		const interventionNodeId = companySelected
@@ -2424,18 +2479,33 @@
 			avoidedMap
 		});
 
-		// Subgraph = only the edges the company avoids (plus their endpoint nodes).
+		// Subgraph = the company's node's causal chain from node_details.json when
+		// available (a pre-computed, directly-verifiable data source), falling
+		// back to filtering baselines.json by avoided.json's touched-pairs list
+		// (the legacy mechanism -- still correct, just derived from avoided.json's
+		// per-company mechanical edge allocation rather than real chain topology).
 		let graph = fullLaidOut;
 		if (carve) {
-			const subLinks = fullGraph.links.filter((link) =>
-				avoidedMap.has(`${link.source}|${link.target}`)
+			const chainCarve = resolveImpactsChainCarve(
+				businessId,
+				baselineNodeById,
+				scenarioRequest.resolvedScenarioKey
 			);
-			const subNodeIds = new Set();
-			subLinks.forEach((link) => {
-				subNodeIds.add(link.source);
-				subNodeIds.add(link.target);
-			});
-			const subNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
+			let subNodes;
+			let subLinks;
+			if (chainCarve) {
+				({ subNodes, subLinks } = chainCarve);
+			} else {
+				subLinks = fullGraph.links.filter((link) =>
+					avoidedMap.has(`${link.source}|${link.target}`)
+				);
+				const subNodeIds = new Set();
+				subLinks.forEach((link) => {
+					subNodeIds.add(link.source);
+					subNodeIds.add(link.target);
+				});
+				subNodes = fullGraph.nodes.filter((node) => subNodeIds.has(node.id));
+			}
 			graph = layoutStageGraph(subNodes, subLinks, {
 				width,
 				bandTop,
@@ -2749,24 +2819,33 @@
 		const worldKy = sankeyValueScale(fullGraph);
 		const worldValueById = new Map(fullGraph.nodes.map((node) => [node.id, node.value]));
 
-		const subLinks = built.links.filter((link) =>
-			avoidedMap.has(`${link.source}|${link.target}`)
-		);
-		const subNodeIds = new Set();
-		subLinks.forEach((link) => {
-			subNodeIds.add(link.source);
-			subNodeIds.add(link.target);
-		});
-		const carveGraph = subLinks.length
-			? layoutGraph(
-					built.nodes.filter((node) => subNodeIds.has(node.id)),
-					subLinks,
-					false,
-					fullOrderMap,
-					worldKy,
-					worldValueById
-			  )
-			: fullGraph;
+		// Chain carve from node_details.json takes priority (see
+		// resolveImpactsChainCarve / renderImpactsChart for the rationale);
+		// falls back to filtering baselines.json by avoided.json's touched pairs.
+		const chainCarve = resolveImpactsChainCarve(IMPACTS_WALK_COMPANY, baselineNodeById, scenarioKey);
+		let carveGraph;
+		if (chainCarve) {
+			carveGraph = layoutGraph(chainCarve.subNodes, chainCarve.subLinks, false, fullOrderMap, worldKy, worldValueById);
+		} else {
+			const subLinks = built.links.filter((link) =>
+				avoidedMap.has(`${link.source}|${link.target}`)
+			);
+			const subNodeIds = new Set();
+			subLinks.forEach((link) => {
+				subNodeIds.add(link.source);
+				subNodeIds.add(link.target);
+			});
+			carveGraph = subLinks.length
+				? layoutGraph(
+						built.nodes.filter((node) => subNodeIds.has(node.id)),
+						subLinks,
+						false,
+						fullOrderMap,
+						worldKy,
+						worldValueById
+				  )
+				: fullGraph;
+		}
 
 		// Per-node avoided amount, summed on the node's height-defining side so it
 		// aligns with the ribbons entering/leaving that side.
@@ -3762,7 +3841,7 @@
 			centerOffset: 0
 		};
 
-		ensureAvoidedData()
+		Promise.all([ensureAvoidedData(), ensureNodeDetails()])
 			.then(() => {
 				renderImpactsWalkChart();
 				populateImpactsWalkCopy();
@@ -4686,20 +4765,21 @@
 	// Cached per node id — chain data and node ids are static for a session.
 	const chainLinkCache = new Map();
 	const warnedChainIds = new Set();
-	function chainLinksFor(nodeId, nodeById) {
-		if (chainLinkCache.has(nodeId)) {
-			return chainLinkCache.get(nodeId);
+	function chainLinksFor(nodeId, nodeById, scenarioKey = defaultScenario) {
+		const cacheKey = `${nodeId}|${scenarioKey}`;
+		if (chainLinkCache.has(cacheKey)) {
+			return chainLinkCache.get(cacheKey);
 		}
 
 		const rawLinks = state.nodeDetails?.[nodeId]?.links;
 		if (!Array.isArray(rawLinks) || !rawLinks.length) {
-			chainLinkCache.set(nodeId, null);
+			chainLinkCache.set(cacheKey, null);
 			return null;
 		}
 
 		const merged = new Map();
 		rawLinks.forEach((raw) => {
-			const value = toFiniteNumber(raw?.[defaultScenario]?.value, 0);
+			const value = toFiniteNumber(raw?.[scenarioKey]?.value, 0);
 			if (value <= 0) {
 				return;
 			}
@@ -4726,7 +4806,7 @@
 		});
 
 		const links = merged.size ? Array.from(merged.values()) : null;
-		chainLinkCache.set(nodeId, links);
+		chainLinkCache.set(cacheKey, links);
 		return links;
 	}
 
