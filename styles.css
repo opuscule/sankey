@@ -2153,7 +2153,7 @@
 			   the summed beat budget from main.js — and .impacts-layout is the
 			   sticky stage held inside it. */
 			.impacts-walk {
-				min-height: calc(var(--impacts-walk-vh, 1670) * 1vh);
+				min-height: calc(var(--impacts-walk-vh, 1544) * 1vh);
 				position: relative;
 			}
 
@@ -2411,8 +2411,7 @@
 				font-size: 0.95rem;
 				line-height: 1.42;
 				margin: 0;
-				display: flex;
-				align-items: flex-end;
+				position: relative;
 				height: 100%;
 			}
 

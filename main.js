@@ -103,6 +103,67 @@
 		el.style.visibility = o <= 0.001 ? "hidden" : "visible";
 	};
 
+	// Every pinned panel is position:fixed with opacity:0 (see .pins-fixed in
+	// styles.css), and the ONLY thing that makes one visible is its own
+	// ScrollTrigger writing opacity through setPinOpacity above. Nothing
+	// enumerated the set, so a single trigger left holding a stale progress
+	// painted its whole panel over the page and nothing else corrected it.
+	//
+	// hideAllPins() runs on "refreshInit" -- i.e. immediately before every
+	// global ScrollTrigger.refresh() recomputes positions -- which makes hidden
+	// the default state and leaves each trigger's own onRefresh to re-assert
+	// only the pin it actually owns. Any trigger that forgets to fade its pin
+	// out now fails safe (invisible) instead of failing open (covering the
+	// section below it). Every pin listed here must have an onRefresh that
+	// re-applies its opacity, or it will stay hidden until the next scroll.
+	const PIN_SELECTORS = [
+		".sankey-layout",
+		"#timeline-intro .timeline-intro__pin",
+		"#timeline .timeline-layout",
+		"#tif-tigf-portfolio .portfolio-intro__pin",
+		".themes-layout",
+		".impacts-intro .impacts-intro__pin",
+		".impacts-layout",
+		"#closing-transition .closing-transition__pin",
+		".acknowledgements-intro__pin"
+	];
+
+	const hideAllPins = () => {
+		PIN_SELECTORS.forEach((selector) => {
+			setPinOpacity(document.querySelector(selector), 0);
+		});
+	};
+
+	// Nothing in this file used to call ScrollTrigger.refresh(), and the page
+	// never opted out of the browser's scroll restoration (see index.html).
+	// Reloading below the fold therefore let ScrollTrigger measure trigger rects
+	// against a cached scroll position of 0, producing negative start/end values
+	// -- #hero-intro resolved to start:-4275 end:-3411 after a reload at y=6000,
+	// which pins its progress at 1 permanently, so the hero never animated back
+	// and scrolling to the top left the globe 2230px above where it belongs. A
+	// single refresh() restores the correct start:0 end:864 and repairs it.
+	//
+	// Coalesced into one rAF because several of these fire in quick succession
+	// as the deferred section data lands, and each refresh() is a full re-measure.
+	let refreshFrame = null;
+	const scheduleScrollRefresh = () => {
+		if (!window.ScrollTrigger || refreshFrame !== null) {
+			return;
+		}
+		refreshFrame = requestAnimationFrame(() => {
+			refreshFrame = null;
+			ScrollTrigger.refresh();
+		});
+	};
+
+	if (window.ScrollTrigger) {
+		ScrollTrigger.addEventListener("refreshInit", hideAllPins);
+		if (document.fonts && document.fonts.ready) {
+			// Webfonts reflow the copy inside every pinned panel; measure after.
+			document.fonts.ready.then(scheduleScrollRefresh);
+		}
+	}
+
 	// --- Scene timeline (single source of truth) ------------------------------
 	// One scroll clock drives both the copy beats and the Sankey choreography.
 	// Each scene owns a [start, end] window in percent (0-100) of the
@@ -394,6 +455,14 @@
 			onUpdate: (self) => {
 				const { slideT, progress } = splitEntryProgress(self.progress, self);
 				applyBeatProgress(progress, slideT);
+			},
+			// This was the one pin-owning trigger with no onRefresh, so .sankey-layout
+			// never re-asserted its opacity after a refresh -- and with hideAllPins()
+			// now clearing every pin on "refreshInit", its absence would leave the
+			// narrative blank until the next scroll event.
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				applyBeatProgress(progress, slideT);
 			}
 		});
 	}
@@ -521,7 +590,6 @@
 		impactsWalkRendered: null,
 		impactsWalkCopy: null,
 		impactsWalkProgress: 0,
-		impactsWalkPreselected: false,
 		impactsWalkChartStale: false,
 		impactsHandedOff: false,
 		impactsScanLinePlayed: false,
@@ -633,6 +701,11 @@
 	// The total runway is therefore an OUTPUT of the table, which means beats can
 	// be retimed without renumbering every downstream percentage.
 	const IMPACTS_WALK_COMPANY = "fervo";
+	// How much scroll the pinned stage takes to fade out at the end of the runway.
+	// A fixed vh budget rather than a fraction of the total: the fade should keep
+	// its own pace no matter how long the interactive dwell above it is retimed to
+	// run. Converted to a progress threshold in IMPACTS_EXIT_START below.
+	const IMPACTS_EXIT_FADE_VH = 48;
 	const IMPACTS_WALK_BEATS = [
 		{ id: "copy-in", hold: 0, vh: 60 },
 		{ id: "chart-in", hold: 32, vh: 60 },
@@ -648,18 +721,23 @@
 		{ id: "ripple-final-service", hold: 0, vh: 24 },
 		{ id: "ripple-cascade", hold: 0, vh: 136 },
 		{ id: "copy3-out", hold: 40, vh: 40 },
-		{ id: "copy4-in", hold: 0, vh: 48 },
+		// The roster arrives with nothing highlighted and the card reveals in its
+		// "Select any company..." prompt state -- the walkthrough deliberately does
+		// NOT carry its focal company into the interactive handoff.
 		{ id: "roster-in", hold: 40, vh: 60 },
-		{ id: "company-bold", hold: 0, vh: 20 },
 		{ id: "card-reveal", hold: 0, vh: 60 },
 		// Interaction unlocks the instant the card finishes revealing, so this
 		// dwell is the beat's `vh`, not a leading `hold`. A leading hold here
 		// would push the handoff's start to 1.0 and make the roster and tabs
 		// clickable only at the very last pixel of the runway.
-		// vh sized so the viewport-frame stays lit (see IMPACTS_EXIT_START,
-		// which fades it out near the very end of this dwell) for >=60vh of
-		// scroll -- 120 only gave ~66vh, which read as far too brief.
-		{ id: "handoff", hold: 0, vh: 160 }
+		//
+		// This beat IS the interactive window: the whole of it has the viewport
+		// frame lit and the roster/card clickable. Its tail overlaps the exit
+		// fade, so it is budgeted as (exploring time + IMPACTS_EXIT_FADE_VH) --
+		// 300vh of fully-lit exploring, enough to work through several companies
+		// unhurried. The previous 160 left only ~113vh, about one screen, which
+		// read as far too brief.
+		{ id: "handoff", hold: 0, vh: 300 + IMPACTS_EXIT_FADE_VH }
 	];
 	const IMPACTS_WALK_TOTAL_VH = IMPACTS_WALK_BEATS.reduce(
 		(total, beat) => total + beat.hold + beat.vh,
@@ -678,9 +756,9 @@
 	// Raw progress (0-1) within .impacts-walk's own scroll runway where the
 	// pinned .impacts-layout starts fading out, finishing at 1 so it is
 	// already invisible before it un-pins and would otherwise scroll up. The
-	// "handoff" beat above starts the interactive dwell at ~0.913, so this
-	// leaves room to explore before the fade begins.
-	const IMPACTS_EXIT_START = 0.965;
+	// "handoff" beat above starts the interactive dwell at ~0.77, so this
+	// leaves ~300vh to explore before the fade begins.
+	const IMPACTS_EXIT_START = 1 - IMPACTS_EXIT_FADE_VH / IMPACTS_WALK_TOTAL_VH;
 
 	// Section progress -> 0-1 progress within a single named beat.
 	const walkT = (p, id) => {
@@ -986,6 +1064,9 @@
 		setupChapterAnchorLinks();
 		setupMethodologyToc();
 		setupResize();
+		// Every section's triggers now exist; re-measure them all in one pass so
+		// none is left holding positions computed against a half-built page.
+		scheduleScrollRefresh();
 		statusEl.textContent = "Click a node to isolate direct flows";
 	}
 
@@ -3679,8 +3760,6 @@
 			smoothstep(walkT(p, "copy2-in")) * (1 - smoothstep(walkT(p, "copy2-out")))
 		);
 		setOpacity(c.copies[2], smoothstep(walkT(p, "copy3-in")) * (1 - copy3Out));
-		// Copy 4 hands the column over to the roster, so it clears as the roster arrives.
-		setOpacity(c.copies[3], smoothstep(walkT(p, "copy4-in")) * (1 - rosterIn));
 
 		// Trails the copy out so the two don't leave in lockstep.
 		const nodeOut = smoothstep(clamp01((walkT(p, "copy3-out") - 0.3) / 0.7));
@@ -3724,30 +3803,25 @@
 		const p = clamp01(progress);
 		state.impactsWalkProgress = p;
 
-		const boldStart = IMPACTS_WALK_BOUNDS["company-bold"]?.start ?? 1;
 		const handoffStart = IMPACTS_WALK_BOUNDS["handoff"]?.start ?? 1;
-
-		// The walkthrough presets the focal company so the roster and card read as
-		// already-selected the moment the visitor takes over.
-		const shouldPreselect = p >= boldStart;
-		if (shouldPreselect !== state.impactsWalkPreselected) {
-			state.impactsWalkPreselected = shouldPreselect;
-			if (shouldPreselect) {
-				applyImpactsWalkPreselection();
-			} else {
-				state.impactsCompanyKey = "";
-				syncImpactsBusinessButtons("");
-			}
-		}
 
 		const wasHandedOff = state.impactsHandedOff;
 		state.impactsHandedOff = p >= handoffStart;
 		impactsIsInteractive = state.impactsHandedOff;
 		updateViewportFrame();
 
-		if (state.impactsHandedOff && !wasHandedOff && !state.impactsScanLinePlayed) {
-			state.impactsScanLinePlayed = true;
-			playImpactsScanLine();
+		// Rising/falling edges only, so a ScrollTrigger refresh or a resize while
+		// the visitor is mid-exploration can't clobber their selection.
+		if (state.impactsHandedOff && !wasHandedOff) {
+			releaseImpactsWalkChart();
+			if (!state.impactsScanLinePlayed) {
+				state.impactsScanLinePlayed = true;
+				playImpactsScanLine();
+			}
+		} else if (!state.impactsHandedOff && wasHandedOff) {
+			// Scrolling back into the script drops whatever the visitor picked so
+			// the scripted walkthrough replays clean.
+			clearImpactsSelection();
 		}
 
 		if (!state.impactsHandedOff && state.impactsWalkChartStale) {
@@ -3777,27 +3851,30 @@
 		updateViewportFrame();
 	}
 
-	function impactsWalkRosterKey() {
-		for (const [key, entry] of state.impactsRosterIndex) {
-			if (normalizeBusinessSlug(entry.businessId) === IMPACTS_WALK_COMPANY) {
-				return key;
-			}
-		}
-		return "";
+	// Back to the neutral baseline: no company bolded in the roster, and the card
+	// showing its "Select any company..." prompt. Identical to what clicking the
+	// active company a second time produces (see setActiveImpactsBusiness).
+	function clearImpactsSelection() {
+		state.impactsCompanyKey = "";
+		state.impactsBusinessId = "";
+		window.currentImpactsBusinessId = "";
+		syncImpactsBusinessButtons("");
+		updateImpactsCompanyCard(null);
 	}
 
-	function applyImpactsWalkPreselection() {
-		const key = impactsWalkRosterKey();
-		if (!key) {
-			return;
-		}
-		state.impactsCompanyKey = key;
-		state.impactsBusinessId = supportedPortfolioBusinesses.has(IMPACTS_WALK_COMPANY)
-			? IMPACTS_WALK_COMPANY
-			: "";
-		window.currentImpactsBusinessId = state.impactsBusinessId;
-		syncImpactsBusinessButtons(key);
-		updateImpactsCompanyCard(state.impactsRosterIndex.get(key) || null);
+	// The walkthrough's chart is carved down to its focal company, but the visitor
+	// takes over on the full uncarved landscape with nothing selected -- so chart
+	// ownership passes to the interactive renderer here, at the handoff, rather
+	// than lazily on the visitor's first click.
+	function releaseImpactsWalkChart() {
+		clearImpactsSelection();
+		// renderImpactsSankey() replaces the walkthrough's SVG, so its cached d3
+		// selections are dead until the rebuild in drawImpactsWalk re-creates them
+		// on the way back up. Nulling it also parks drawImpactsWalkChart on its
+		// own `if (!r)` guard in the meantime.
+		state.impactsWalkRendered = null;
+		state.impactsWalkChartStale = true;
+		renderImpactsSankey();
 	}
 
 	// The copy stack starts centred in the column, so its travel distance has to
@@ -3828,7 +3905,7 @@
 		state.impactsWalkCopy = {
 			stage: walkEl.querySelector(".impacts-walk__stage"),
 			stack: walkEl.querySelector("[data-impacts-walk-copy-stack]"),
-			copies: [1, 2, 3, 4].map((n) =>
+			copies: [1, 2, 3].map((n) =>
 				walkEl.querySelector(`[data-impacts-walk-copy="${n}"]`)
 			),
 			node: walkEl.querySelector("[data-impacts-walk-node]"),
@@ -3847,6 +3924,9 @@
 				populateImpactsWalkCopy();
 				measureImpactsWalkCopy();
 				setupImpactsWalkScroll();
+				// Deferred behind ~5.6MB of JSON, so this lands well after the
+				// load-event refresh GSAP does on its own.
+				scheduleScrollRefresh();
 			})
 			.catch((error) => {
 				console.warn("[Sankey] Could not initialize impacts walkthrough:", error);
@@ -4348,11 +4428,35 @@
 
 		state.closingTransitionReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+		// Assigning src here (at init) started a 5.0MB download on every page
+		// load -- the single largest asset on the page, fetched in contention
+		// with the JSON the earlier sections actually need, for a section at
+		// ~78% scroll depth that most visitors never reach. The element keeps
+		// preload="auto" so it still buffers hard enough to scrub; it just
+		// doesn't start until the closing section is roughly four viewports
+		// away. If it somehow isn't ready in time, the hard cut is already
+		// covered by closing-transition-frame.jpg.
+		const ensureClosingTransitionVideo = () => {
+			if (state.closingTransitionVideoEl && !state.closingTransitionVideoEl.src) {
+				state.closingTransitionVideoEl.src = "closing-video-opt-v1.mp4";
+			}
+		};
+
 		ScrollTrigger.matchMedia({
 			"(min-width: 901px)": () => {
-				if (state.closingTransitionVideoEl && !state.closingTransitionVideoEl.src) {
-					state.closingTransitionVideoEl.src = "closing-video-opt-v1.mp4";
-				}
+				const preloadST = ScrollTrigger.create({
+					trigger: section,
+					start: () => `top bottom+=${window.innerHeight * 4}px`,
+					end: "bottom bottom",
+					onEnter: ensureClosingTransitionVideo,
+					// Covers landing below the start (an anchor jump straight to
+					// the conclusion), where onEnter never fires.
+					onRefresh: (self) => {
+						if (self.progress > 0) {
+							ensureClosingTransitionVideo();
+						}
+					}
+				});
 				setClosingTransitionVideoPhase(false);
 				const st = ScrollTrigger.create({
 					trigger: section,
@@ -4365,6 +4469,7 @@
 				});
 				drawClosingTransitionText(0);
 				return () => {
+					preloadST.kill();
 					st.kill();
 				};
 			},
@@ -6851,6 +6956,7 @@
 			renderThemesRoster(state.themesModel);
 			renderThemesSankey();
 			setupThemesScroll();
+			scheduleScrollRefresh();
 			// Warm the full-chain data so the finale can spider-web the complete
 			// impact of each company, then re-apply the current state.
 			ensureNodeDetails().then(() => {
@@ -7346,7 +7452,12 @@
 			// Layout is this section's "first visible thing": driven by slideT
 			// (fully in by the time the panel locks) instead of TL_OPEN_IN's old
 			// [0, 0.1] fade-in that only started once already locked.
-			setPinOpacity(state.timelineLayoutEl, slideT);
+			//
+			// The exit half of this pin's opacity lives on a *second* trigger
+			// (drawTimelineFade). Both handlers therefore write the same product
+			// of the same two stored terms, so whichever one runs last lands on
+			// the same value -- see the ordering note above drawTimelineFade.
+			setPinOpacity(state.timelineLayoutEl, slideT * (1 - (state.timelineExitT ?? 0)));
 		}
 
 		if (state.timelineCloseEl) {
@@ -7440,7 +7551,16 @@
 	// revive it independent of whether the entry trigger thinks it should show
 	// at all -- otherwise an early onRefresh here could stomp .timeline-layout
 	// back to fully opaque while still up in the hero section.
+	//
+	// That guard only covered one of the two orderings. The reverse -- this
+	// fade's onRefresh running FIRST (correctly zeroing the pin) and then
+	// drawTimeline's onRefresh re-opening it to slideT=1 -- left .timeline-layout
+	// fully opaque on top of the themes/impacts/closing sections after any reload
+	// below #timeline. So the exit term is stored the same way the entry term is,
+	// and BOTH handlers now write the identical product of both terms. Neither
+	// ordering can win, because there is nothing left to disagree about.
 	function drawTimelineFade(progress) {
+		state.timelineExitT = progress;
 		if (state.timelineLayoutEl) {
 			setPinOpacity(state.timelineLayoutEl, (state.timelineSlideT ?? 0) * (1 - progress));
 		}

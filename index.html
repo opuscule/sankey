@@ -15,9 +15,9 @@
 
 		<meta name="theme-color" content="#fafafa" />
 
-		<link rel="icon" href="/favicon.ico" sizes="any" />
-		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
-		<link rel="apple-touch-icon" href="icon.png" />
+		<!-- Boilerplate /favicon.ico, /icon.svg and icon.png links lived here and
+			 404'd on every load -- none of the three files exist. The real icons
+			 are the capricornllc.com ones declared below. -->
 
 		<!-- Google tag (gtag.js) -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-PME2V7ZMS0"></script>
@@ -275,7 +275,6 @@
 										<p class="impacts-walk__copy" data-impacts-walk-copy="1">Let's take Fervo's enhanced geothermal system (EGS) technology as an example, which <strong>avoids future emissions</strong> by replacing fossil fuel baseload power generation.</p>
 										<p class="impacts-walk__copy" data-impacts-walk-copy="2"></p>
 										<p class="impacts-walk__copy" data-impacts-walk-copy="3">These avoided emissions ripple across the global economy.</p>
-										<p class="impacts-walk__copy" data-impacts-walk-copy="4"><strong>Select any company</strong> in TIF &amp; TIGF's portfolio to see how its technology is forecast to impact the Global Emissions Landscape.</p>
 									</div>
 
 									<div class="impacts-node-visual impacts-walk__node" data-impacts-walk-node>
@@ -291,9 +290,11 @@
 								</div>
 
 								<div class="impacts-company-card" data-impacts-company-card aria-live="polite">
-									<p class="impacts-company-card__prompt" data-impacts-card-prompt>
-										<strong>Select any company</strong> in TIF &amp; TIGF's portfolio to see how its technology is forecast to impact the Global Emissions Landscape.
-									</p>
+									<div class="impacts-company-card__prompt" data-impacts-card-prompt>
+										<p style="position: absolute; bottom: 0; font-size: 24px; font-weight: 400; line-height: 1.3;">
+											<strong>Select any company</strong> in TIF &amp; TIGF's portfolio to see how its technology is forecast to impact the Global Emissions Landscape.
+										</p>
+									</div>
 
 									<div class="impacts-company-card__content" data-impacts-card-content hidden>
 										<div class="impacts-company-card__body">
@@ -402,6 +403,7 @@
 
 					<div class="methodology-layout__content">
 						<section id="methodology-built" class="methodology-content">
+							<p>Methodology and full details for the technology-level avoided emissions analyses can be found at <a href="https://koi.eco/real-world-impact-appendix/" target="_blank" rel="noopener">koi.eco/real-world-impact-appendix/</a>.</p>
 							<h3>How the Emissions Map was Built</h3>
 
 							<h4>The framework</h4>
@@ -499,6 +501,17 @@
 
 		<script>
 			document.documentElement.classList.remove("no-js");
+
+			// This is a scroll-driven narrative: a restored scroll offset has no
+			// stable meaning until every section's data has landed and every
+			// ScrollTrigger has measured itself. Restoring one mid-load made GSAP
+			// measure trigger rects against a cached scroll of 0 and resolve
+			// #hero-intro to a negative start/end, permanently locking its progress
+			// at 1 -- the hero then stayed in its scrolled-away state even back at
+			// the top of the page. Start every load at the top instead.
+			if ("scrollRestoration" in history) {
+				history.scrollRestoration = "manual";
+			}
 		</script>
 
 		<!-- GSAP core + common plugin. Loaded ahead of d3/d3-sankey (moved below,
@@ -573,25 +586,54 @@
 						.fromTo(heroLogo, { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.52 }, "-=0.28")
 						.fromTo(heroHeadline, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.74 }, "-=0.24");
 
-					const heroScrollTimeline = gsap.timeline({
-						scrollTrigger: {
-							trigger: heroIntro,
-							start: "top top",
-							end: "+=96%",
-							scrub: true,
-							pin: heroStage,
-							invalidateOnRefresh: true
-						}
+					// The scrub timeline below and heroLoadTimeline above animate the
+					// SAME four elements. A scrubbed ScrollTrigger renders at progress 0
+					// the moment it is created, and again on every ScrollTrigger.refresh()
+					// -- and each of those renders writes this timeline's from-values
+					// (globe opacity 1 / scale 1, logo y 0, headline yPercent 0), which
+					// are the entrance's *finished* state. Creating it up-front therefore
+					// punched the entrance to 100% mid-flight, the entrance's next tick
+					// pulled it back to its own eased value, and the cycle repeated on
+					// each refresh: the globe appeared to fade in, shrink and darken, snap
+					// to full, shrink and darken again, then snap to full. (Measured on a
+					// per-frame trace: spikes at trigger creation and at each of the two
+					// refreshes that land inside the ~1.5s entrance.)
+					//
+					// The two phases are meant to be sequential, so build the scrub only
+					// once the entrance has finished. .fromTo() is still used throughout
+					// rather than .to(): an implicit start would be sampled from whatever
+					// the element happens to be at first render, and invalidateOnRefresh
+					// re-samples it on every refresh.
+					// The PIN is split onto its own trigger and created immediately. It
+					// inserts the pin-spacer (864px of padding under .hero-stage), so
+					// deferring it too would reflow the document under a visitor who
+					// scrolls during the entrance -- measured as a 266px scroll jump
+					// (a scroll to 600 landed at 866). Only the scrub timeline waits.
+					ScrollTrigger.create({
+						trigger: heroIntro,
+						start: "top top",
+						end: "+=140%",
+						pin: heroStage,
+						invalidateOnRefresh: true
 					});
 
-					// heroLoadTimeline (above) may still be mid-flight when this scrub
-					// timeline first renders (its ScrollTrigger renders immediately on
-					// creation, at the current scroll position). .to() would capture
-					// whatever live value the globe happens to be at that instant as
-					// its implicit start, which is indeterminate and causes a visible
-					// snap on the first scroll. .fromTo() with the guaranteed resting
-					// post-entrance values makes that initial render deterministic.
-					heroScrollTimeline
+					let heroScrollTimeline = null;
+
+					const buildHeroScrollTimeline = () => {
+						if (heroScrollTimeline) {
+							return;
+						}
+						heroScrollTimeline = gsap.timeline({
+							scrollTrigger: {
+								trigger: heroIntro,
+								start: "top top",
+								end: "+=140%",
+								scrub: true,
+								invalidateOnRefresh: true
+							}
+						});
+
+						heroScrollTimeline
 						// The globe rises only -- it holds the size it settles at after the
 						// entrance, so scale is deliberately untouched here. scale:1 is
 						// pinned in the from-state anyway so a scrub that renders while
@@ -600,9 +642,56 @@
 						.fromTo(heroGlobe, { opacity: 1 }, { opacity: 0, duration: 0.55, ease: "power1.in" }, 0.45)
 						.fromTo(heroLogo, { y: 0 }, { y: () => -heroHeadline.offsetHeight * 1.18, duration: 1, ease: "none" }, 0)
 						.fromTo(heroHeadline, { yPercent: 0 }, { yPercent: -118, duration: 1, ease: "none" }, 0)
-						.to(heroSubtitle, { opacity: 1, yPercent: -42, duration: 0.58, ease: "none" }, 0.38)
-						.to(heroSubtitle, { yPercent: -96, duration: 0.42, ease: "none" }, 0.66);
-				} 
+						// Same reasoning as the .fromTo()s above, which these two were
+						// missed by: an implicit start is sampled from whatever the
+						// element happens to be at first render, and invalidateOnRefresh
+						// re-samples it on every refresh. After a mid-page reload that
+						// captured the subtitle mid-flight, leaving it stuck opaque and
+						// offset once scrolled back to the top.
+						//
+						// The old pair was two overlapping .to()s -- opacity+yPercent
+						// over 0.38-0.96, then yPercent again from 0.66 -- so the second
+						// one's implicit start was the first one's *mid-flight* value,
+						// not its endpoint: at t=0.66 the linear 0 -> -42 ramp is
+						// (0.66-0.38)/0.58 = 48.3% through, i.e. yPercent -20.28. Writing
+						// -42 as an explicit start would silently retime the slide, so
+						// the two properties are separated instead: opacity keeps its
+						// original 0.38-0.96 span, and yPercent becomes two explicit
+						// back-to-back segments that trace the exact same path.
+						// y stays at the 28px the CSS resting transform supplies.
+							.fromTo(heroSubtitle, { opacity: 0 }, { opacity: 1, duration: 0.58, ease: "none" }, 0.38)
+							.fromTo(heroSubtitle, { yPercent: 0 }, { yPercent: -20.28, duration: 0.28, ease: "none" }, 0.38)
+							// immediateRender:false because this is the SECOND tween to own
+							// yPercent. A fromTo applies its from-value the moment it is
+							// added to the timeline, so without this the later tween's
+							// -20.28 wins at rest and the subtitle sits ~19px too high
+							// (measured: resting y of 9px instead of the CSS 28px).
+							.fromTo(
+								heroSubtitle,
+								{ yPercent: -20.28 },
+								{ yPercent: -96, duration: 0.42, ease: "none", immediateRender: false },
+								0.66
+							);
+					};
+
+					heroLoadTimeline.eventCallback("onComplete", buildHeroScrollTimeline);
+
+					// If the visitor scrolls before the entrance has finished, don't make
+					// them wait on it: snap the entrance to its end state and hand straight
+					// over, so the globe never sits unresponsive to the scroll.
+					// buildHeroScrollTimeline is idempotent, so the onComplete that
+					// progress(1) fires is harmless.
+					window.addEventListener(
+						"scroll",
+						() => {
+							if (!heroScrollTimeline && window.scrollY > 0) {
+								heroLoadTimeline.progress(1);
+								buildHeroScrollTimeline();
+							}
+						},
+						{ passive: true }
+					);
+				}
 			}
 
 			// Add data-animation="word-reveal" to any paragraph to opt it into this scroll-scrub reveal.
