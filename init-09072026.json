@@ -1676,14 +1676,14 @@
         "view": "Full",
         "par1": "Fervo is scaling enhanced geothermal systems for firm, dispatchable clean power.",
         "par2": "Geothermal power has a direct impact on electricity and heat emissions.",
-        "par3": "Beyond electricity, enhanced geothermal could also supply industrial process heat and district heating networks now run on fossil boilers.",
+        "par3": "Beyond electricity, enhanced geothermal could supply industrial process heat and district heating, and give grids firm clean power in places with no volcanic resource.",
         "bullets": [
           "Enhanced geothermal delivers firm, dispatchable clean electricity, displacing coal- and gas-fired firm power generation worldwide.",
-          "Our model assumes enhanced geothermal can physically displace the entire firm-fossil generation pool, with no binding resource limit.",
+          "The figure assumes enhanced geothermal can physically displace the entire firm-fossil generation pool, with no binding resource limit.",
           "Widespread adoption depends on drilling rig fleet scale-up and geothermal permitting timelines."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, geothermal power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.3 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, geothermal power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.3 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/fervo-energy/"
       },
       {
         "company": "ElectricHydrogen",
@@ -1700,14 +1700,14 @@
         "view": "Full",
         "par1": "Electric Hydrogen is scaling cost-competitive green hydrogen production.",
         "par2": "Green hydrogen has a direct impact on chemical emissions.",
-        "par3": "Green hydrogen could also displace fossil fuels in passenger transport, freight, and industrial activities beyond chemical feedstocks.",
+        "par3": "Beyond replacing today's grey hydrogen, cheap green hydrogen could reach the industrial and heavy transport segments that direct electrification struggles to serve.",
         "bullets": [
           "Water electrolysis run on dedicated renewables produces hydrogen that displaces conventional global fossil-based hydrogen production.",
-          "Our model assumes electrolysers run on dedicated renewable power, so hydrogen production carries no operating emissions, and the full fossil pool is displaced.",
+          "The figure assumes electrolysers run on dedicated renewable power, so hydrogen production carries no operating emissions, and the full fossil pool is displaced.",
           "Widespread adoption depends on dedicated clean electricity at utility scale and closing the cost gap against fossil-based hydrogen."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, green hydrogen has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.03 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, green hydrogen has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.03 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/electric-hydrogen/"
       },
       {
         "company": "PropelAero",
@@ -1724,14 +1724,14 @@
         "view": "Full",
         "par1": "Propel Aero is developing sodium-air fuel cells for regional electric aviation.",
         "par2": "Sodium-air fuel cell propulsion has a direct impact on plane emissions, and the same flow appears under direct oil use and passenger transport.",
-        "par3": "Beyond regional aviation, sodium-air fuel cell propulsion could also power marine transport, rail, and heavy road freight.",
+        "par3": "Beyond regional aviation, sodium-air fuel cells could carry marine, rail, and heavy freight, where batteries are too heavy for the range those journeys demand.",
         "bullets": [
           "Sodium-air fuel cell propulsion displaces jet-fuel combustion on the world's short-haul regional passenger flights.",
-          "Our model assumes the sodium fuel is made by grid-powered electrolysis at the best efficiency industrial cells document.",
+          "The figure assumes the sodium fuel is made by grid-powered electrolysis at the best efficiency industrial cells document.",
           "Widespread adoption depends on type certification for novel propulsion and low-carbon sodium metal produced at industrial volume."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, sodium-air fuel cell propulsion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">6.76 Mt</strong> CO2e (~0.007 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, sodium-air fuel cell propulsion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">6.76 Mt</strong> CO2e (~0.007 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/propel-aero/"
       },
       {
         "company": "RedwoodMaterials",
@@ -1748,14 +1748,14 @@
         "view": "Full",
         "par1": "Redwood Materials is advancing the circular economy through battery repurposing and recycling.",
         "par2": "Second-life battery storage has a direct impact on computing infrastructure emissions.",
-        "par3": "Packs that finish a second life could also be recycled, so their lithium, nickel and cobalt return to manufacturing instead of newly mined material.",
+        "par3": "Second-life packs could also serve grid storage, commercial buildings, and EV charging sites, and recycling at end of life could reduce the demand for virgin lithium, nickel, and cobalt.",
         "bullets": [
           "Repurposed electric-vehicle packs paired with renewables displace fossil-fired firm generation serving data centers.",
-          "Our model assumes the batteries charge only on paired renewable power, never the grid.",
+          "The figure assumes the batteries charge only on paired renewable power, never the grid.",
           "Widespread adoption depends on retired vehicle packs reaching volume and renewable generation paired at data-center sites."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, second-life battery storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">92.4 Mt</strong> CO2e (~0.09 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, second-life battery storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">92.4 Mt</strong> CO2e (~0.09 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/redwood-materials/"
       },
       {
         "company": "WhisperAero",
@@ -1771,15 +1771,15 @@
         },
         "view": "Full",
         "par1": "Whisper Aero is developing ultraquiet electric ducted-fan propulsion for regional aircraft.",
-        "par2": "Electric regional aircraft have a direct impact on passenger transport emissions, and the same flow appears under car use and direct oil use.",
-        "par3": "Beyond road-trip mode shift, electric regional aircraft could also replace today's fossil-fuelled commuter flights and carry regional air freight on the same short routes.",
+        "par2": "Electric regional aircraft have a direct impact on passenger transport emissions.",
+        "par3": "Electric commuter aircraft could also replace today's fossil-fuelled commuter flights, carry regional freight, and bring small airports back into use for towns with no fast link.",
         "bullets": [
           "Electric regional aircraft shift medium-distance trips from road to air and displace passenger-car travel on small-airport routes.",
-          "Our model assumes grid electricity, and every flight fully booked, the assumption that decides whether the technology beats car travel.",
+          "The figure assumes grid electricity, every flight fully booked, and car travel as the baseline displaced.",
           "Widespread adoption depends on type certification of a manned electric aircraft and charging infrastructure at thousands of community airports."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, electric regional air transport has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">235 Mt</strong> CO2e (~0.24 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, electric regional air transport has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">235 Mt</strong> CO2e (~0.24 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/whisper-aero/"
       },
       {
         "company": "HarbingerMotors",
@@ -1796,14 +1796,14 @@
         "view": "Full",
         "par1": "Harbinger Motors is scaling battery-electric medium-duty trucks for commercial fleets.",
         "par2": "Medium-duty truck electrification has a direct impact on truck emissions, which affects freight and direct oil use emissions.",
-        "par3": "Beyond medium-duty fleets, battery-electric truck platforms could also reach heavy-duty regional haul and vocational trucks that run the same depot-based duty cycles.",
+        "par3": "Beyond medium-duty fleets, electric truck platforms could reach heavy regional haul and vocational trucks, and cut the diesel noise and street-level pollution of urban delivery.",
         "bullets": [
           "Battery-electric Class 4 to 6 trucks displace diesel combustion across the global medium-duty truck fleet.",
-          "Our model assumes every diesel Class 4 to 6 truck kilometer is replaceable, with charging on the projected grid.",
+          "The figure assumes every diesel Class 4 to 6 truck kilometer is replaceable, with charging on the projected grid.",
           "Widespread adoption depends on battery raw-material supply keeping pace and the replacement cycle of long-lived diesel truck fleets."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, medium-duty truck electrification has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">508 Mt</strong> CO2e (~0.51 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, medium-duty truck electrification has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">508 Mt</strong> CO2e (~0.51 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/harbinger-motors/"
       },
       {
         "company": "HeronPower",
@@ -1820,14 +1820,14 @@
         "view": "Full",
         "par1": "Heron Power is scaling solid-state transformers for the medium-voltage grid.",
         "par2": "Solid-state power conversion has a direct impact on electricity and heat emissions.",
-        "par3": "Solid-state conversion could also supply megawatt-scale vehicle charging directly from medium voltage, replacing a conventional transformer chain now quoted at multi-year lead times.",
+        "par3": "Solid-state conversion could relieve the transformer shortage that now holds up grid connections, so new clean generation and large charging sites reach users sooner.",
         "bullets": [
           "Solid-state transformers give the grid dynamic voltage and reactive control, allowing distributed solar and wind that would otherwise be curtailed to displace fossil power.",
-          "Our model assumes full recovery of curtailed solar and wind at transformative scale, displacing firm-fossil generation at its marginal intensity.",
+          "The figure assumes full recovery of curtailed solar and wind at transformative scale, displacing firm-fossil generation at its marginal intensity.",
           "Widespread adoption depends on equipment qualification and the amount of renewable curtailment at the level of distribution."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, solid-state power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">815 Mt</strong> CO2e (~0.82 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, solid-state power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">815 Mt</strong> CO2e (~0.82 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/heron-power/"
       },
       {
         "company": "Seurat",
@@ -1844,14 +1844,14 @@
         "view": "Full",
         "par1": "Seurat is scaling advanced metal additive manufacturing for precision metal parts.",
         "par2": "Metal additive manufacturing has a direct impact on emissions from other industries.",
-        "par3": "Area printing could also make additive economical at production volumes, since build rate can scale without the loss of resolution that limits point-scanning systems.",
+        "par3": "Area printing could also make lightweight structures that cannot be machined at all, and let manufacturers hold less tooling and inventory than conventional production requires.",
         "bullets": [
           "Metal additive manufacturing displaces conventional machining, casting, and forging of precision metal parts.",
-          "Our model assumes 100% clean power, not grid electricity, for the print process.",
+          "The figure assumes 100% clean power, not grid electricity, for the print process.",
           "Widespread adoption depends on qualifying new designs into long-cycle aerospace and defense programs and reaching cost-competitive production at higher volumes."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, metal additive manufacturing has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">5.40 Mt</strong> CO2e (~0.005 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, metal additive manufacturing has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">5.40 Mt</strong> CO2e (~0.005 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/seurat/"
       },
       {
         "company": "QuantumScape",
@@ -1868,14 +1868,14 @@
         "view": "Full",
         "par1": "QuantumScape is scaling solid-state lithium-metal battery cells for electric vehicles and other applications not modeled.",
         "par2": "Solid-state battery technology has a direct impact on car emissions.",
-        "par3": "Solid-state cells could also reach electric aircraft and grid storage, where energy density and electrolyte flammability currently rule batteries out rather than merely limit them.",
+        "par3": "Solid-state cells could also reach electric aircraft and grid storage that flammable electrolytes rule out, and ease the range and charging concerns that keep drivers in ICE vehicles.",
         "bullets": [
           "Solid-state cells enable electric cars that displace internal-combustion travel across the projected electric fleet.",
-          "Our model assumes grid electricity, and that every electric-car kilometer driven displaces one internal-combustion kilometer.",
+          "The figure assumes grid electricity, and that every electric-car kilometer driven displaces one internal-combustion kilometer.",
           "Widespread adoption depends on solid-state manufacturing reaching automotive volumes and the projected electric fleet materializing."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, solid-state battery technology has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">147 Mt</strong> CO2e (~0.15 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, solid-state battery technology has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">147 Mt</strong> CO2e (~0.15 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/quantumscape/"
       },
       {
         "company": "SPAN",
@@ -1892,14 +1892,14 @@
         "view": "Full",
         "par1": "SPAN is scaling intelligent residential electrical panels with circuit-level metering and load control.",
         "par2": "Circuit-level household load management has a direct impact on residential emissions, and the same flow appears under heating system and direct gas use.",
-        "par3": "Circuit-level load management could also make room for EV charging and water heating, and spare homes a service upgrade entirely.",
+        "par3": "Circuit-level load management could let a home add EV charging, heat pumps, and water heating without the panel upgrade and service rewire that blocks many households today.",
         "bullets": [
           "Circuit-level load management lets US homes with undersized electrical service replace gas furnaces with electric heat pumps.",
-          "Our model assumes every panel-constrained US gas home converts fully with no gas backup, a maximum rather than a forecast.",
+          "The figure assumes every panel-constrained US gas home converts fully with no gas backup, a maximum rather than a forecast.",
           "Widespread adoption depends on a narrower electricity-to-gas price gap and the replacement pace of cold-region gas furnaces."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, circuit-level residential load management has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">50.6 Mt</strong> CO2e (~0.05 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, circuit-level residential load management has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">50.6 Mt</strong> CO2e (~0.05 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/span/"
       },
       {
         "company": "Navitas",
@@ -1915,15 +1915,15 @@
         },
         "view": "Full",
         "par1": "Navitas Semiconductor is commercializing gallium nitride (GaN) and silicon carbide (SiC) power semiconductors.",
-        "par2": "Wide-bandgap power electronics has a direct impact on electricity and heat emissions.",
-        "par3": "Wide-bandgap devices could also make power conversion compact and light enough for uses such as electric aircraft propulsion, where conventional silicon equipment is too bulky to serve.",
+        "par2": "Wide-bandgap power electronics have a direct impact on electricity and heat emissions.",
+        "par3": "At scale, wide-bandgap devices could cut conversion losses in everything that runs on electricity, from data centres to motor drives, and make electric aircraft propulsion light enough to fly.",
         "bullets": [
           "Wide-bandgap devices replace silicon transistors in chargers, inverters and motor drives, so less grid electricity is wasted as heat.",
-          "Our model assumes wide-bandgap devices fully replace silicon in every addressable power-conversion stage by 2040.",
+          "The figure assumes wide-bandgap devices fully replace silicon in every addressable power-conversion stage by 2040, which recovers one percent of global electricity generation.",
           "Widespread adoption depends on cost savings against silicon devices and reliability qualification in equipment built to run for decades."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, wide-bandgap power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">115 Mt</strong> CO2e (~0.12 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, wide-bandgap power conversion has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">115 Mt</strong> CO2e (~0.12 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/navitas-semiconductor/"
       },
       {
         "company": "JobyAviation",
@@ -1940,14 +1940,14 @@
         "view": "Full",
         "par1": "Joby Aviation is developing electric vertical takeoff aircraft for on-demand urban passenger service.",
         "par2": "Electric vertical takeoff aircraft have a direct impact on passenger transport emissions, and the same flow appears under car use and direct oil use.",
-        "par3": "Electric vertical takeoff aircraft could also carry electric propulsion into larger aircraft, since motor power-to-weight and efficiency hold across a wide range of scales.",
+        "par3": "As an early commercially viable electric aircraft, electric vertical takeoff designs could enable electrification of air transport more generally, and beyond emissions, ease cross-city journey times and road congestion.",
         "bullets": [
           "Electric vertical takeoff aircraft displace car travel on long, congested urban ride-hail and taxi trips.",
-          "Our model assumes grid electricity and counts only long congested trips, the narrow segment where flying emits less than driving.",
+          "The figure assumes grid electricity and counts only the long congested trips the technology targets, where flying emits less than driving.",
           "Widespread adoption depends on type certification of a powered-lift aircraft and vertiport electrical capacity in dense cities."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, electric vertical takeoff air transport roughly matches the emissions of efficient urban road passenger transport, with the potential to reduce global emissions marginally (by <strong class=\"impacts-company-card__sentence-accent\">0.0547 Mt</strong> CO2e in 2040).",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, electric vertical takeoff air transport roughly matches the emissions of efficient urban road passenger transport, with the potential to reduce global emissions marginally (by <strong class=\"impacts-company-card__sentence-accent\">0.055 Mt</strong> CO2e in 2040).",
+        "url": "https://koi.eco/real-world-impact-appendix/joby-aviation/"
       },
       {
         "company": "Electra",
@@ -1964,14 +1964,14 @@
         "view": "Full",
         "par1": "Electra is scaling low-temperature electrochemical ironmaking for primary steel production.",
         "par2": "Electrochemical ironmaking has a direct impact on iron and steel emissions.",
-        "par3": "Electrochemical ironmaking could also draw on lower-grade ores and tailings that blast furnaces leave behind, and, running at low temperature, follow intermittent renewable power.",
+        "par3": "At scale, electrochemical ironmaking could put near-zero-emissions steel into the buildings, vehicles, and clean energy equipment that every decarbonization pathway depends on.",
         "bullets": [
           "Electrolysis-based iron production feeds electric arc furnaces and displaces conventional coke-fired global steel production.",
-          "Our model assumes grid electricity, and full replacement of coke-based steel production by 2040.",
+          "The figure assumes grid electricity, and full replacement of coke-based steel production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and cost parity with refurbishing an existing blast furnace."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, electrochemical ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.78 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, electrochemical ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.78 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/electra/"
       },
       {
         "company": "LimelightSteel",
@@ -1988,14 +1988,14 @@
         "view": "Full",
         "par1": "Limelight Steel is scaling laser-driven thermal iron ore reduction for primary steelmaking.",
         "par2": "Laser-driven ironmaking has a direct impact on iron and steel emissions.",
-        "par3": "Laser-driven reduction could also work low-grade ore fines that conventional furnaces cannot use without sintering or pelletizing.",
+        "par3": "At scale, laser-driven ironmaking could put near-zero-emissions steel into construction and manufacturing, and reach the low-grade ore conventional furnaces cannot use today.",
         "bullets": [
           "Laser-driven thermal reduction of iron ore displaces conventional coke-fired blast furnace ironmaking in global primary steel.",
-          "Our model assumes grid electricity, and full replacement of coke-based steel production by 2040.",
+          "The figure assumes grid electricity, and full replacement of coke-based steel production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and cost parity with refurbishing an existing blast furnace."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, laser-driven ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.32 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, laser-driven ironmaking has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.32 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/limelight-steel/"
       },
       {
         "company": "Helion",
@@ -2012,14 +2012,14 @@
         "view": "Full",
         "par1": "Helion Energy is commercializing fusion power for firm electricity generation.",
         "par2": "Fusion power has a direct impact on electricity and heat emissions.",
-        "par3": "Beyond electricity, fusion power could also drive hydrogen production, seawater desalination, and district heating networks.",
+        "par3": "Fusion could give any country firm clean power without fuel imports, and drive hydrogen production and desalination where fresh water is short.",
         "bullets": [
           "Fusion power generation delivers firm, dispatchable clean electricity, displacing coal- and gas-fired firm power generation worldwide.",
-          "Our model assumes fusion can physically displace the entire firm-fossil generation pool, with no binding fuel or resource limit.",
+          "The figure assumes fusion can physically displace the entire firm-fossil generation pool, with no binding fuel or resource limit.",
           "Widespread adoption depends on first-of-a-kind commercial plant construction and fusion fuel-cycle supply."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, fusion power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.5 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, fusion power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">11.5 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/helion/"
       },
       {
         "company": "Chement",
@@ -2036,14 +2036,14 @@
         "view": "Full",
         "par1": "Chement is scaling electrochemical cement production that avoids the fossil-fired kiln.",
         "par2": "Electrochemical cement production has a direct impact on cement emissions.",
-        "par3": "Electrochemical decarbonation could also deliver hydrogen and oxygen as useful co-products from the same cell that makes the cement.",
+        "par3": "At scale, electrochemical cement production could supply the concrete for housing, roads, and water infrastructure without the process emissions that make cement so hard to abate.",
         "bullets": [
           "Electrochemical cement production replaces the fossil-fired rotary kiln across global conventional Portland cement output.",
-          "Our model assumes grid electricity, and that the CO2 from limestone is fully captured and stored, not vented.",
+          "The figure assumes grid electricity, and that the CO2 from limestone is fully captured and stored, not vented.",
           "Widespread adoption depends on CO2 storage far beyond today's capacity and electricity priced against fossil kiln fuel."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, electrochemical cement production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">350 Mt</strong> CO2e (~0.35 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, electrochemical cement production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">350 Mt</strong> CO2e (~0.35 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/chement/"
       },
       {
         "company": "Erthos",
@@ -2060,14 +2060,14 @@
         "view": "Full",
         "par1": "Erthos is scaling utility-scale solar modules laid flat on graded earth, without steel racking.",
         "par2": "Utility-scale solar power has a direct impact on electricity and heat emissions.",
-        "par3": "Earth-mount solar could also cut the steel, zinc, and aluminum that conventional racking and trackers put into every utility-scale array.",
+        "par3": "At scale, earth-mount solar could take the steel and aluminum racking out of utility solar and shorten how long a new array takes to build.",
         "bullets": [
           "Earth-mount utility-scale solar deploys panels directly on graded earth, displacing fossil grid generation with solar power.",
-          "Our model assumes every utility-scale ground-mount solar installation could use the earth-mount design, displacing fossil generation, with land not a limit.",
+          "The figure assumes every utility-scale ground-mount solar installation could use the earth-mount design, displacing fossil generation, with land not a limit.",
           "Widespread adoption depends on grid interconnection capacity and land acquisition for utility-scale solar."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, utility-scale solar power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.85 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, utility-scale solar power has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">1.85 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/erthos/"
       },
       {
         "company": "FormEnergy",
@@ -2084,14 +2084,14 @@
         "view": "Full",
         "par1": "Form Energy is scaling multi-day iron-air energy storage.",
         "par2": "Long-duration energy storage has a direct impact on electricity and heat emissions.",
-        "par3": "Long-duration storage could also replace diesel generators in remote microgrids and defer new transmission and distribution build-out.",
+        "par3": "At scale, multi-day storage could let grids run on wind and solar through still, cloudy weeks, which is the condition that keeps fossil plants on the system.",
         "bullets": [
           "Multi-day iron-air battery storage firms clean power, displacing coal- and gas-fired dispatchable generation.",
-          "Our model assumes charging at a grid-average intensity, and that storage can replace all coal- and gas-fired firm power.",
+          "The figure assumes charging at a grid-average intensity, and that storage can replace all coal- and gas-fired firm power.",
           "Widespread adoption depends on iron-air manufacturing capacity and grid interconnection for long-duration storage."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, long-duration energy storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">2.12 Gt</strong> CO2e in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, long-duration energy storage has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">2.12 Gt</strong> CO2e in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/form-energy/"
       },
       {
         "company": "MagratheaMetals",
@@ -2108,14 +2108,14 @@
         "view": "Full",
         "par1": "Magrathea Metals is scaling molten-salt electrolytic magnesium production from seawater and brine.",
         "par2": "Electrolytic magnesium production has a direct impact on non-ferrous metal emissions.",
-        "par3": "Electrolytic magnesium could also make vehicle lightweighting a net emissions gain, which coal-fired production currently prevents.",
+        "par3": "Beyond its own emissions, clean primary magnesium could make lightweight metal worth using in vehicles and aircraft.",
         "bullets": [
           "Molten-salt electrolytic magnesium displaces the coal-fired Pidgeon process across global primary magnesium production.",
-          "Our model assumes grid electricity, and full replacement of coal-fired Pidgeon magnesium production by 2040.",
+          "The figure assumes grid electricity, and full replacement of coal-fired Pidgeon magnesium production by 2040.",
           "Widespread adoption depends on electricity at industrial volume and on electrolytic magnesium beating the cost of coal-based production."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, electrolytic magnesium production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">28.9 Mt</strong> CO2e (~0.03 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, electrolytic magnesium production has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">28.9 Mt</strong> CO2e (~0.03 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/magrathea-metals/"
       },
       {
         "company": "SummitNanotech",
@@ -2132,14 +2132,14 @@
         "view": "Full",
         "par1": "Summit Nanotech is scaling sorbent-based direct lithium extraction from brines located underground.",
         "par2": "Direct lithium extraction has a direct impact on emissions from other industries.",
-        "par3": "Sorbent-based extraction could also relieve a lithium supply constraint that bears on how quickly transport and grid storage can electrify.",
+        "par3": "Sorbent-based extraction could widen the lithium supply that batteries and clean energy technologies depend on, and do it on far less land and fresh water than evaporation ponds.",
         "bullets": [
           "Direct lithium extraction from brine displaces conventional primary lithium production across the global supply mix.",
-          "Our model assumes grid electricity, and that brine-extracted lithium is credited against the global average of all primary lithium production.",
+          "The figure assumes grid electricity, and that brine-extracted lithium is credited against the global average of all primary lithium production.",
           "Widespread adoption depends on brine-hosted rather than hard-rock deposits and water permitting in arid extraction regions."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, direct lithium extraction has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">43.0 Mt</strong> CO2e (~0.04 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, direct lithium extraction has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">43.0 Mt</strong> CO2e (~0.04 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/summit-nanotech/"
       },
       {
         "company": "Twelve",
@@ -2156,14 +2156,14 @@
         "view": "Full",
         "par1": "Twelve is scaling power-to-liquid jet fuel made from captured CO2.",
         "par2": "Power-to-liquid jet fuel has a direct impact on plane emissions.",
-        "par3": "CO2 electrolysis could also supply chemical feedstocks such as ethylene and ethanol for plastics and materials, alongside jet fuel.",
+        "par3": "At scale, CO2 electrolysis could make plastics, chemicals, and fuels from captured carbon rather than crude oil, so everyday materials no longer start as fossil feedstock.",
         "bullets": [
           "Power-to-liquid jet fuel from captured CO2 displaces the fossil jet fuel remaining in global aviation.",
-          "Our model assumes grid electricity, and that the addressable pool is only the fossil jet fuel remaining after strong SAF displacement.",
+          "The figure assumes grid electricity, and that the addressable pool is only the fossil jet fuel remaining after strong SAF displacement.",
           "Widespread adoption depends on certification beyond the fifty percent blend cap and power priced to close the cost gap."
         ],
-        "avoided_emissions_sentence": "When deployed at a transformative scale, power-to-liquid jet fuel has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">623 Mt</strong> CO2e (~0.62 Gt CO2e) in 2040.",
-        "url": "https://feat-capricorn-appendix.koi-landing.pages.dev/capricorn-appendix/"
+        "avoided_emissions_sentence": "If deployed at a transformative scale, power-to-liquid jet fuel has the potential to reduce global emissions by <strong class=\"impacts-company-card__sentence-accent\">623 Mt</strong> CO2e (~0.62 Gt CO2e) in 2040.",
+        "url": "https://koi.eco/real-world-impact-appendix/twelve/"
       }
     ]
   }

@@ -1,5 +1,5 @@
 (function () {
-	const initPath = "init-09052026.json";
+	const initPath = "init-09072026.json";
 	const baselinesPath = "baselines-09052026.json";
 	const nodeDetailsPath = "node_details-09052026.json";
 	const avoidedPath = "avoided-09052026.json";
@@ -3530,9 +3530,9 @@
 		card.root.classList.add("is-active");
 	}
 
-	// Populates the two prose tab panels. Bullets are still being authored for
-	// most companies, so an empty list renders an explicit placeholder rather
-	// than an empty panel.
+	// Populates the two bulleted tab panels. Both lists are authored copy that may
+	// carry inline markup, so items render as HTML. An empty list falls back to an
+	// explicit placeholder rather than an empty panel.
 	function renderImpactsCardTabs(selection) {
 		const card = state.impactsCard;
 		if (!card) {
@@ -3545,19 +3545,19 @@
 			const items = bullets.length ? bullets : ["data not found"];
 			items.forEach((text) => {
 				const li = document.createElement("li");
-				li.textContent = text;
+				li.innerHTML = text;
 				card.bullets.append(li);
 			});
 		}
 
 		if (card.overview) {
 			card.overview.innerHTML = "";
-			const paragraphs = Array.isArray(selection?.overview) ? selection.overview : [];
-			const items = paragraphs.length ? paragraphs : ["data not found"];
+			const points = Array.isArray(selection?.overview) ? selection.overview : [];
+			const items = points.length ? points : ["data not found"];
 			items.forEach((text) => {
-				const p = document.createElement("p");
-				p.textContent = text;
-				card.overview.append(p);
+				const li = document.createElement("li");
+				li.innerHTML = text;
+				card.overview.append(li);
 			});
 		}
 
@@ -6362,8 +6362,8 @@
 			const bullets = Array.isArray(company?.bullets)
 				? company.bullets.map((entry) => String(entry || "").trim()).filter(Boolean)
 				: [];
-			// Long-form prose for the company-overview tab in the impacts card.
-			const overview = [company?.par1, company?.par2]
+			// Three bulleted overview points, authored as par1/par2/par3 in the data.
+			const overview = [company?.par1, company?.par2, company?.par3]
 				.map((entry) => String(entry || "").trim())
 				.filter(Boolean);
 			const url = String(company?.url || "").trim();
