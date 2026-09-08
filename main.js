@@ -705,7 +705,7 @@
 	// A fixed vh budget rather than a fraction of the total: the fade should keep
 	// its own pace no matter how long the interactive dwell above it is retimed to
 	// run. Converted to a progress threshold in IMPACTS_EXIT_START below.
-	const IMPACTS_EXIT_FADE_VH = 48;
+	const IMPACTS_EXIT_FADE_VH = 36;
 	const IMPACTS_WALK_BEATS = [
 		{ id: "copy-in", hold: 0, vh: 60 },
 		{ id: "chart-in", hold: 32, vh: 60 },
@@ -726,17 +726,15 @@
 		// NOT carry its focal company into the interactive handoff.
 		{ id: "roster-in", hold: 40, vh: 60 },
 		{ id: "card-reveal", hold: 0, vh: 60 },
-		// Interaction unlocks the instant the card finishes revealing, so this
-		// dwell is the beat's `vh`, not a leading `hold`. A leading hold here
-		// would push the handoff's start to 1.0 and make the roster and tabs
-		// clickable only at the very last pixel of the runway.
-		//
-		// This beat IS the interactive window: the whole of it has the viewport
-		// frame lit and the roster/card clickable. Its tail overlaps the exit
-		// fade, so it is budgeted as (exploring time + IMPACTS_EXIT_FADE_VH) --
-		// 300vh of fully-lit exploring, enough to work through several companies
-		// unhurried. The previous 160 left only ~113vh, about one screen, which
-		// read as far too brief.
+		// Interaction actually unlocks one beat earlier, the moment "roster-in"
+		// completes (see drawImpactsWalk) -- "card-reveal" and this beat are both
+		// inside the live window, with the viewport frame lit and the roster/card
+		// clickable. The dwell is this beat's `vh`, not a leading `hold`: a
+		// leading hold would push the beat's start to 1.0 and leave nothing
+		// after the card reveal. Its tail overlaps the exit fade, so it is
+		// budgeted as (exploring time + IMPACTS_EXIT_FADE_VH) -- 300vh here plus
+		// the 60vh card reveal is ~360vh of fully-lit exploring, enough to work
+		// through several companies unhurried.
 		{ id: "handoff", hold: 0, vh: 300 + IMPACTS_EXIT_FADE_VH }
 	];
 	const IMPACTS_WALK_TOTAL_VH = IMPACTS_WALK_BEATS.reduce(
@@ -755,9 +753,10 @@
 	}
 	// Raw progress (0-1) within .impacts-walk's own scroll runway where the
 	// pinned .impacts-layout starts fading out, finishing at 1 so it is
-	// already invisible before it un-pins and would otherwise scroll up. The
-	// "handoff" beat above starts the interactive dwell at ~0.77, so this
-	// leaves ~300vh to explore before the fade begins.
+	// already invisible before it un-pins and would otherwise scroll up. This
+	// is the fade that takes the company card and the roster off the screen.
+	// Interaction unlocks at the end of "roster-in" (~0.74), so this leaves
+	// ~360vh to explore before the fade begins.
 	const IMPACTS_EXIT_START = 1 - IMPACTS_EXIT_FADE_VH / IMPACTS_WALK_TOTAL_VH;
 
 	// Section progress -> 0-1 progress within a single named beat.
@@ -3815,7 +3814,12 @@
 		const p = clamp01(progress);
 		state.impactsWalkProgress = p;
 
-		const handoffStart = IMPACTS_WALK_BOUNDS["handoff"]?.start ?? 1;
+		// Interaction unlocks the moment the roster is fully opaque -- i.e. the END
+		// of "roster-in", not the start of the "handoff" beat. The scan line, the
+		// viewport frame and the clickable companies all key off this, so waiting
+		// for the card to finish revealing left the fully-drawn roster sitting
+		// inert for a beat. The card reveals underneath the now-live roster.
+		const handoffStart = IMPACTS_WALK_BOUNDS["roster-in"]?.end ?? 1;
 
 		const wasHandedOff = state.impactsHandedOff;
 		state.impactsHandedOff = p >= handoffStart;
