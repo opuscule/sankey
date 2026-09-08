@@ -2618,8 +2618,8 @@
 				font-weight: 400;
 			}
 
-			/* Carved "empty" avoided regions: no fill, 1px border. Remaining regions
-			   keep the normal stage fill (nodes) or gradient fill (ribbons). */
+			/* Carved "avoided" regions: nodes stay solid white, ribbons take the same
+			   stage gradient as the remaining band at reduced opacity. */
 			#impacts-sankey-chart .impacts-node-avoided {
 				fill: #fff;
 				stroke: none;
@@ -2631,9 +2631,9 @@
 			}
 
 			#impacts-sankey-chart .impacts-link-avoided {
-				fill: none;
-				stroke: rgba(238, 245, 255, 0.85);
-				stroke-width: 1;
+				stroke: none !important;
+				stroke-width: 0;
+				opacity: 0.4;
 			}
 
 			/* Intervention node: full-height outline marking the company's

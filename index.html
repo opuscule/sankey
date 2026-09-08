@@ -317,17 +317,17 @@
 															<p class="impacts-node-visual__savings" data-impacts-card-node-percentage></p>
 														</div>
 													</div>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" onclick="openPopup(event, this.href)" hidden>Access the detailed forecast</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="analysis" hidden>
 													<ul class="impacts-tabs__bullets" data-impacts-card-bullets></ul>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" onclick="openPopup(event, this.href)" hidden>Access the detailed forecast</a>
 												</div>
 
 												<div class="impacts-tabs__panel" data-impacts-panel="overview" hidden>
 													<ul class="impacts-tabs__prose" data-impacts-card-overview></ul>
-													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" hidden>Access the detailed forecast</a>
+													<a class="impacts-tabs__learn-more" data-impacts-card-learn-more href="#" target="_blank" rel="noopener" onclick="openPopup(event, this.href)" hidden>Access the detailed forecast</a>
 												</div>
 											</div>
 										</div>
@@ -509,6 +509,23 @@
 			// the top of the page. Start every load at the top instead.
 			if ("scrollRestoration" in history) {
 				history.scrollRestoration = "manual";
+			}
+
+			// The detailed-forecast links open in a chromeless popup rather than a
+			// full tab, so the narrative page stays put behind it. A fixed window
+			// name means repeat clicks reuse the one popup instead of stacking up.
+			// If the browser blocks the popup, window.open returns null and we fall
+			// through to the anchor's normal target="_blank" behaviour.
+			function openPopup(event, url) {
+				const popup = window.open(
+					url,
+					"capricornDetailedForecast",
+					"width=500,height=600,menubar=no,toolbar=no,location=yes,status=no"
+				);
+				if (popup) {
+					event.preventDefault();
+					popup.focus();
+				}
 			}
 		</script>
 

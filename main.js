@@ -2718,12 +2718,7 @@
 							"d",
 							impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW)
 						)
-						.style("stroke", () => {
-							// Border takes the colour of the node the ribbon comes from
-							// (the upstream / final-service side of the flow).
-							const colorVar = stageColorVars[link.source?.stage];
-							return colorVar ? `var(${colorVar})` : null;
-						});
+						.style("fill", linkStroke(link));
 				}
 			});
 		} else {
@@ -3106,7 +3101,7 @@
 			.attr("fill", "none")
 			.attr("stroke-opacity", 1)
 			.attr("class", "sankey-links");
-		// Filled "remaining" band + outlined "avoided" band, mirroring
+		// Filled "remaining" band + faded "avoided" band, mirroring
 		// renderImpactsChart's carved links (main.js impacts-link-*). Both are
 		// always appended (unlike the click path's width>0.25 gate) so the avoided
 		// band can grow in from zero as drawImpactsWalkChart's ripple reveals it.
@@ -3116,13 +3111,7 @@
 			.join("g")
 			.attr("class", "impacts-link");
 		linkSelection.append("path").attr("class", "impacts-link-remaining").style("fill", linkStroke);
-		linkSelection
-			.append("path")
-			.attr("class", "impacts-link-avoided")
-			.style("stroke", (d) => {
-				const colorVar = stageColorVars[d.source?.stage];
-				return colorVar ? `var(${colorVar})` : null;
-			});
+		linkSelection.append("path").attr("class", "impacts-link-avoided").style("fill", linkStroke);
 
 		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
 		const nodeSelection = nodesGroup
@@ -3313,7 +3302,7 @@
 					"d",
 					avoidedW > 0.25 ? impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW) : null
 				)
-				.style("opacity", avoidedW > 0.25 ? 1 : 0);
+				.style("opacity", avoidedW > 0.25 ? null : 0);
 		});
 	}
 
