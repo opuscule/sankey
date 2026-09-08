@@ -15,10 +15,6 @@
 
 		<meta name="theme-color" content="#fafafa" />
 
-		<!-- Boilerplate /favicon.ico, /icon.svg and icon.png links lived here and
-			 404'd on every load -- none of the three files exist. The real icons
-			 are the capricornllc.com ones declared below. -->
-
 		<!-- Google tag (gtag.js) -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-PME2V7ZMS0"></script>
 		<script>
@@ -153,7 +149,7 @@
 
 							<div class="hero-copy-3">
 								<p>
-									Centered on the portfolios of the <strong style="color:var(--color-white);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-white);">Technology Growth Impact Fund (TIGF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj, Julian Allwood, and Jonathan Cullen and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
+									Centered on the portfolios of the <strong style="color:var(--color-white);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-white);">Technology Impact Growth Fund (TIGF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj, Julian Allwood, and Jonathan Cullen and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.
 								</p>
 								<p>
 									The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.
@@ -205,7 +201,7 @@
 				<div class="timeline-layout">
 					<div class="timeline-copy" aria-label="Timeline narrative text">
 						<div class="timeline-panel" aria-hidden="true">
-							<p class="timeline-opening">The total amount of global emissions is forecast to increase to 57Gt CO2e by 2040.</p>
+							<p class="timeline-opening">The total amount of global emissions is forecast to increase to 57 Gt CO2e by 2040.</p>
 							<div class="timeline-yearstrip">
 								<div class="timeline-yearbox"></div>
 								<div class="timeline-years">
@@ -393,21 +389,35 @@
 				<div class="methodology-layout">
 					<nav class="methodology-layout__toc" aria-label="Methodology contents">
 						<ul>
+							<li><a href="#credits">Credits</a></li>
 							<li><a href="#methodology-built">How the Emissions Map was Built</a></li>
 							<li><a href="#methodology-references">References</a></li>
 							<li><a href="#methodology-disclaimers">Disclaimers</a></li>
 							<li><a href="#methodology-important-disclosures">Important Disclosures</a></li>
-							<li><a href="#credits">Credits</a></li>
 						</ul>
 					</nav>
 
 					<div class="methodology-layout__content">
+						<section id="credits" class="methodology-content">
+							<h3>Credits</h3>
+							<p class="acknowledgements-layout__lead">This interactive experience was created by Capricorn Investment Group.</p>
+							<p class="acknowledgements-layout__meta">September 2026 &copy; Capricorn Investment Group</p>
+
+							<h4 class="acknowledgements-layout__subhead">Partners</h4>
+							<ul class="acknowledgements-layout__partners" aria-label="Project partners">
+								<li><span>Management &amp; Narrative</span><strong>Tideline</strong></li>
+								<li><span>Research &amp; Data</span><strong>Rho Impact</strong></li>
+								<li><span>Design</span><strong>Great Jones Studio</strong></li>
+								<li><span>Animation</span><strong>Opuscule</strong></li>
+							</ul>
+						</section>
+						
 						<section id="methodology-built" class="methodology-content">
 							<p>Methodology and full details for the technology-level avoided emissions analyses can be found at <a href="https://koi.eco/real-world-impact-appendix/" target="_blank" rel="noopener">koi.eco/real-world-impact-appendix/</a>.</p>
 							<h3>How the Emissions Map was Built</h3>
 
 							<h4>The framework</h4>
-							<p>The map is built on the framework published in <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">Bajzelj et al. (2013)</a> and the sources compiled there. That work divides total annual anthropogenic greenhouse gas emissions, including energy, process, and land-use change emissions, into seven views of the same global total. Each is a lens on where those emissions come from: the final service being bought, the economic sector that delivers it, the equipment used, the powered device inside that equipment, the final form of energy, the fuel, and the gas released. Emissions from land follow a parallel chain, from service through sector to land use and land management. Flows connect the nodes in one lens to the nodes in an adjacent lens, showing, for example, how emissions from a sector are connected to particular equipment. The original data was compiled for 2010 from IEA fuel-combustion statistics and EDGAR v4.2, with the allocations between nodes derived by triangulation across industry, government, and academic sources.</p>
+							<p>The map is built on the framework published in <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">Bajželj et al. (2013)</a> and the sources compiled there. That work divides total annual anthropogenic greenhouse gas emissions, including energy, process, and land-use change emissions, into seven views of the same global total. Each is a lens on where those emissions come from: the final service being bought, the economic sector that delivers it, the equipment used, the powered device inside that equipment, the final form of energy, the fuel, and the gas released. Emissions from land follow a parallel chain, from service through sector to land use and land management. Flows connect the nodes in one lens to the nodes in an adjacent lens, showing, for example, how emissions from a sector are connected to particular equipment. The original data was compiled for 2010 from IEA fuel-combustion statistics and EDGAR v4.2, with the allocations between nodes derived by triangulation across industry, government, and academic sources.</p>
 
 							<h4>The 2025 data update</h4>
 							<p>The underlying data was updated to a present-day base year as part of this project. Energy emissions, process emissions, and agriculture, forestry and land-use change emissions were all updated from the sources cited below. Two nodes were added to represent computing: digital infrastructure equipment at the equipment level, and computing infrastructure, covering data centers, cryptocurrency, and AI, at the device level. An electric motor flow to cars and buses was added so that the electricity they use resolves to the grid rather than to a combustion engine. How emissions flow between the nodes of adjacent lenses was reviewed throughout rather than carried over: those flows were updated where newer data supported a different allocation, and retained where no better evidence existed. The result is a global total of approximately 54 Gt CO2e.</p>
@@ -422,7 +432,7 @@
 						<section id="methodology-references" class="methodology-content">
 							<h3>References</h3>
 							<ol class="methodology-content__references">
-								<li><strong>Bajzelj, B., Allwood, J. M., and Cullen, J. M.</strong> (2013). Designing Climate Change Mitigation Plans That Add Up. <em>Environmental Science &amp; Technology</em> 47(14), 8062&ndash;8069. <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">doi:10.1021/es400399h</a></li>
+								<li><strong>Bajželj, B., Allwood, J. M., and Cullen, J. M.</strong> (2013). Designing Climate Change Mitigation Plans That Add Up. <em>Environmental Science &amp; Technology</em> 47(14), 8062&ndash;8069. <a href="https://doi.org/10.1021/es400399h" target="_blank" rel="noopener">doi:10.1021/es400399h</a></li>
 								<li><strong>IEA datasets.</strong> <a href="https://www.iea.org/data-and-statistics/data-product/greenhouse-gas-emissions-from-energy-highlights" target="_blank" rel="noopener">GHG Emissions from Energy</a> (2024); <a href="https://www.iea.org/data-and-statistics/data-product/world-energy-statistics-balances" target="_blank" rel="noopener">World Energy Statistics and Balances</a>; World Energy Balances 2019 (<a href="https://doi.org/10.1787/3a876031-en" target="_blank" rel="noopener">doi:10.1787/3a876031-en</a>); CO2 Emissions from Fuel Combustion 2019 (<a href="https://doi.org/10.1787/2a701673-en" target="_blank" rel="noopener">doi:10.1787/2a701673-en</a>)</li>
 								<li><strong>IEA reports.</strong> <a href="https://www.iea.org/reports/world-energy-outlook-2024" target="_blank" rel="noopener">World Energy Outlook 2024</a>; <a href="https://www.iea.org/reports/road-transport" target="_blank" rel="noopener">Road Transport 2023</a>; <a href="https://www.iea.org/reports/electricity-2024" target="_blank" rel="noopener">Electricity 2024</a>; <a href="https://www.iea.org/reports/energy-and-ai" target="_blank" rel="noopener">Energy and AI 2025</a></li>
 								<li><strong>IEA energy system topic pages and data charts.</strong> <a href="https://www.iea.org/topics" target="_blank" rel="noopener">iea.org/topics</a>, <a href="https://www.iea.org/data-and-statistics/charts" target="_blank" rel="noopener">iea.org/data-and-statistics/charts</a></li>
@@ -446,9 +456,9 @@
 							<h3>Disclaimers</h3>
 
 							<h4>About the Data and Modeling</h4>
-							<p>The underlying emissions data, avoided-emissions estimates, and 2040 projections were developed using Koi, a forecasting platform built by Rho Impact, drawing on the systems modeling work of Bojana Bajz&#380;elj, Julian Allwood, and Jonathan Cullen and incorporating updated public data sources. This information was provided to Capricorn Investment Group, LLC (&ldquo;Capricorn&rdquo;) by Rho Impact, and Capricorn has not independently verified, audited, or otherwise validated the accuracy, completeness, or methodology of the underlying data or modeling. Capricorn relies on Rho Impact as the source for this information and disclaims responsibility for any errors, omissions, or inaccuracies contained in it.</p>
+							<p>The underlying emissions data, avoided-emissions estimates, and 2040 projections were developed using Koi, a forecasting platform built by Rho Impact, drawing on the systems modeling work of Bojana Bajželj, Julian Allwood, and Jonathan Cullen and incorporating updated public data sources. This information was provided to Capricorn Investment Group, LLC (&ldquo;Capricorn&rdquo;) by Rho Impact, and Capricorn has not independently verified, audited, or otherwise validated the accuracy, completeness, or methodology of the underlying data or modeling. Capricorn relies on Rho Impact as the source for this information and disclaims responsibility for any errors, omissions, or inaccuracies contained in it.</p>
 							<p>Detailed model inputs, baseline assumptions, and sources for each technology referenced above are available in the accompanying Appendix, built on Koi, Rho Impact&rsquo;s forecasting platform. The same reliance and no-independent verification disclosures set out above apply to that appendix.</p>
-							<p>Estimates of avoided emissions associated with portfolio companies in the Technology Impact Fund and Technology Growth Impact Fund are hypothetical and forward-looking. They assume that a given technology scales to its maximum potential and displaces a specific incumbent technology or process; actual outcomes will depend on the pace and location of deployment and may differ materially from what is shown. These estimates do not represent audited results, are not a measure of realized fund performance, and should not be relied on as such.</p>
+							<p>Estimates of avoided emissions associated with portfolio companies in the Technology Impact Fund and Technology Impact Growth Fund are hypothetical and forward-looking. They assume that a given technology scales to its maximum potential and displaces a specific incumbent technology or process; actual outcomes will depend on the pace and location of deployment and may differ materially from what is shown. These estimates do not represent audited results, are not a measure of realized fund performance, and should not be relied on as such.</p>
 							<p>This experience is provided for informational and illustrative purposes only. It does not constitute investment advice, a recommendation, or an offer to buy or sell any security or fund interest. Prospective and current investors should refer to the applicable fund&rsquo;s offering documents for complete information regarding the Technology Impact Fund and Technology Impact Growth Fund.</p>
 
 							<h4>About the Appendix</h4>
@@ -465,19 +475,7 @@
 							<p>Statements regarding future emissions, technology adoption, market scale, or climate outcomes are forward-looking and reflect assumptions as of September 2026 that are subject to significant uncertainty. Actual results may differ materially. Past or projected environmental impact is not indicative of future financial performance. For more information about Capricorn&rsquo;s advisory business, services, and fees, please refer to our Form ADV and Form CRS available <a href="https://adviserinfo.sec.gov/firm/summary/147417" target="_blank" rel="noopener">here</a> or upon request.</p>
 							<p>Company and product names, logos, and trademarks referenced herein are the property of their respective owners. Their use does not imply endorsement of, or affiliation with, Capricorn beyond the investment relationship described. The information, data, and projections presented reflect assumptions and inputs as of September 2026 and are subject to change without notice. Capricorn undertakes no obligation to update this content to reflect subsequent events or developments.</p>
 						</section>
-						<section id="credits" class="methodology-content">
-							<h3>Credits</h3>
-							<p class="acknowledgements-layout__lead">This interactive experience was created by Capricorn Investment Group.</p>
-							<p class="acknowledgements-layout__meta">September 2026 &copy; Capricorn Investment Group</p>
-
-							<h4 class="acknowledgements-layout__subhead">Partners</h4>
-							<ul class="acknowledgements-layout__partners" aria-label="Project partners">
-								<li><span>Management &amp; Narrative</span><strong>Tideline</strong></li>
-								<li><span>Research &amp; Data</span><strong>Rho Impact</strong></li>
-								<li><span>Design</span><strong>Great Jones Studio</strong></li>
-								<li><span>Animation</span><strong>Opuscule</strong></li>
-							</ul>
-						</section>
+						
 					</div>
 				</div>
 			</section>

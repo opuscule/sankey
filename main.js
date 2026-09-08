@@ -3398,24 +3398,47 @@
 		return "This technology";
 	}
 
+	// Avoided totals span orders of magnitude -- close to a Gt for the largest
+	// companies, ~0.055 Mt for Joby -- so the decimals scale with the number
+	// rather than sitting at a fixed two, which rounded the small ones to "0".
+	function formatAvoidedMtText(mtValue) {
+		const abs = Math.abs(mtValue);
+		const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : abs >= 1 ? 2 : 3;
+		return d3.format(`,.${digits}f`)(mtValue);
+	}
+
+	// The short "-X" figure beside the node bar. Anything under 0.01 Gt would
+	// read as "0.00 Gt", so it is stated in Mt instead.
+	function formatAvoidedShortText(gtValue) {
+		if (Math.abs(gtValue) >= 0.01) {
+			return `${d3.format(".2f")(gtValue)} Gt`;
+		}
+		return `${formatAvoidedMtText(gtValue * 1000)} Mt`;
+	}
+
 	function formatImpactsAmountHtml(amountText) {
-		const match = /^(-?[\d.]+)\s*Gt$/i.exec(String(amountText).trim());
+		const match = /^(-?[\d.]+)\s*(Gt|Mt)$/i.exec(String(amountText).trim());
 		if (!match) {
 			return `<strong class="impacts-company-card__sentence-accent">${amountText}</strong>`;
 		}
-		const gtValue = parseFloat(match[1]);
-		if (Number.isNaN(gtValue)) {
+		const parsed = parseFloat(match[1]);
+		if (Number.isNaN(parsed)) {
 			return `<strong class="impacts-company-card__sentence-accent">${amountText}</strong>`;
 		}
+		const gtValue = /^mt$/i.test(match[2]) ? parsed / 1000 : parsed;
 		if (Math.abs(gtValue) < 1) {
-			const mtValue = gtValue * 1000;
-			const mtText = Number.isInteger(mtValue) ? mtValue.toString() : mtValue.toFixed(2);
+			const mtText = formatAvoidedMtText(gtValue * 1000);
+			const gtText = d3.format(".2f")(gtValue);
+			// Below 0.005 Gt the parenthetical would just read "(0.00 Gt CO2e)".
+			const gtParenthetical = parseFloat(gtText) !== 0 ? ` (${gtText} Gt CO2e)` : "";
 			return (
 				`<strong class="impacts-company-card__sentence-accent">${mtText} Mt</strong> ` +
-				`CO2e (${match[1]} Gt CO2e)`
+				`CO2e${gtParenthetical}`
 			);
 		}
-		return `<strong class="impacts-company-card__sentence-accent">${match[1]} Gt</strong> CO2e`;
+		return (
+			`<strong class="impacts-company-card__sentence-accent">${d3.format(".2f")(gtValue)} Gt</strong> CO2e`
+		);
 	}
 
 	function impactsSentenceHtml(technologyLabel, amountText) {
@@ -3495,7 +3518,7 @@
 		);
 
 		const nodeAvoidedGt = nodeMetrics.avoidedMt / 1000;
-		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? `${d3.format(".2f")(nodeAvoidedGt)} Gt` : "N/A";
+		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? formatAvoidedShortText(nodeAvoidedGt) : "N/A";
 		const nodeSavingsText = nodeAvoidedGtText === "N/A" ? "- N/A" : `-${nodeAvoidedGtText}`;
 		const sentenceAmountText = nodeSavingsText.replace(/^\s*-\s*/, "");
 		const showNodePercentage = nodeMetrics.totalMt > 0;
@@ -3963,7 +3986,7 @@
 				label: String(company?.company_label || company?.company || "").trim()
 			});
 			const avoidedGt = metrics.avoidedMt / 1000;
-			const amountText = avoidedGt > 0 ? `${d3.format(".2f")(avoidedGt)} Gt` : "data pending";
+			const amountText = avoidedGt > 0 ? formatAvoidedShortText(avoidedGt) : "data pending";
 			c.copies[1].innerHTML = impactsWalkSentenceHtml(technologyLabel, amountText);
 		}
 	}
