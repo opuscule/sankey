@@ -1,6 +1,4 @@
 (function () {
-	// All narrative strings live in copy.js; view.js exposes the lookup.
-	const siteCopy = window.siteCopy;
 	const initPath = "init-09072026.json";
 	const baselinesPath = "baselines-09052026.json";
 	const nodeDetailsPath = "node_details-09052026.json";
@@ -12,6 +10,7 @@
 	const scenarioChart = document.getElementById("scenario-sankey-chart");
 	const impactsChart = document.getElementById("impacts-sankey-chart");
 	const themesChart = document.getElementById("themes-sankey-chart");
+	const timelineChart = document.getElementById("timeline-sankey-chart");
 	const statusEl = document.getElementById("sankey-status");
 	const narrativeSection = document.getElementById("sankey-narrative");
 	const impactsLayoutEl = document.querySelector(".impacts-layout");
@@ -119,6 +118,8 @@
 	// re-applies its opacity, or it will stay hidden until the next scroll.
 	const PIN_SELECTORS = [
 		".sankey-layout",
+		"#timeline-intro .timeline-intro__pin",
+		"#timeline .timeline-layout",
 		"#tif-tigf-portfolio .portfolio-intro__pin",
 		".themes-layout",
 		".impacts-intro .impacts-intro__pin",
@@ -176,77 +177,77 @@
 			start: 0,
 			end: 9,
 			variant: "headline",
-			copy: siteCopy("sankey.beat1")
+			copy: '<span class="headline-plain">In 2025, global emissions totaled <strong>54 Gt of CO2e</strong>.</span>'
 		},
 		{
 			id: "beat-2",
 			phase: "fan-out",
 			start: 9,
 			end: 17,
-			copy: siteCopy("sankey.beat2")
+			copy: "Transitioning to a low-carbon economy requires understanding the origin of these emissions."
 		},
 		{
 			id: "beat-3",
 			phase: "wipe-reveal",
 			start: 17,
 			end: 27,
-			copy: siteCopy("sankey.beat3")
+			copy: "Total emissions can be viewed through seven different lenses."
 		},
 		{
 			id: "beat-4",
 			phase: "hold-services",
 			start: 27,
 			end: 34,
-			copy: siteCopy("sankey.beat4")
+			copy: 'These lenses include the <span class="kw kw-final-service">final services</span> provided to us, such as travel and food.'
 		},
 		{
 			id: "beat-5",
 			phase: "hold-lenses",
 			start: 34,
 			end: 43,
-			copy: siteCopy("sankey.beat5")
+			copy: 'They also include the economic <span class="kw kw-sector">sectors</span> that provide those final services, the <span class="kw kw-equipment">equipment</span> that comprises each sector, the <span class="kw kw-device">devices</span> that make up equipment, the <span class="kw kw-final-energy">final energy</span> that powers devices, <span class="kw kw-fuel">fuels</span> we use, and the type of greenhouse gas <span class="kw kw-emissions">emissions</span>.'
 		},
 		{
 			id: "beat-6",
 			phase: "collapse",
 			start: 43,
 			end: 52,
-			copy: siteCopy("sankey.beat6")
+			copy: "Each lens is inclusive of all the world&rsquo;s emissions."
 		},
 		{
 			id: "beat-7",
 			phase: "unstack",
 			start: 52,
 			end: 64,
-			copy: siteCopy("sankey.beat7")
+			copy: "Emissions can be <strong>traced between lenses</strong> as they <strong>flow through the global economy</strong>."
 		},
 		{
 			id: "beat-8",
 			phase: "expand",
 			start: 64,
 			end: 77,
-			copy: siteCopy("sankey.beat8")
+			copy: 'Each lens can be broken down into nodes, such as <strong>travel</strong> and <strong>food</strong> when looking through the lens of <span class="kw kw-final-service">final services</span>.'
 		},
 		{
 			id: "beat-9",
 			phase: "lens-focus",
 			start: 77,
 			end: 84,
-			copy: siteCopy("sankey.beat9")
+			copy: '<strong>Together, all the nodes for one lens sum to global <span class="kw kw-emissions">emissions</span>.</strong>'
 		},
 		{
 			id: "beat-10",
 			phase: "cars-example",
 			start: 84,
 			end: 96,
-			copy: siteCopy("sankey.beat10")
+			copy: 'Flows between neighboring nodes show how <strong>emissions are connected across lenses</strong>, with the width of the flow reflecting the magnitude of such connections.<br><br>For example, of the 6 Gt CO2e due to <span class="kw kw-sector">Passenger Transport</span>, 4.4 Gt are due to <span class="kw kw-equipment">cars</span>.'
 		},
 		{
 			id: "beat-11",
 			phase: "explore",
 			start: 96,
 			end: 100,
-			copy: siteCopy("sankey.beat11")
+			copy: "<strong>Select any node</strong> in the visualization to explore its emissions today and see how it connects to the wider system.</strong>"
 		}
 	];
 
@@ -607,7 +608,9 @@
 		themesProgress: 0,
 		themesLeadEl: null,
 		themesFinaleLeadEl: null,
-		finaleOrder: null
+		finaleOrder: null,
+		timelineRendered: null,
+		timelineProgress: 0
 	};
 
 	const fmtMt = d3.format(",.2f");
@@ -1002,7 +1005,7 @@
 
 	loadAndRender().catch((err) => {
 		console.error(err);
-		statusEl.textContent = siteCopy("sankey.status.loadError");
+		statusEl.textContent = "Could not load Sankey data";
 	});
 
 	async function loadAndRender() {
@@ -1034,7 +1037,7 @@
 		state.portfolioBusinessNodeMap = buildPortfolioBusinessNodeMap(initData);
 
 		if (!state.nodes.length || !state.links.length) {
-			statusEl.textContent = siteCopy("sankey.status.noFlows", { scenario: graph.scenario });
+			statusEl.textContent = `No positive flows found for scenario ${graph.scenario}`;
 			return;
 		}
 
@@ -1052,6 +1055,8 @@
 		initClosingTransitionSection();
 		initAcknowledgementsIntroSection();
 		initThemesSection();
+		initTimelineIntroSection();
+		initTimelineSection();
 		initPortfolioIntroSection();
 		setupBottomStickyNav();
 		initTechImpactsTooltip();
@@ -1061,7 +1066,7 @@
 		// Every section's triggers now exist; re-measure them all in one pass so
 		// none is left holding positions computed against a half-built page.
 		scheduleScrollRefresh();
-		statusEl.textContent = siteCopy("sankey.status.clickHint");
+		statusEl.textContent = "Click a node to isolate direct flows";
 	}
 
 	// Boundaries used for the bottom-nav scroll-spy active state.
@@ -3327,7 +3332,7 @@
 			return impactsNodeLabelByBusiness[businessId];
 		}
 
-		return siteCopy("impacts.noNode");
+		return "No mapped node available";
 	}
 
 	function impactsNodeMetrics(nodeId) {
@@ -3425,19 +3430,19 @@
 	}
 
 	function impactsSentenceHtml(technologyLabel, amountText) {
-		return siteCopy("impacts.cardSentence", {
-			technology: technologyLabel,
-			amount: formatImpactsAmountHtml(amountText)
-		});
+		return (
+			`If deployed at a transformative scale, ${technologyLabel} has the potential to reduce global emissions by ` +
+			`${formatImpactsAmountHtml(amountText)} in 2040.`
+		);
 	}
 
 	// Beat 2's own wording (data-impacts-walk-copy="2") -- distinct from the
 	// card sentence above, which stays on its own phrasing.
 	function impactsWalkSentenceHtml(technologyLabel, amountText) {
-		return siteCopy("impacts.walkSentence", {
-			technology: technologyLabel,
-			amount: formatImpactsAmountHtml(amountText)
-		});
+		return (
+			`By 2040, emissions are forecasted to be reduced by ${formatImpactsAmountHtml(amountText)} ` +
+			`through the adoption of ${technologyLabel} at transformative scale.`
+		);
 	}
 
 	function updateImpactsCompanyCard(selection) {
@@ -3454,7 +3459,7 @@
 		}
 
 		const nodeLabel = resolveImpactsNodeLabel(selection);
-		const nodeLabelText = nodeLabel || siteCopy("impacts.noNode");
+		const nodeLabelText = nodeLabel || "No mapped node available";
 		const nodeStage = deriveStageFromId(selection.nodeId);
 		const nodeStageVar = stageColorVars[nodeStage] || "--color-final-energy";
 		const logoSrc = impactsLogoByBusiness[selection.businessId] || impactsLogoFallback;
@@ -3466,13 +3471,13 @@
 		if (selection.businessId && !state.avoidedData) {
 			card.logo.src = logoSrc;
 			card.logo.alt = `${selection.label} logo`;
-			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, siteCopy("impacts.loading"));
+			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, "loading...");
 			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
 			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
 			card.nodeBar.style.setProperty("--impacts-node-remaining-height", "100%");
 			card.nodeName.textContent = nodeLabelText;
 			if (card.nodeSavings) {
-				card.nodeSavings.textContent = `- ${siteCopy("impacts.loading")}`;
+				card.nodeSavings.textContent = "- loading...";
 			}
 			if (card.nodePercentage) {
 				card.nodePercentage.hidden = true;
@@ -3523,7 +3528,7 @@
 				card.nodeSavings.textContent = nodeSavingsText;
 			}
 		} else {
-			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, siteCopy("impacts.dataPending"));
+			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, "data pending");
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = nodeSavingsText;
 			}
@@ -3974,7 +3979,7 @@
 				label: String(company?.company_label || company?.company || "").trim()
 			});
 			const avoidedGt = metrics.avoidedMt / 1000;
-			const amountText = avoidedGt > 0 ? formatAvoidedShortText(avoidedGt) : siteCopy("impacts.dataPending");
+			const amountText = avoidedGt > 0 ? formatAvoidedShortText(avoidedGt) : "data pending";
 			c.copies[1].innerHTML = impactsWalkSentenceHtml(technologyLabel, amountText);
 		}
 	}
@@ -5642,7 +5647,6 @@
 				if (!state.scanLinePlayed) {
 					state.scanLinePlayed = true;
 					playSankeyScanLine();
-					document.getElementById("beat-11")?.classList.add("is-highlighted");
 				}
 			}
 
@@ -6096,7 +6100,7 @@
 		if (!state.selectedNodeId) {
 			linkSelection.classed("is-faded", false).classed("is-active", false);
 			nodeSelection.classed("is-faded", false).classed("is-selected", false);
-			statusEl.textContent = siteCopy("sankey.status.clickHint");
+			statusEl.textContent = "Click a node to isolate direct flows";
 			hideNodePanel();
 			return;
 		}
@@ -6247,7 +6251,7 @@
 
 		const selectedNode = graph.nodes.find((node) => node.id === selectedId);
 		if (!selectedNode) {
-			statusEl.textContent = siteCopy("sankey.status.clickHint");
+			statusEl.textContent = "Click a node to isolate direct flows";
 			return;
 		}
 
@@ -6985,6 +6989,82 @@
 		}
 	}
 
+	// --- Timeline intro (bg fade + two crossfading lines, locked #timeline-intro) --
+	// Same sequential window shape as the portfolio/impacts intros (388vh scrub
+	// range + 80vh pinned viewport): bg-in 72vh, line1-in 48vh, hold 40vh,
+	// line1-out 40vh, line2-in 48vh, hold 60vh, line2+bg fade-out over the final 80vh.
+	// Gap between the pin finishing its fade-in and line-1 starting to appear
+	// (the leading "bg-in" span below) felt too long; cut it 25% (96vh -> 72vh)
+	// and shift every later boundary left by the same 24vh so the rest of the
+	// sequence's durations are untouched (see the matching 468vh CSS min-height).
+	const TLI_TOTAL_VH = 388;
+	const TLI_LINE1_IN = [72 / TLI_TOTAL_VH, 120 / TLI_TOTAL_VH];
+	const TLI_LINE1_OUT = [160 / TLI_TOTAL_VH, 200 / TLI_TOTAL_VH];
+	const TLI_LINE2_IN = [200 / TLI_TOTAL_VH, 248 / TLI_TOTAL_VH];
+	const TLI_ALL_OUT = [308 / TLI_TOTAL_VH, 1];
+
+	function drawTimelineIntro(progress, slideT) {
+		state.timelineIntroProgress = progress;
+		const allOut = windowProgress(progress, TLI_ALL_OUT);
+		// The whole pin fades as a unit at entry/exit (slideT*(1-allOut) is 1
+		// throughout the main content hold, so it's a no-op there -- this is
+		// what used to be the bg element's own opacity, and what line2 used to
+		// share via its own "* (1-allOut)" term; both are now free rides on the
+		// pin's opacity instead of being multiplied in twice).
+		// Entry fade-in felt too slow/long; compress its scroll distance 20%
+		// (fully faded in by slideT=0.8 instead of 1) without touching the
+		// shared splitEntryProgress lock-fraction other sections rely on.
+		const pinFadeT = clamp01(slideT / 0.8);
+		setPinOpacity(state.timelineIntroPinEl, pinFadeT * (1 - allOut));
+		if (state.timelineIntroLine1El) {
+			const inAmt = windowProgress(progress, TLI_LINE1_IN);
+			const outAmt = windowProgress(progress, TLI_LINE1_OUT);
+			state.timelineIntroLine1El.style.opacity = String(inAmt * (1 - outAmt));
+		}
+		if (state.timelineIntroLine2El) {
+			const inAmt = windowProgress(progress, TLI_LINE2_IN);
+			state.timelineIntroLine2El.style.opacity = String(inAmt);
+		}
+	}
+
+	function setupTimelineIntroScroll() {
+		const section = document.getElementById("timeline-intro");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawTimelineIntro(1, 1);
+			return;
+		}
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top bottom",
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimelineIntro(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimelineIntro(progress, slideT);
+			}
+		});
+		drawTimelineIntro(0, 0);
+	}
+
+	function initTimelineIntroSection() {
+		const section = document.getElementById("timeline-intro");
+		if (!section) {
+			return;
+		}
+		state.timelineIntroPinEl = document.querySelector("#timeline-intro .timeline-intro__pin");
+		state.timelineIntroLine1El = document.querySelector("#timeline-intro .timeline-intro__line--1");
+		state.timelineIntroLine2El = document.querySelector("#timeline-intro .timeline-intro__line--2");
+		setupTimelineIntroScroll();
+	}
+
 	// --- Portfolio intro (bg fade + two crossfading lines, locked #tif-tigf-portfolio) --
 	// Sequential windows, fractions of a 388vh scroll range (+80vh pinned viewport):
 	// bg fade-in 72vh, line-1 in 48vh, hold 40vh, line-1 out 40vh, line-2 in 48vh,
@@ -7061,6 +7141,525 @@
 		setupPortfolioIntroScroll();
 	}
 
+	// --- Timeline section (2025 -> 2040 scroll morph) -------------------------
+	// The right-column Sankey morphs from the 2025 baseline to the 2040A scenario
+	// while the left column slides a year strip 2025 -> 2040. We have no per-year
+	// data, so both endpoints are laid out independently and every node/link is
+	// linearly interpolated between them (easeInOut over the scroll range).
+	const TIMELINE_TARGET_SCENARIO = "2040A";
+	// Scroll windows as fractions of the #timeline scroll range (section ~384vh).
+	// .timeline-layout's fade-in (via slideT in drawTimeline) now runs during
+	// the section-to-section slide itself, so it's already fully visible by
+	// the time #timeline locks at top:0, instead of only starting the fade
+	// there.
+	const TL_ANIM = [0.32, 0.9]; // sankey morph + year slide (~144vh of 256vh)
+	const TL_CLOSE_IN = [0.8, 0.9];
+	const TL_OPEN_OUT = [0.32, 0.42];
+	// Bottom-pinned growth: the 2025 chart fills TL_START_FRAC of the band height
+	// and grows to TL_END_FRAC (full) by 2040, so the rising envelope reads as the
+	// rising emissions total. Tunable; could instead be derived from GT totals.
+	const TL_START_FRAC = 0.92;
+	const TL_END_FRAC = 1;
+	// Left y-axis: hardcoded copy-matching GT labels (not derived from data),
+	// mirroring the scenarioTotalsGt precedent used by the scenario chart.
+	const TIMELINE_START_GT = 54;
+	const TIMELINE_END_GT = 57;
+	const TIMELINE_AXIS_X = 18;
+
+	function renderTimelineSankey() {
+		if (!timelineChart || !state.initData || !state.baselinesData) {
+			return;
+		}
+
+		const bounds = timelineChart.getBoundingClientRect();
+		const width = Math.max(820, Math.floor(bounds.width));
+		const height = Math.max(560, Math.floor(bounds.height));
+
+		const layoutGraph = (scenarioKey) => {
+			const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+			const graph = {
+				nodes: built.nodes.map((node) => ({ ...node })),
+				links: built.links.map((link) => ({ ...link }))
+			};
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(9)
+				.nodeAlign(d3.sankeyJustify)
+				.extent([
+					[28, 44],
+					[width - 28, height - 34]
+				])
+				.iterations(64)(graph);
+			spreadStageHeights(graph, 44, height - 34);
+			spreadNodesForLabels(timelineChart, graph, 44, height - 34);
+			return graph;
+		};
+
+		const startGraph = layoutGraph(defaultScenario); // 2025
+
+		// Capture the exact vertical order of nodes from 2025 per stage
+		const startOrderMap = new Map();
+		d3.group(startGraph.nodes, (d) => d.stage).forEach((stageNodes) => {
+			stageNodes
+				.slice()
+				.sort((a, b) => a.y0 - b.y0)
+				.forEach((node, idx) => {
+					startOrderMap.set(node.id, idx);
+				});
+		});
+
+		// Layout the 2040 target scenario locked to 2025 node ordering (iterations: 0)
+		const layoutEndGraph = (scenarioKey) => {
+			const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+			const graph = {
+				nodes: built.nodes.map((node) => ({ ...node })),
+				links: built.links.map((link) => ({ ...link }))
+			};
+			d3
+				.sankey()
+				.nodeId((d) => d.id)
+				.nodeWidth(20)
+				.nodePadding(9)
+				.nodeAlign(d3.sankeyJustify)
+				.nodeSort((a, b) => {
+					const orderA = startOrderMap.has(a.id) ? startOrderMap.get(a.id) : 999;
+					const orderB = startOrderMap.has(b.id) ? startOrderMap.get(b.id) : 999;
+					return orderA - orderB;
+				})
+				.extent([
+					[28, 44],
+					[width - 28, height - 34]
+				])
+				.iterations(0)(graph);
+			spreadStageHeights(graph, 44, height - 34);
+			spreadNodesForLabels(timelineChart, graph, 44, height - 34);
+			return graph;
+		};
+
+		const endGraph = layoutEndGraph(TIMELINE_TARGET_SCENARIO); // 2040A
+
+		// Scale every y about the band bottom so the chart is pinned to the bottom
+		// and its height encodes the endpoint's fraction of full height.
+		const bandBottom = height - 34;
+		const scaleY = (y, frac) => bandBottom - (bandBottom - y) * frac;
+
+		const linkKey = (link) => `${link.source.id}|${link.target.id}`;
+		const nodeGeomMap = (graph, frac) => {
+			const map = new Map();
+			graph.nodes.forEach((node) => {
+				map.set(node.id, {
+					x0: node.x0,
+					y0: scaleY(node.y0, frac),
+					x1: node.x1,
+					y1: scaleY(node.y1, frac),
+					node
+				});
+			});
+			return map;
+		};
+		const linkGeomMap = (graph, frac) => {
+			const map = new Map();
+			graph.links.forEach((link) => {
+				map.set(linkKey(link), {
+					sx: link.source.x1,
+					tx: link.target.x0,
+					y0: scaleY(link.y0, frac),
+					y1: scaleY(link.y1, frac),
+					width: link.width * frac,
+					link
+				});
+			});
+			return map;
+		};
+
+		const startNodes = nodeGeomMap(startGraph, TL_START_FRAC);
+		const endNodes = nodeGeomMap(endGraph, TL_END_FRAC);
+		const startLinks = linkGeomMap(startGraph, TL_START_FRAC);
+		const endLinks = linkGeomMap(endGraph, TL_END_FRAC);
+
+		// A node/link present in only one scenario is collapsed to zero height at
+		// its own position on the missing side, so it grows in / shrinks out cleanly.
+		const collapseNode = (geom) =>
+			geom ? { x0: geom.x0, x1: geom.x1, y0: (geom.y0 + geom.y1) / 2, y1: (geom.y0 + geom.y1) / 2 } : null;
+		const collapseLink = (geom) =>
+			geom
+				? { sx: geom.sx, tx: geom.tx, y0: (geom.y0 + geom.y1) / 2, y1: (geom.y0 + geom.y1) / 2, width: 0 }
+				: null;
+
+		const startNodeOf = (id) => startNodes.get(id) || collapseNode(endNodes.get(id));
+		const endNodeOf = (id) => endNodes.get(id) || collapseNode(startNodes.get(id));
+		const startLinkOf = (key) => startLinks.get(key) || collapseLink(endLinks.get(key));
+		const endLinkOf = (key) => endLinks.get(key) || collapseLink(startLinks.get(key));
+
+		const nodeIds = new Set([...startNodes.keys(), ...endNodes.keys()]);
+		const nodeData = Array.from(nodeIds).map((id) => (endNodes.get(id) || startNodes.get(id)).node);
+
+		const linkKeys = new Set([...startLinks.keys(), ...endLinks.keys()]);
+		const linkData = Array.from(linkKeys).map((key) => {
+			const ref = (endLinks.get(key) || startLinks.get(key)).link;
+			return { id: key, key, source: ref.source, target: ref.target };
+		});
+
+		const svg = d3
+			.select(timelineChart)
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.style("pointer-events", "none");
+		svg.selectAll("*").remove();
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(endGraph);
+		const stagePairs = Array.from(
+			new Set(linkData.map((link) => `${link.source?.stage ?? "?"}-${link.target?.stage ?? "?"}`))
+		);
+		stagePairs.forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map((v) => Number.parseInt(v, 10));
+			const sourceColorVar = stageColorVars[sourceStage];
+			const targetColorVar = stageColorVars[targetStage];
+			if (!sourceColorVar || !targetColorVar) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", `timeline-link-gradient-${sourceStage}-${targetStage}`)
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${sourceColorVar})`);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${targetColorVar})`);
+		});
+
+		const linkStroke = (link) => {
+			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
+			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
+			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
+				return `url(#timeline-link-gradient-${sourceStage}-${targetStage})`;
+			}
+			return "rgba(208, 222, 235, 0.38)";
+		};
+
+		const linkGen = d3.sankeyLinkHorizontal();
+		const linkPathFromGeom = (geom) =>
+			linkGen({ source: { x1: geom.sx }, target: { x0: geom.tx }, y0: geom.y0, y1: geom.y1 });
+
+		const linksGroup = svg.append("g").attr("fill", "none").attr("class", "sankey-links");
+		const linkSelection = linksGroup
+			.selectAll("path")
+			.data(linkData, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", linkStroke)
+			.attr("d", (d) => linkPathFromGeom(startLinkOf(d.key)))
+			.attr("stroke-width", (d) => Math.max(0.5, startLinkOf(d.key).width));
+
+		const nodesGroup = svg.append("g").attr("class", "sankey-nodes");
+		const nodeSelection = nodesGroup
+			.selectAll("g")
+			.data(nodeData, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => {
+				const geom = startNodeOf(d.id);
+				return `translate(${geom.x0},${geom.y0})`;
+			});
+
+		nodeSelection
+			.append("rect")
+			.attr("width", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(1, geom.x1 - geom.x0);
+			})
+			.attr("height", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(3, geom.y1 - geom.y0);
+			});
+
+		nodeSelection
+			.append("title")
+			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
+
+		nodeSelection
+			.append("text")
+			.attr("x", (d) => {
+				const geom = startNodeOf(d.id);
+				return d.stage !== 7 ? Math.max(1, geom.x1 - geom.x0) + 7 : -7;
+			})
+			.attr("y", (d) => {
+				const geom = startNodeOf(d.id);
+				return Math.max(3, geom.y1 - geom.y0) / 2;
+			})
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (d.stage !== 7 ? "start" : "end"))
+			.text((d) => d.label);
+
+		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(endGraph));
+
+		// Left y-axis: a static "54 Gt" tick at the 2025 (start-state) envelope
+		// top, plus a growing line + live counting label that tracks the chart's
+		// rising top edge (same scaleY math as the node envelope) up to "57 Gt".
+		const axisTopStart = scaleY(44, TL_START_FRAC);
+		const axisTopEnd = scaleY(44, TL_END_FRAC);
+		const axisGroup = svg.append("g").attr("class", "timeline-axis");
+
+		axisGroup
+			.append("line")
+			.attr("class", "timeline-axis__tick-dash")
+			.attr("x1", TIMELINE_AXIS_X)
+			.attr("x2", TIMELINE_AXIS_X + 8)
+			.attr("y1", axisTopStart)
+			.attr("y2", axisTopStart);
+		const tickLabel = axisGroup
+			.append("text")
+			.attr("class", "timeline-axis__tick-label")
+			.attr("x", TIMELINE_AXIS_X - 12)
+			.attr("y", axisTopStart)
+			.attr("dy", "0.32em")
+			.attr("text-anchor", "end")
+			.text(`${TIMELINE_START_GT} Gt`);
+
+		const axisLine = axisGroup
+			.append("line")
+			.attr("class", "timeline-axis__line")
+			.attr("x1", TIMELINE_AXIS_X)
+			.attr("x2", TIMELINE_AXIS_X)
+			.attr("y1", bandBottom)
+			.attr("y2", axisTopStart);
+		const axisMarkerLabel = axisGroup
+			.append("text")
+			.attr("class", "timeline-axis__marker-label")
+			.attr("x", TIMELINE_AXIS_X - 12)
+			.attr("y", axisTopStart)
+			.attr("dy", "0.32em")
+			.attr("text-anchor", "end")
+			.text(`${TIMELINE_START_GT} Gt`);
+
+		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
+		renderStageHeaders(headersGroup, endGraph, 24);
+
+		state.timelineRendered = {
+			nodeSelection,
+			linkSelection,
+			startNodeOf,
+			endNodeOf,
+			startLinkOf,
+			endLinkOf,
+			linkPathFromGeom,
+			axisLine,
+			axisMarkerLabel,
+			axisTopStart,
+			axisTopEnd
+		};
+
+		drawTimeline(state.timelineProgress || 0, state.timelineSlideT ?? 0);
+	}
+
+	// Drive the whole section from one scroll clock: crossfade the copy beats,
+	// slide the year strip 2025 -> 2040 through the fixed box, and interpolate the
+	// Sankey geometry between the 2025 and 2040A layouts (easeInOut).
+	function drawTimeline(progress, slideT) {
+		state.timelineProgress = progress;
+		state.timelineSlideT = slideT;
+
+		if (state.timelineLayoutEl) {
+			// Layout is this section's "first visible thing": driven by slideT
+			// (fully in by the time the panel locks) instead of TL_OPEN_IN's old
+			// [0, 0.1] fade-in that only started once already locked.
+			//
+			// The exit half of this pin's opacity lives on a *second* trigger
+			// (drawTimelineFade). Both handlers therefore write the same product
+			// of the same two stored terms, so whichever one runs last lands on
+			// the same value -- see the ordering note above drawTimelineFade.
+			setPinOpacity(state.timelineLayoutEl, slideT * (1 - (state.timelineExitT ?? 0)));
+		}
+
+		if (state.timelineCloseEl) {
+			state.timelineCloseEl.style.opacity = String(windowProgress(progress, TL_CLOSE_IN));
+		}
+
+		if (state.timelineOpenEl) {
+			const openFadeOut = windowProgress(progress, TL_OPEN_OUT);
+			state.timelineOpenEl.style.opacity = String(slideT * (1 - openFadeOut));
+		}
+
+		const t = smoothstep(windowProgress(progress, TL_ANIM));
+
+		const years = state.timelineYearEls;
+		const yearsEl = state.timelineYearsEl;
+		if (years && years.length && yearsEl && yearsEl.parentElement) {
+			const center = yearsEl.parentElement.clientHeight / 2;
+			const firstCenter = years[0].offsetTop + years[0].offsetHeight / 2;
+			const lastCenter = years[years.length - 1].offsetTop + years[years.length - 1].offsetHeight / 2;
+			const translateY = lerp(center - firstCenter, center - lastCenter, t);
+			yearsEl.style.transform = `translateY(${translateY}px)`;
+			const currentIdx = Math.round(t * (years.length - 1));
+			years.forEach((el, index) => el.classList.toggle("is-current", index === currentIdx));
+		}
+
+		const r = state.timelineRendered;
+		if (!r) {
+			return;
+		}
+
+		r.nodeSelection.attr("transform", (d) => {
+			const a = r.startNodeOf(d.id);
+			const b = r.endNodeOf(d.id);
+			return `translate(${lerp(a.x0, b.x0, t)},${lerp(a.y0, b.y0, t)})`;
+		});
+		r.nodeSelection
+			.select("rect")
+			.attr("width", (d) => {
+				const a = r.startNodeOf(d.id);
+				const b = r.endNodeOf(d.id);
+				return lerp(Math.max(1, a.x1 - a.x0), Math.max(1, b.x1 - b.x0), t);
+			})
+			.attr("height", (d) => {
+				const a = r.startNodeOf(d.id);
+				const b = r.endNodeOf(d.id);
+				return lerp(Math.max(3, a.y1 - a.y0), Math.max(3, b.y1 - b.y0), t);
+			});
+		r.nodeSelection.select("text").attr("y", (d) => {
+			const a = r.startNodeOf(d.id);
+			const b = r.endNodeOf(d.id);
+			return lerp(Math.max(3, a.y1 - a.y0), Math.max(3, b.y1 - b.y0), t) / 2;
+		});
+		r.linkSelection
+			.attr("d", (d) => {
+				const a = r.startLinkOf(d.key);
+				const b = r.endLinkOf(d.key);
+				return r.linkPathFromGeom({
+					sx: lerp(a.sx, b.sx, t),
+					tx: lerp(a.tx, b.tx, t),
+					y0: lerp(a.y0, b.y0, t),
+					y1: lerp(a.y1, b.y1, t)
+				});
+			})
+			.attr("stroke-width", (d) => {
+				const a = r.startLinkOf(d.key);
+				const b = r.endLinkOf(d.key);
+				return Math.max(0.5, lerp(a.width, b.width, t));
+			});
+
+		if (r.axisLine && r.axisMarkerLabel) {
+			const axisTopY = lerp(r.axisTopStart, r.axisTopEnd, t);
+			const gtValue = Math.round(lerp(TIMELINE_START_GT, TIMELINE_END_GT, t) * 10) / 10;
+			r.axisLine.attr("y2", axisTopY);
+			r.axisMarkerLabel.attr("y", axisTopY).text(`${gtValue} Gt`);
+		}
+	}
+
+	// Fades the pinned timeline content out over the final 40vh, so #timeline
+	// is fully invisible before .portfolio-intro's own crossfade begins. This
+	// is a *separate* ScrollTrigger from drawTimeline's, so its own progress
+	// is 0 both "within #timeline but before this fade window" (opacity should
+	// be 1) AND "nowhere near #timeline at all" (opacity should be 0) --
+	// indistinguishable from this trigger's own progress alone. onUpdate never
+	// exposes that ambiguity (this only fires once actually scrolling through
+	// the fade window, by which point drawTimeline's own progress is already
+	// settled at 1), but onRefresh fires unconditionally on every global
+	// ScrollTrigger.refresh() -- including the several that happen in quick
+	// succession right after page load, while still scrolled at the very top.
+	// Multiplying against drawTimeline's own last-computed slideT (rather than
+	// assuming a base of 1) means this can only ever reduce visibility, never
+	// revive it independent of whether the entry trigger thinks it should show
+	// at all -- otherwise an early onRefresh here could stomp .timeline-layout
+	// back to fully opaque while still up in the hero section.
+	//
+	// That guard only covered one of the two orderings. The reverse -- this
+	// fade's onRefresh running FIRST (correctly zeroing the pin) and then
+	// drawTimeline's onRefresh re-opening it to slideT=1 -- left .timeline-layout
+	// fully opaque on top of the themes/impacts/closing sections after any reload
+	// below #timeline. So the exit term is stored the same way the entry term is,
+	// and BOTH handlers now write the identical product of both terms. Neither
+	// ordering can win, because there is nothing left to disagree about.
+	function drawTimelineFade(progress) {
+		state.timelineExitT = progress;
+		if (state.timelineLayoutEl) {
+			setPinOpacity(state.timelineLayoutEl, (state.timelineSlideT ?? 0) * (1 - progress));
+		}
+	}
+
+	function setupTimelineScroll() {
+		const section = document.getElementById("timeline");
+		if (!section) {
+			return;
+		}
+		if (!window.gsap || !window.ScrollTrigger) {
+			drawTimeline(1, 1);
+			drawTimelineFade(1);
+			return;
+		}
+		// GSAP's relative-offset shorthand ("bottom bottom+=92vh") doesn't
+		// understand the vh unit — it parseFloat()s the number and treats it as
+		// raw px, silently shrinking these to ~1/9th of the intended distance.
+		// Compute the px offsets ourselves (as functions, so they stay correct
+		// across invalidateOnRefresh/resize) instead.
+		const vh = (fraction) => `${window.innerHeight * fraction}px`;
+
+		ScrollTrigger.create({
+			trigger: section,
+			start: "top bottom",
+			// Finish the scrub 92vh before the section's actual (grown) bottom, so
+			// the scrub timeline itself is unchanged and the extra 92vh becomes a
+			// held final state (60vh static hold + 32vh fade-out below) before the
+			// section unpins.
+			end: () => `bottom bottom+=${vh(0.92)}`,
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimeline(progress, slideT);
+			},
+			onRefresh: (self) => {
+				const { slideT, progress } = splitEntryProgress(self.progress, self);
+				drawTimeline(progress, slideT);
+			}
+		});
+		drawTimeline(0, 0);
+
+		// After the 60vh static hold, scrub #timeline's own fade-out over the
+		// final 32vh before the section unpins into the portfolio section.
+		ScrollTrigger.create({
+			trigger: section,
+			start: () => `bottom bottom+=${vh(0.32)}`,
+			end: "bottom bottom",
+			scrub: 0.5,
+			invalidateOnRefresh: true,
+			onUpdate: (self) => drawTimelineFade(self.progress),
+			onRefresh: (self) => drawTimelineFade(self.progress)
+		});
+		drawTimelineFade(0);
+	}
+
+	function initTimelineSection() {
+		if (!timelineChart) {
+			return;
+		}
+		state.timelineCloseEl = document.querySelector("#timeline .timeline-closing");
+		state.timelineOpenEl = document.querySelector("#timeline .timeline-opening");
+		state.timelineLayoutEl = document.querySelector("#timeline .timeline-layout");
+
+		const yearsEl = document.querySelector("#timeline .timeline-years");
+		if (yearsEl && !yearsEl.childElementCount) {
+			const fragment = document.createDocumentFragment();
+			for (let year = 2025; year <= 2040; year += 1) {
+				const el = document.createElement("div");
+				el.className = "timeline-year";
+				el.textContent = String(year);
+				fragment.appendChild(el);
+			}
+			yearsEl.appendChild(fragment);
+		}
+		state.timelineYearsEl = yearsEl;
+		state.timelineYearEls = yearsEl ? Array.from(yearsEl.children) : [];
+
+		renderTimelineSankey();
+		setupTimelineScroll();
+	}
+
 	function setupResize() {
 		let frameId = null;
 		const schedule = () => {
@@ -7080,6 +7679,7 @@
 				}
 				measureImpactsWalkCopy();
 				renderThemesSankey();
+				renderTimelineSankey();
 				measureNavProgressGeometry();
 				frameId = null;
 			});
