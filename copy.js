@@ -3,14 +3,18 @@
 // and view.js fills it before anything measures; main.js reads the rest
 // through siteCopy(key, vars), which fills {name} placeholders.
 //
-// Copy is identical in every view -- only layout differs -- so there are
-// no per-view variants here. Loaded blocking from <head>; no build step.
+// Copy is identical in every view -- only layout differs. The exceptions are
+// the "mobile.*" keys and "hero.navIntroMobile": UI text that only exists
+// on mobile, or that names the nav's position. Loaded blocking from <head>;
+// no build step.
 window.SITE_COPY = {
 	// --- Hero + chapter select (#hero-intro)
 	"hero.headline": 'Real World<br />Clim<span>a</span>te Impact<br /><span>A</span>t Scale',
 	"hero.subtitle": 'Explore how climate technologies across the TIF &amp; TIGF portfolios are forecast to alter the trajectory of global emissions over the next 15 years.',
 	"hero.intro": 'In this first-of-its-kind interactive experience, Capricorn Investment Group presents the global emissions landscape <strong>as it is today</strong> and <strong>how it could evolve</strong> through the scaling of climate technologies across the global economy.',
 	"hero.navIntro": 'The following experience is presented in three distinct chapters. Scroll to continue or select a chapter from the navigation bar below at any time.',
+	// Mobile: the chapter bar sits at the top of the screen.
+	"hero.navIntroMobile": 'The following experience is presented in three distinct chapters. Scroll to continue or select a chapter from the navigation bar above at any time.',
 	"hero.navNote": 'NOTE TO USERS: This page includes forward-looking, third-party-modeled data regarding hypothetical technology and emissions outcomes. Please review the disclosures in the "<a href="#conclusion">Conclusion</a>" section before relying on the information presented.',
 	"hero.about1": 'Centered on the portfolios of the <strong style="color:var(--color-white);">Technology Impact Fund (TIF)</strong> and <strong style="color:var(--color-white);">Technology Impact Growth Fund (TIGF)</strong>, this interactive experience builds upon the pioneering systems modeling work of Dr. Bojana Bajželj, Julian Allwood, and Jonathan Cullen and incorporates updated public data to visualize relationships between economic activities and greenhouse gas emissions at planetary scale.',
 	"hero.about2": 'The purpose is to make climate impact more transparent, tangible, and decision-useful: showing where emissions come from, how systems are connected, and where innovation can shift the trajectory.',
@@ -153,5 +157,10 @@ window.SITE_COPY = {
 	`,
 
 	// --- Floating tooltip
-	"tooltip.techImpacts": 'The Conclusion section includes more information on the forecasting approach and related disclosures.'
+	"tooltip.techImpacts": 'The Conclusion section includes more information on the forecasting approach and related disclosures.',
+
+	// --- Mobile explore mode (the full-screen Sankey slides)
+	"mobile.explore.nodeList": 'node list',
+	"mobile.explore.companyList": 'company list',
+	"mobile.explore.details": 'details'
 };

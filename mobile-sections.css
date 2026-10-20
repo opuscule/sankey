@@ -38,10 +38,12 @@
 	bottom: 16px;
 }
 
-/* .split-section -- fixed top half (.split-top) over a full-screen vertical
-   swiper whose slides only use their bottom half. The whole screen is the
-   drag/wheel target, not just the bottom half. */
+/* .split-section -- fixed top part (.split-top) over a full-screen vertical
+   swiper whose slides only use the part below it. The whole screen is the
+   drag/wheel target, not just the bottom part. --split-top sets where the
+   split falls (default: halfway). */
 .split-section {
+	--split-top: 50%;
 	width: 100%;
 	height: 100dvh;
 	position: relative;
@@ -52,7 +54,7 @@
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 50%;
+	height: var(--split-top);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -73,11 +75,11 @@
 }
 
 .split-slide-spacer {
-	height: 50%;
+	height: var(--split-top);
 }
 
 .split-slide-content {
-	height: 50%;
+	height: calc(100% - var(--split-top));
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -86,7 +88,7 @@
 
 .split-pagination {
 	position: absolute;
-	top: 75%;
+	top: calc((100% + var(--split-top)) / 2);
 	right: 16px;
 	transform: translateY(-50%);
 	display: flex;

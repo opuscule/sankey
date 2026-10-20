@@ -534,7 +534,9 @@
 
 	setupNarrativeBeats();
 
-	if (!chart || !statusEl || !window.d3 || !d3.sankey) {
+	// The mobile view has none of the desktop chart markup (it lives in a
+	// desktop-only <template>), so only desktop needs the chart elements.
+	if (!window.d3 || !d3.sankey || (VIEW === "desktop" && (!chart || !statusEl))) {
 		return;
 	}
 
@@ -1004,7 +1006,9 @@
 
 	loadAndRender().catch((err) => {
 		console.error(err);
-		statusEl.textContent = siteCopy("sankey.status.loadError");
+		if (statusEl) {
+			statusEl.textContent = siteCopy("sankey.status.loadError");
+		}
 	});
 
 	async function loadAndRender() {
@@ -1035,6 +1039,27 @@
 		state.links = graph.links;
 		state.portfolioBusinessNodeMap = buildPortfolioBusinessNodeMap(initData);
 
+		// Mobile builds its own carousel (mobile.js) from the same data and
+		// none of the desktop sections below.
+		if (VIEW === "mobile") {
+			await window.mobileDepsReady;
+			const walkCompany = initData?.intervention?.companies?.find(
+				(entry) => normalizeBusinessSlug(entry?.company || entry?.company_label) === IMPACTS_WALK_COMPANY
+			);
+			const walkTechnology = resolveImpactsTechnologyLabel({
+				technologyLabel: String(walkCompany?.technology || "").trim(),
+				label: String(walkCompany?.company_label || walkCompany?.company || "").trim()
+			});
+			window.MobileSite.init({
+				siteCopy,
+				themesModel: buildThemesModel(initData),
+				// The avoided amount comes from the rendered impacts graph, which
+				// mobile doesn't build yet.
+				walkSentenceHtml: impactsWalkSentenceHtml(walkTechnology, siteCopy("impacts.dataPending"))
+			});
+			return;
+		}
+
 		if (!state.nodes.length || !state.links.length) {
 			statusEl.textContent = siteCopy("sankey.status.noFlows", { scenario: graph.scenario });
 			return;
@@ -1049,34 +1074,13 @@
 		setupLeadFades();
 		setupScenarioLeadFades();
 
-		// The view fork (MOBILE_OVERHAUL.md §5). Each section's init owns its
-		// own pins, so a view builds only its own sections instead of building
-		// desktop's and overriding them. Mobile sections move from the desktop
-		// list into the mobile one as they're rebuilt; until then mobile runs
-		// the same inits and their in-function (max-width: 900px) fallbacks.
-		const SECTION_INITS = {
-			desktop: [
-				initHeroCopyIntroSection,
-				initImpactsIntroSection,
-				initImpactsWalk,
-				initClosingTransitionSection,
-				initAcknowledgementsIntroSection,
-				initThemesSection,
-				initPortfolioIntroSection
-			],
-			mobile: [
-				initHeroCopyIntroSection,
-				initImpactsIntroSection,
-				initImpactsWalk,
-				initClosingTransitionSection,
-				initAcknowledgementsIntroSection,
-				initThemesSection,
-				initPortfolioIntroSection
-			]
-		};
-		// Once a mobile init uses Swiper / MobileSections, await
-		// window.mobileDepsReady here (mobile only) before running the list.
-		SECTION_INITS[VIEW].forEach((init) => init());
+		initHeroCopyIntroSection();
+		initImpactsIntroSection();
+		initImpactsWalk();
+		initClosingTransitionSection();
+		initAcknowledgementsIntroSection();
+		initThemesSection();
+		initPortfolioIntroSection();
 
 		setupBottomStickyNav();
 		initTechImpactsTooltip();

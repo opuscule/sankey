@@ -1,0 +1,483 @@
+/* Mobile view visuals -- loaded only when html[data-view="mobile"] (see the
+   <head> loader in index.html), after styles.css and mobile-sections.css.
+   Section sizing and the split layout come from mobile-sections.css; this
+   file is type, colour and the per-screen look, sized against the mockups
+   in mobile-mockup/ (393x852 viewport). */
+
+:root {
+	/* Height of the fixed chapter bar; every screen keeps its content below it. */
+	--m-bar-h: 38px;
+	--m-gutter: 26px;
+	--m-placeholder: #f2fb37;
+}
+
+/* The page scroll is driven by mobile-sections.js; a smooth CSS default
+   would turn its instant re-pins into visible glides. */
+html {
+	scroll-behavior: auto;
+}
+
+#m-app {
+	color: var(--color-white);
+}
+
+/* --- Chapter bar (the desktop .bottom-sticky-nav, moved to the top) ------ */
+
+.bottom-sticky-nav {
+	bottom: auto;
+	top: 0;
+	height: var(--m-bar-h);
+	transform: none;
+	transition: none;
+}
+
+.bottom-sticky-nav__list::after {
+	display: none; /* desktop's scroll-progress tint */
+}
+
+/* Inactive chapters are fixed squares; the active one takes the rest of
+   the bar and shows its title. */
+.bottom-sticky-nav__list > li,
+.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label {
+	flex: 0 0 var(--m-bar-h);
+	min-width: 0;
+	overflow: hidden;
+	transition: flex-basis 0.35s ease;
+}
+
+.bottom-sticky-nav__list > li:has(> .is-active),
+.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label.is-active {
+	flex: 1 1 auto;
+}
+
+/* Each link exactly fills its segment: a collapsed segment clips its title,
+   and a link wider than its square would take taps meant for the next one. */
+.bottom-sticky-nav__list > li > a.bottom-sticky-nav__item {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.bottom-sticky-nav__item {
+	font-size: 13px;
+	font-weight: 500;
+	padding: 0 14px;
+	color: transparent;
+	text-shadow: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.bottom-sticky-nav__item.is-active {
+	color: var(--color-dark);
+	text-shadow: none;
+}
+
+.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label {
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1.05;
+	white-space: normal;
+	cursor: pointer;
+}
+
+/* The tooltip and frame are desktop affordances. */
+.tech_impacts_tooltip,
+.viewport-frame {
+	display: none;
+}
+
+/* --- Screens ------------------------------------------------------------- */
+
+.m-slide {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: var(--m-bar-h) var(--m-gutter) 0;
+	position: relative;
+}
+
+.m-text {
+	font-size: 19px;
+	line-height: 1.4;
+	margin: 0;
+}
+
+.m-text strong {
+	font-weight: 700;
+}
+
+.m-text--center {
+	text-align: center;
+}
+
+.m-text--lead {
+	font-size: 30px;
+	font-weight: 700;
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+}
+
+.m-text--lead strong {
+	font-weight: inherit;
+}
+
+.m-text--xl {
+	font-size: 28px;
+	line-height: 1.22;
+	letter-spacing: -0.03em;
+}
+
+.m-text--bold {
+	font-weight: 700;
+}
+
+.m-text--about p {
+	font-size: 17px;
+	line-height: 1.55;
+	margin: 0 0 1.3em;
+}
+
+.m-text--about p:last-child {
+	margin-bottom: 0;
+}
+
+/* "Select any node" / "Select any company": the bold phrase sits in a
+   white box, as in the mockups. */
+.m-text--prompt {
+	font-size: 21px;
+	line-height: 1.6;
+}
+
+.m-text--prompt strong {
+	background: var(--color-white);
+	color: var(--color-dark);
+	padding: 2px 6px;
+}
+
+/* Keyword colours from the Sankey copy (kw-* spans). */
+.m-text .kw-final-service { color: var(--color-final-service); font-weight: 700; }
+.m-text .kw-sector { color: var(--color-sector); font-weight: 700; }
+.m-text .kw-equipment { color: var(--color-equipment); font-weight: 700; }
+.m-text .kw-device { color: var(--color-device); font-weight: 700; }
+.m-text .kw-final-energy { color: var(--color-final-energy); font-weight: 700; }
+.m-text .kw-fuel { color: var(--color-fuel); font-weight: 700; }
+.m-text .kw-emissions { color: var(--color-emissions); font-weight: 700; }
+
+/* Full-bleed colour screens. */
+.m-slide--portfolio {
+	background: var(--color-device);
+	color: var(--color-dark);
+}
+
+.m-slide--impacts {
+	background: var(--color-final-energy);
+	color: var(--color-dark);
+}
+
+.m-slide--conclusion {
+	background: var(--color-fuel);
+	color: var(--color-dark);
+}
+
+/* --- Hero (page 01) ------------------------------------------------------ */
+
+.m-slide--hero {
+	align-items: center;
+	background: var(--color-dark);
+	justify-content: flex-start;
+	overflow: hidden;
+	padding-top: calc(var(--m-bar-h) + 17vh);
+}
+
+.m-hero__globe {
+	height: auto;
+	left: 50%;
+	pointer-events: none;
+	position: absolute;
+	top: calc(var(--m-bar-h) - 2vh);
+	transform: translateX(-50%);
+	width: 150vw;
+}
+
+.m-hero__logo {
+	height: auto;
+	position: relative;
+	width: 54vw;
+}
+
+/* One word per line: min-content wraps at every space (the copy's <br>s
+   land on word boundaries too). */
+.m-hero__headline {
+	font-family: "Helvetica Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 15.6vw;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+	line-height: 0.88;
+	margin: 6vh 0 0;
+	position: relative;
+	text-align: center;
+	text-transform: uppercase;
+	width: min-content;
+}
+
+/* "arrow can fade in after a beat" */
+.m-hero__arrow {
+	animation: m-arrow-in 0.6s ease 2.2s both;
+	border-bottom: 2px solid var(--color-white);
+	border-right: 2px solid var(--color-white);
+	bottom: 9vh;
+	height: 14px;
+	left: 50%;
+	position: absolute;
+	transform: translateX(-50%) rotate(45deg);
+	width: 14px;
+}
+
+@keyframes m-arrow-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+/* --- Chapter cards (page 04) -------------------------------------------- */
+
+.m-chapters {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.m-chapters > .m-text {
+	font-size: 18px;
+	margin-bottom: 28px;
+}
+
+.m-chapters__card {
+	margin: 0 0 22px 13%;
+	width: 74%;
+}
+
+.m-chapters__card > a {
+	color: var(--color-dark);
+	display: block;
+	font-size: 20px;
+	font-weight: 700;
+	padding: 12px 10px;
+	text-align: center;
+	text-decoration: none;
+}
+
+.m-chapters__card > p {
+	font-size: 14px;
+	line-height: 1.4;
+	margin: 10px 12px 0;
+}
+
+.m-chapters__card[data-nav-group="global-emissions"] > a { background: var(--color-final-service); }
+.m-chapters__card[data-nav-group="global-emissions"] > p { color: var(--color-final-service); }
+.m-chapters__card[data-nav-group="portfolio"] > a { background: var(--color-device); }
+.m-chapters__card[data-nav-group="portfolio"] > p { color: var(--color-device); }
+.m-chapters__card[data-nav-group="technology-impacts"] > a { background: var(--color-final-energy); }
+.m-chapters__card[data-nav-group="technology-impacts"] > p { color: var(--color-final-energy); }
+
+.m-chapters__note {
+	color: rgb(255 255 255 / 0.6);
+	font-size: 11px;
+	line-height: 1.4;
+	margin: 6px 0 0;
+}
+
+.m-chapters__note a {
+	color: inherit;
+}
+
+/* --- Split screens ------------------------------------------------------- */
+
+.split-section.m-section {
+	/* The mockups split about two-thirds of the way down. */
+	--split-top: 68%;
+}
+
+.split-section.m-section .split-top {
+	box-sizing: border-box;
+	padding: calc(var(--m-bar-h) + 20px) var(--m-gutter) 20px;
+}
+
+.split-section.m-section .split-slide-content {
+	box-sizing: border-box;
+	justify-content: flex-start;
+	padding: 28px var(--m-gutter) 0;
+}
+
+.m-visual {
+	align-items: center;
+	display: flex;
+	height: 100%;
+	justify-content: center;
+	position: relative;
+	width: 100%;
+}
+
+/* --- Placeholders (visuals not built yet) -------------------------------
+   A dashed box with a caption naming what goes there. Each one is replaced
+   as its chapter's visuals are built. */
+
+.m-visual[data-placeholder]:not([data-placeholder=""])::after,
+.m-explore__chart[data-placeholder]::after {
+	align-items: center;
+	border: 1.5px dashed var(--m-placeholder);
+	box-sizing: border-box;
+	color: var(--m-placeholder);
+	content: attr(data-placeholder);
+	display: flex;
+	font-size: 15px;
+	font-weight: 700;
+	inset: 0;
+	justify-content: center;
+	line-height: 1.3;
+	padding: 20px;
+	position: absolute;
+	text-align: center;
+}
+
+/* --- Chapter 2 company chips (pages 25-29) ------------------------------ */
+
+.m-chips {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	width: 100%;
+}
+
+.m-chips__group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.m-chip {
+	border: 1px solid rgb(255 255 255 / 0.5);
+	color: rgb(255 255 255 / 0.85);
+	font-size: 14px;
+	line-height: 1;
+	padding: 9px 9px;
+	transition: color 0.4s ease, border-color 0.4s ease, opacity 0.4s ease;
+	white-space: nowrap;
+}
+
+[data-top-state^="chips"] .m-chips {
+	opacity: 1;
+}
+
+/* The highlighted theme takes its colour; themes already passed stay
+   coloured but dimmed; the finale (chips-all) colours every theme. */
+[data-top-state="chips-Materials"] .m-chips__group[data-theme="Materials"] .m-chip,
+[data-top-state="chips-Energy"] .m-chips__group[data-theme="Energy"] .m-chip,
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Electrification"] .m-chip,
+[data-top-state="chips-all"] .m-chip {
+	border-color: var(--m-theme-color);
+	color: var(--m-theme-color);
+}
+
+[data-top-state="chips-Energy"] .m-chips__group[data-theme="Materials"] .m-chip,
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Materials"] .m-chip,
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Energy"] .m-chip {
+	border-color: var(--m-theme-color);
+	color: var(--m-theme-color);
+	opacity: 0.45;
+}
+
+.m-theme-blurb strong {
+	color: var(--m-theme-color);
+}
+
+/* --- Explore mode (pages 15-21, 38-41) ---------------------------------- */
+
+.m-slide--explore {
+	justify-content: stretch;
+	padding: var(--m-bar-h) 0 0;
+}
+
+.m-explore {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.m-explore__lenses {
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+	padding: 18px 0 12px;
+}
+
+.m-explore__lens {
+	background: var(--m-lens-color);
+	height: 22px;
+	width: 22px;
+}
+
+.m-explore__chart {
+	flex: 1 1 auto;
+	margin: 0 var(--m-gutter);
+	position: relative;
+}
+
+.m-explore__bar {
+	display: flex;
+	gap: 12px;
+	padding: 16px var(--m-gutter) 22px;
+}
+
+.m-explore__toggle {
+	background: none;
+	border: 1px solid var(--color-white);
+	border-radius: 0;
+	color: var(--color-white);
+	font: inherit;
+	font-size: 17px;
+	padding: 10px 14px;
+}
+
+/* --- Closing (no mockup) ------------------------------------------------- */
+
+.m-closing__bg {
+	inset: 0;
+	position: absolute;
+	z-index: 0;
+}
+
+.m-closing__bg::after {
+	background: linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.6));
+	content: "";
+	inset: 0;
+	position: absolute;
+}
+
+.m-closing__bg img {
+	height: 100%;
+	object-fit: cover;
+	width: 100%;
+}
+
+.m-closing .swiper-wrapper {
+	z-index: 1;
+}
+
+/* --- Methodology / legal (free-scrolling, last on the page) ------------- */
+
+.m-methodology {
+	/* Same light panel as desktop's .methodology-layout, whose dark text and
+	   link colours the methodology copy is styled for. */
+	background: var(--color-fuel);
+	color: var(--color-dark);
+	box-sizing: border-box;
+	min-height: 100dvh;
+	padding: calc(var(--m-bar-h) + 28px) var(--m-gutter) 48px;
+}
+
+.m-methodology .methodology-content {
+	font-size: 15px;
+	line-height: 1.5;
+}

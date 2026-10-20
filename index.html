@@ -32,7 +32,7 @@
 		<!-- View is decided once, here, before anything renders: a pinned scroll
 			 narrative can't live-swap layouts, so view.js reloads the page if the
 			 breakpoint is crossed. 900/901 matches styles.css and main.js.
-			 Mobile-only dependencies (Swiper + mobile-sections) load only in the
+			 Mobile-only dependencies (Swiper, mobile-sections, mobile) load only in the
 			 mobile view; main.js awaits window.mobileDepsReady before using them. -->
 		<script>
 			(function () {
@@ -42,15 +42,15 @@
 					return;
 				}
 				const head = document.head;
-				["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.css", "mobile-sections.css"].forEach((href) => {
+				["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.css", "mobile-sections.css", "mobile.css"].forEach((href) => {
 					const link = document.createElement("link");
 					link.rel = "stylesheet";
 					link.href = href;
 					head.appendChild(link);
 				});
-				// async=false keeps these two in order relative to each other.
+				// async=false keeps these in order relative to each other.
 				window.mobileDepsReady = Promise.all(
-					["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.js", "mobile-sections.js"].map(
+					["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.js", "mobile-sections.js", "mobile.js"].map(
 						(src) =>
 							new Promise((resolve, reject) => {
 								const script = document.createElement("script");
@@ -87,6 +87,9 @@
 				sandbox="allow-scripts allow-same-origin"
 			></iframe>
 		</div>
+		<!-- Desktop narrative. view.js swaps this template for its content in the
+			 desktop view and drops it in the mobile view (see MOBILE_OVERHAUL.md). -->
+		<template data-view-variant="desktop">
 		<div id="introduction" class="section-anchor" aria-hidden="true"></div>
 		 
 		<section id="hero-intro" aria-label="Opening hero scene">
@@ -397,6 +400,267 @@
 
 
         </main>
+		</template>
+
+		<!-- Mobile carousel: one screen at a time, every screen either a full
+			 slide (.outer-swiper) or a split slide (.split-section), driven by
+			 mobile-sections.js (MOBILE_SECTIONS.md). Screens follow the mockups in
+			 mobile-mockup/page-NN.png -- the m-page comments name each one.
+			 data-chapter feeds the top chapter bar; data-top-state on a split
+			 slide is copied onto its section while that slide is active.
+			 data-placeholder marks a visual that isn't built yet. -->
+		<template data-view-variant="mobile">
+			<main id="m-app">
+				<!-- Intro: pages 01-05 -->
+				<div class="swiper outer-swiper m-section" data-chapter="intro" data-m-anchor="introduction">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide m-slide--hero"><!-- m-page 01 -->
+							<img class="m-hero__globe" src="earth-softfade.webp" width="1750" height="1750" alt="" aria-hidden="true" />
+							<img class="m-hero__logo" src="capricorn-logo.svg" width="263" height="47" alt="Capricorn Investment Group" />
+							<h1 class="m-hero__headline" data-copy="hero.headline"></h1>
+							<span class="m-hero__arrow" aria-hidden="true"></span>
+						</div>
+						<div class="swiper-slide m-slide"><!-- m-page 02 -->
+							<p class="m-text m-text--center" data-copy="hero.subtitle"></p>
+						</div>
+						<div class="swiper-slide m-slide"><!-- m-page 03 -->
+							<p class="m-text m-text--xl" data-copy="hero.intro"></p>
+						</div>
+						<div class="swiper-slide m-slide"><!-- m-page 04 -->
+							<div class="m-chapters">
+								<p class="m-text" data-copy="hero.navIntroMobile"></p>
+								<div class="m-chapters__card" data-nav-group="global-emissions">
+									<a href="#global-emissions-landscape" data-copy="nav.globalEmissions.title"></a>
+									<p data-copy="nav.globalEmissions.blurb"></p>
+								</div>
+								<div class="m-chapters__card" data-nav-group="portfolio">
+									<a href="#tif-tigf-portfolio" data-copy="nav.portfolio.title"></a>
+									<p data-copy="nav.portfolio.blurb"></p>
+								</div>
+								<div class="m-chapters__card" data-nav-group="technology-impacts">
+									<a href="#technology-impacts" data-copy="nav.technologyImpacts.title"></a>
+									<p data-copy="nav.technologyImpacts.blurb"></p>
+								</div>
+								<p class="m-chapters__note" data-copy="hero.navNote"></p>
+							</div>
+						</div>
+						<div class="swiper-slide m-slide"><!-- m-page 05 -->
+							<div class="m-text m-text--about">
+								<p data-copy="hero.about1"></p>
+								<p data-copy="hero.about2"></p>
+								<p data-copy="hero.about3"></p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 1 story: pages 06-13 -->
+				<div class="split-section m-section" data-chapter="global-emissions" data-m-anchor="global-emissions-landscape">
+					<div class="split-top">
+						<div class="m-visual" data-m-visual="ch1"></div>
+					</div>
+					<div class="swiper split-swiper">
+						<div class="swiper-wrapper">
+							<div class="swiper-slide" data-top-state="empty"><!-- m-page 06 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="one-strip" data-placeholder="one photo strip"><!-- m-page 07 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="seven-strips" data-placeholder="seven lens photo strips"><!-- m-page 08 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat2"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="lens-bars" data-placeholder="seven labelled lens bars"><!-- m-page 09 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat3"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="stacked" data-placeholder="lenses stacked into one column"><!-- m-page 10 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat6"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="sankey" data-placeholder="full Sankey, fitted to width"><!-- m-page 11 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat8"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="final-service" data-placeholder="Final Service column, labelled, 54 Gt"><!-- m-page 12 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat8"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="travel-path" data-placeholder="Travel → Passenger transport → Car"><!-- m-page 13 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat10"></p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 1 explore: pages 14-21 -->
+				<div class="swiper outer-swiper m-section" data-chapter="global-emissions">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide"><!-- m-page 14 -->
+							<p class="m-text m-text--prompt" data-copy="sankey.beat11"></p>
+						</div>
+						<div class="swiper-slide m-slide m-slide--explore"><!-- m-pages 15-21 -->
+							<div class="m-explore" data-m-explore="nodes">
+								<div class="m-explore__lenses" aria-hidden="true"></div>
+								<div class="m-explore__chart" data-placeholder="explore Sankey: 3 lenses at a time, pan sideways"></div>
+								<div class="m-explore__bar">
+									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.nodeList"></button>
+									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.details" hidden></button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 2 intro: pages 22-23 -->
+				<div class="swiper outer-swiper m-section" data-chapter="portfolio" data-m-anchor="tif-tigf-portfolio">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide m-slide--portfolio"><!-- m-page 22 -->
+							<p class="m-text m-text--xl m-text--bold" data-copy="portfolioIntro.line1"></p>
+						</div>
+						<div class="swiper-slide m-slide m-slide--portfolio"><!-- m-page 23 -->
+							<p class="m-text m-text--xl" data-copy="portfolioIntro.line2"></p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 2 themes: pages 24-30. Chips and blurbs come from the
+					 init data (buildThemesModel), filled in by mobile.js. -->
+				<div class="split-section m-section" data-chapter="portfolio">
+					<div class="split-top">
+						<div class="m-visual" data-m-visual="ch2">
+							<div class="m-chips" data-m-chips></div>
+						</div>
+					</div>
+					<div class="swiper split-swiper">
+						<div class="swiper-wrapper">
+							<div class="swiper-slide" data-top-state="empty"><!-- m-page 24 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-text--bold" data-copy="themes.lead"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="chips"><!-- m-page 25 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-text--bold" data-copy="themes.lead"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="chips-Materials"><!-- m-page 26 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-theme-blurb" data-m-theme-blurb="Materials"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="chips-Energy"><!-- m-page 27 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-theme-blurb" data-m-theme-blurb="Energy"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="chips-Electrification"><!-- m-page 28 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-theme-blurb" data-m-theme-blurb="Electrification"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="chips-all"><!-- m-page 29 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"></div>
+							</div>
+							<div class="swiper-slide" data-top-state="sankey" data-placeholder="portfolio Sankey, fitted to width"><!-- m-page 30 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text m-text--bold" data-copy="themes.finaleLead"></p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 3 intro: page 31 -->
+				<div class="swiper outer-swiper m-section" data-chapter="technology-impacts" data-m-anchor="technology-impacts">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide m-slide--impacts"><!-- m-page 31 -->
+							<p class="m-text m-text--xl" data-copy="impactsIntro.line2"></p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 3 Fervo walk: pages 32-36 -->
+				<div class="split-section m-section" data-chapter="technology-impacts">
+					<div class="split-top">
+						<div class="m-visual" data-m-visual="ch3"></div>
+					</div>
+					<div class="swiper split-swiper">
+						<div class="swiper-wrapper">
+							<div class="swiper-slide" data-top-state="empty"><!-- m-page 32 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy1"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="bar-0" data-placeholder="Electricity and heat bar, 0% avoided"><!-- m-page 33 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy1"></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="bar-avoided" data-placeholder="bar fills to the avoided %"><!-- m-page 34 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-m-walk-sentence></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="bar-flows" data-placeholder="flows appear around the bar"><!-- m-page 35 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-m-walk-sentence></p></div>
+							</div>
+							<div class="swiper-slide" data-top-state="sankey" data-placeholder="impacts Sankey, fitted to width"><!-- m-page 36 -->
+								<div class="split-slide-spacer"></div>
+								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy3"></p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chapter 3 explore: pages 37-41 -->
+				<div class="swiper outer-swiper m-section" data-chapter="technology-impacts">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide"><!-- m-page 37 -->
+							<p class="m-text m-text--prompt" data-copy="impacts.cardPrompt"></p>
+						</div>
+						<div class="swiper-slide m-slide m-slide--explore"><!-- m-pages 38-41 -->
+							<div class="m-explore" data-m-explore="companies">
+								<div class="m-explore__lenses" aria-hidden="true"></div>
+								<div class="m-explore__chart" data-placeholder="impacts Sankey: 3 lenses at a time, pan sideways"></div>
+								<div class="m-explore__bar">
+									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.companyList"></button>
+									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.details" hidden></button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Closing (no mockup): one slide per closing line over the video frame -->
+				<div class="swiper outer-swiper m-section m-closing" data-chapter="technology-impacts">
+					<div class="m-closing__bg" aria-hidden="true">
+						<img src="closing-transition-frame.jpg" alt="" />
+					</div>
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide"><p class="m-text m-text--xl" data-copy="closing.line1"></p></div>
+						<div class="swiper-slide m-slide"><p class="m-text m-text--xl" data-copy="closing.line2"></p></div>
+						<div class="swiper-slide m-slide"><p class="m-text m-text--xl" data-copy="closing.line3"></p></div>
+						<div class="swiper-slide m-slide"><p class="m-text m-text--xl" data-copy="closing.line4"></p></div>
+					</div>
+				</div>
+
+				<!-- Conclusion (no mockup) -->
+				<div class="swiper outer-swiper m-section" data-chapter="conclusion" data-m-anchor="conclusion">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide m-slide m-slide--conclusion">
+							<h2 class="m-text m-text--xl m-text--bold" data-copy="conclusion.heading"></h2>
+						</div>
+					</div>
+				</div>
+
+				<!-- Methodology / legal: free-scrolling content, last on the page -->
+				<div class="m-methodology" data-chapter="conclusion">
+					<section class="methodology-content" data-copy="methodology.credits"></section>
+					<section class="methodology-content" data-copy="methodology.built"></section>
+					<section class="methodology-content" data-copy="methodology.references"></section>
+					<section class="methodology-content methodology-content--legal" data-copy="methodology.disclaimers"></section>
+					<section class="methodology-content methodology-content--legal" data-copy="methodology.importantDisclosures"></section>
+				</div>
+			</main>
+		</template>
 
 		<nav class="bottom-sticky-nav" aria-label="Section navigation">
 			<ul class="bottom-sticky-nav__list">

@@ -52,46 +52,29 @@ What the script also handles:
 
 ## Integrating into `index.html`
 
+**As built (2026-10-20):** the whole mobile page is a carousel of these sections, in
+`<template data-view-variant="mobile">` in `index.html`, with the visuals in `mobile.css` and the
+behaviour in `mobile.js` (`MobileSite.init`). The steps below describe how that is wired.
+
 ### 1. Load order
 
-```html
-<head>
-	…
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.css" />
-	<link rel="stylesheet" href="styles.css" />
-	<link rel="stylesheet" href="mobile-sections.css" />
-	<script src="copy.js"></script>
-</head>
-<body>
-	… markup …
-	<script src="view.js"></script>   <!-- clones templates + fills data-copy, as today -->
-	… GSAP …
-	<script src="https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.js"></script>
-	<script src="mobile-sections.js"></script>
-	… d3 …
-	<script src="main.js"></script>
-</body>
+The inline script in `<head>` sets `html[data-view]` and, **only in the mobile view**, injects the
+mobile dependencies in order (`async = false`), exposing `window.mobileDepsReady`:
+
+```
+swiper-bundle.min.css (11.2.10) → mobile-sections.css → mobile.css      (after styles.css)
+swiper-bundle.min.js  (11.2.10) → mobile-sections.js  → mobile.js
 ```
 
-`mobile-sections.js` only defines `MobileSections`. Nothing runs until `init()` is called, so it's
-safe to load in both views. (To save desktop the ~150KB of Swiper, inject both Swiper tags only
-when `data-view="mobile"`.)
+Desktop never downloads Swiper. `mobile-sections.js` only defines `MobileSections`; nothing runs
+until `init()` is called.
 
-### 2. Initialise from the mobile boot list
+### 2. Initialise from `loadAndRender()`
 
 **Only call `init()` in the mobile view.** It installs a window-level wheel listener that would
-take over desktop scrolling. The fork point is `loadAndRender()` in `main.js` (see
-MOBILE_OVERHAUL.md §5):
-
-```js
-function initMobileSections() {
-	window.mobileSections = MobileSections.init({
-		swiperOptions: { on: { /* per-section behaviour, see below */ } },
-	});
-}
-
-const MOBILE = [initMobileSections, /* … other mobile inits … */];
-```
+take over desktop scrolling. `loadAndRender()` in `main.js` loads the data, then on mobile awaits
+`window.mobileDepsReady` and calls `MobileSite.init(ctx)` instead of building any desktop section.
+`mobile.js` calls `MobileSections.init()`.
 
 It must run **after** `view.js` has cloned the `<template data-view-variant="mobile">` markup.
 That's already true for anything called from `loadAndRender()`.
