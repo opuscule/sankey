@@ -1,0 +1,100 @@
+/* Structural styles for mobile-sections.js -- layout only; colors, type and
+   section content belong in styles.css. Load after Swiper's stylesheet.
+
+   No scroll-snap on purpose: mobile-sections.js positions the page itself,
+   and a mandatory snap would also trap free-scrolling content (the legal
+   block) between sections. */
+
+/* .outer-swiper -- full-screen vertical swiper, one slide per screen */
+.outer-swiper {
+	width: 100%;
+	height: 100dvh;
+}
+
+.outer-swiper > .swiper-wrapper > .swiper-slide {
+	width: 100%;
+	height: 100%;
+}
+
+/* .inner-swiper -- optional horizontal swiper inside an .outer-swiper slide */
+.inner-swiper {
+	width: 100%;
+	height: 100%;
+}
+
+.inner-swiper .swiper-slide {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+.inner-pagination {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 16px;
+}
+
+/* .split-section -- fixed top half (.split-top) over a full-screen vertical
+   swiper whose slides only use their bottom half. The whole screen is the
+   drag/wheel target, not just the bottom half. */
+.split-section {
+	width: 100%;
+	height: 100dvh;
+	position: relative;
+}
+
+.split-top {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none; /* gestures pass through to the swiper below */
+	z-index: 2;
+}
+
+.split-swiper {
+	width: 100%;
+	height: 100%;
+}
+
+.split-swiper .swiper-slide {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+}
+
+.split-slide-spacer {
+	height: 50%;
+}
+
+.split-slide-content {
+	height: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.split-pagination {
+	position: absolute;
+	top: 75%;
+	right: 16px;
+	transform: translateY(-50%);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	z-index: 10;
+}
+
+.split-pagination .swiper-pagination-bullet {
+	display: block;
+}
