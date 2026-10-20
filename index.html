@@ -29,6 +29,42 @@
 
 		<link rel="stylesheet" href="styles.css" />
 
+		<!-- View is decided once, here, before anything renders: a pinned scroll
+			 narrative can't live-swap layouts, so view.js reloads the page if the
+			 breakpoint is crossed. 900/901 matches styles.css and main.js.
+			 Mobile-only dependencies (Swiper + mobile-sections) load only in the
+			 mobile view; main.js awaits window.mobileDepsReady before using them. -->
+		<script>
+			(function () {
+				const view = matchMedia("(max-width: 900px)").matches ? "mobile" : "desktop";
+				document.documentElement.dataset.view = view;
+				if (view !== "mobile") {
+					return;
+				}
+				const head = document.head;
+				["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.css", "mobile-sections.css"].forEach((href) => {
+					const link = document.createElement("link");
+					link.rel = "stylesheet";
+					link.href = href;
+					head.appendChild(link);
+				});
+				// async=false keeps these two in order relative to each other.
+				window.mobileDepsReady = Promise.all(
+					["https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.js", "mobile-sections.js"].map(
+						(src) =>
+							new Promise((resolve, reject) => {
+								const script = document.createElement("script");
+								script.src = src;
+								script.async = false;
+								script.onload = resolve;
+								script.onerror = () => reject(new Error(`Failed to load ${src}`));
+								head.appendChild(script);
+							})
+					)
+				);
+			})();
+		</script>
+
 		<!-- All page copy. Blocking on purpose: view.js fills the text in before
 			 anything measures (see MOBILE_OVERHAUL.md). -->
 		<script src="copy.js"></script>

@@ -1,6 +1,8 @@
 (function () {
 	// All narrative strings live in copy.js; view.js exposes the lookup.
 	const siteCopy = window.siteCopy;
+	// "desktop" | "mobile", decided once in <head>; view.js reloads on change.
+	const VIEW = document.documentElement.dataset.view === "mobile" ? "mobile" : "desktop";
 	const initPath = "init-09072026.json";
 	const baselinesPath = "baselines-09052026.json";
 	const nodeDetailsPath = "node_details-09052026.json";
@@ -1046,13 +1048,36 @@
 		setupScenarioSync();
 		setupLeadFades();
 		setupScenarioLeadFades();
-		initHeroCopyIntroSection();
-		initImpactsIntroSection();
-		initImpactsWalk();
-		initClosingTransitionSection();
-		initAcknowledgementsIntroSection();
-		initThemesSection();
-		initPortfolioIntroSection();
+
+		// The view fork (MOBILE_OVERHAUL.md §5). Each section's init owns its
+		// own pins, so a view builds only its own sections instead of building
+		// desktop's and overriding them. Mobile sections move from the desktop
+		// list into the mobile one as they're rebuilt; until then mobile runs
+		// the same inits and their in-function (max-width: 900px) fallbacks.
+		const SECTION_INITS = {
+			desktop: [
+				initHeroCopyIntroSection,
+				initImpactsIntroSection,
+				initImpactsWalk,
+				initClosingTransitionSection,
+				initAcknowledgementsIntroSection,
+				initThemesSection,
+				initPortfolioIntroSection
+			],
+			mobile: [
+				initHeroCopyIntroSection,
+				initImpactsIntroSection,
+				initImpactsWalk,
+				initClosingTransitionSection,
+				initAcknowledgementsIntroSection,
+				initThemesSection,
+				initPortfolioIntroSection
+			]
+		};
+		// Once a mobile init uses Swiper / MobileSections, await
+		// window.mobileDepsReady here (mobile only) before running the list.
+		SECTION_INITS[VIEW].forEach((init) => init());
+
 		setupBottomStickyNav();
 		initTechImpactsTooltip();
 		setupChapterAnchorLinks();
