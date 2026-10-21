@@ -117,6 +117,12 @@ html {
 	letter-spacing: -0.03em;
 }
 
+/* Page 13 carries both paragraphs of the desktop beat. */
+.m-text--dense {
+	font-size: 16px;
+	line-height: 1.38;
+}
+
 .m-text--lead strong {
 	font-weight: inherit;
 }
@@ -392,6 +398,34 @@ html {
 	color: var(--m-theme-color);
 }
 
+/* --- Chapter 1 narrative chart (pages 06-13) ---------------------------- */
+
+.m-visual__chart {
+	display: block;
+	height: 100%;
+	overflow: visible;
+	width: 100%;
+}
+
+.m-visual__chart .stage-header {
+	font-size: 13px;
+}
+
+.m-visual__chart .sankey-node text {
+	font-size: 10.5px;
+}
+
+.m-visual__chart .lens-focus-axis__line,
+.m-visual__chart .lens-focus-axis__tick {
+	stroke: var(--color-emissions);
+	stroke-width: 1;
+}
+
+.m-visual__chart .lens-focus-axis__label {
+	fill: var(--color-emissions);
+	font-size: 15px;
+}
+
 /* --- Explore mode (pages 15-21, 38-41) ---------------------------------- */
 
 .m-slide--explore {
@@ -400,11 +434,14 @@ html {
 }
 
 .m-explore {
+	--m-stage-color: var(--color-white);
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	position: relative;
 }
 
+/* The Chapter 3 placeholder's lens row (company explore, still to build). */
 .m-explore__lenses {
 	display: flex;
 	gap: 6px;
@@ -424,20 +461,422 @@ html {
 	position: relative;
 }
 
+/* Chapter 1's chart is wider than the screen; mobile.js pans it. */
+.m-explore[data-m-explore="nodes"] .m-explore__chart {
+	margin: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.m-explore__svg {
+	display: block;
+	left: 0;
+	position: absolute;
+	top: 0;
+	transition: transform 0.45s cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+.m-explore__svg .stage-header {
+	font-size: 13px;
+}
+
+.m-explore__svg .sankey-node text {
+	font-size: 10.5px;
+}
+
+.m-explore__svg .sankey-node {
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* (Specific enough to beat styles.css's per-stage `.sankey-node rect` fills.) */
+.m-explore__svg .sankey-node rect.m-explore__hit {
+	fill: transparent;
+	stroke: none;
+}
+
+.m-explore__svg .sankey-link {
+	opacity: 0.75;
+	transition: opacity 0.25s ease;
+}
+
+.m-explore__svg .sankey-link.is-active {
+	opacity: 0.95;
+}
+
+.m-explore__svg .sankey-link.is-faded {
+	opacity: 0.04;
+}
+
+.m-explore__svg .sankey-node {
+	transition: opacity 0.25s ease;
+}
+
+.m-explore__svg .sankey-node.is-faded {
+	opacity: 0.12;
+}
+
+.m-explore__svg .sankey-chain-link {
+	fill: none;
+	opacity: 0.95;
+}
+
+/* --- Lens navigator: seven swatches, a frame around the three on screen -- */
+
+.m-lensnav {
+	--lens: 18px;
+	--lens-gap: 7px;
+	display: flex;
+	justify-content: center;
+	padding: 18px 0 14px;
+}
+
+.m-lensnav__track {
+	display: flex;
+	gap: var(--lens-gap);
+	position: relative;
+}
+
+.m-lensnav__lens {
+	background: var(--m-lens-color);
+	border: 0;
+	border-radius: 0;
+	height: var(--lens);
+	opacity: 0.4;
+	padding: 0;
+	transition: opacity 0.3s ease;
+	width: var(--lens);
+	-webkit-tap-highlight-color: transparent;
+}
+
+.m-lensnav__lens.is-on-screen {
+	opacity: 1;
+}
+
+.m-lensnav__frame {
+	border: 1px solid var(--color-white);
+	height: calc(var(--lens) + 8px);
+	left: calc(var(--m-window, 0) * (var(--lens) + var(--lens-gap)) - 4px);
+	pointer-events: none;
+	position: absolute;
+	top: -5px;
+	transition: left 0.45s cubic-bezier(0.33, 0, 0.2, 1);
+	width: calc(3 * var(--lens) + 2 * var(--lens-gap) + 8px);
+}
+
+.m-lensnav__arrow {
+	background: var(--color-dark);
+	border: 0;
+	height: 100%;
+	padding: 0;
+	pointer-events: auto;
+	position: absolute;
+	top: 0;
+	width: 14px;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* A bigger tap target than the arrow itself. */
+.m-lensnav__arrow::before {
+	content: "";
+	inset: -10px -8px;
+	position: absolute;
+}
+
+.m-lensnav__arrow::after {
+	border-left: 2px solid var(--color-white);
+	border-top: 2px solid var(--color-white);
+	content: "";
+	height: 7px;
+	left: 50%;
+	position: absolute;
+	top: 50%;
+	width: 7px;
+}
+
+.m-lensnav__arrow--prev {
+	left: -15px;
+}
+
+.m-lensnav__arrow--prev::after {
+	transform: translate(-30%, -50%) rotate(-45deg);
+}
+
+.m-lensnav__arrow--next {
+	right: -15px;
+}
+
+.m-lensnav__arrow--next::after {
+	transform: translate(-70%, -50%) rotate(135deg);
+}
+
+/* --- Info bar (selected node) and toggles -------------------------------- */
+
+.m-explore__info {
+	align-items: flex-start;
+	display: flex;
+	gap: 14px;
+	justify-content: space-between;
+	padding: 14px var(--m-gutter) 0;
+}
+
+.m-explore__info[hidden],
+.m-explore.has-drawer .m-explore__info {
+	display: none;
+}
+
+.m-explore__title {
+	color: var(--m-stage-color);
+	font-size: 19px;
+	font-weight: 400;
+	hyphens: auto;
+	line-height: 1.12;
+	margin: 0;
+}
+
+.m-explore__title strong {
+	font-weight: 700;
+}
+
+.m-explore__callout {
+	flex: 0 0 auto;
+	max-width: 46%;
+	text-align: center;
+}
+
+.m-explore__value {
+	background: var(--color-emissions);
+	color: var(--color-white);
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.15;
+	margin: 0;
+	padding: 9px 12px;
+}
+
+.m-explore__share {
+	color: var(--color-emissions);
+	font-size: 13px;
+	line-height: 1.3;
+	margin: 7px 0 0;
+}
+
 .m-explore__bar {
 	display: flex;
-	gap: 12px;
-	padding: 16px var(--m-gutter) 22px;
+	gap: 10px;
+	padding: 14px var(--m-gutter) 22px;
+	position: relative;
+	z-index: 3; /* stays above an open drawer */
 }
 
 .m-explore__toggle {
-	background: none;
+	align-items: center;
+	background: var(--color-dark);
 	border: 1px solid var(--color-white);
 	border-radius: 0;
 	color: var(--color-white);
+	display: inline-flex;
 	font: inherit;
-	font-size: 17px;
-	padding: 10px 14px;
+	font-size: 15px;
+	gap: 9px;
+	line-height: 1;
+	padding: 9px 12px;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.m-explore__toggle[hidden] {
+	display: none;
+}
+
+.m-explore__toggle[data-m-drawer-toggle="details"] {
+	border-color: var(--m-stage-color);
+	color: var(--m-stage-color);
+}
+
+/* Chevron: up when closed (the drawer opens upward), down when open. */
+.m-explore__toggle[data-m-drawer-toggle]::after {
+	border-left: 1.5px solid currentColor;
+	border-top: 1.5px solid currentColor;
+	content: "";
+	height: 6px;
+	transform: translateY(2px) rotate(45deg);
+	width: 6px;
+}
+
+.m-explore__toggle.is-open::after {
+	transform: translateY(-2px) rotate(225deg);
+}
+
+.m-explore__toggle[data-m-drawer-toggle="nodes"].is-open {
+	background: var(--color-white);
+	color: var(--color-dark);
+}
+
+.m-explore__toggle[data-m-drawer-toggle="details"].is-open {
+	background: var(--m-stage-color);
+	color: var(--color-dark);
+}
+
+/* --- Drawers ------------------------------------------------------------- */
+
+.m-drawer {
+	--m-toggle-row: 70px; /* .m-explore__bar stays visible below */
+	box-sizing: border-box;
+	inset: 0 0 var(--m-toggle-row);
+	position: absolute;
+	z-index: 2;
+}
+
+.m-drawer[hidden] {
+	display: none;
+}
+
+.m-drawer--nodes {
+	background: var(--color-dark);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+/* Details: the chart stays faintly visible behind the text. */
+.m-drawer--details {
+	background: rgb(0 0 0 / 0.9);
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+.m-drawer--details[hidden] {
+	display: none;
+}
+
+.m-drawer__body {
+	max-height: 100%;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 20px var(--m-gutter) 10px;
+}
+
+.m-drawer__body .m-explore__title {
+	margin-bottom: 14px;
+}
+
+.m-drawer__desc {
+	font-size: 15px;
+	line-height: 1.45;
+	margin: 0;
+}
+
+.m-drawer__close {
+	background: none;
+	border: 1px solid rgb(255 255 255 / 0.6);
+	border-radius: 0;
+	height: 30px;
+	padding: 0;
+	position: absolute;
+	right: var(--m-gutter);
+	top: 14px;
+	width: 30px;
+}
+
+.m-drawer__close::before,
+.m-drawer__close::after {
+	background: var(--color-white);
+	content: "";
+	height: 1.5px;
+	left: 5px;
+	position: absolute;
+	top: 50%;
+	width: 18px;
+}
+
+.m-drawer__close::before {
+	transform: rotate(45deg);
+}
+
+.m-drawer__close::after {
+	transform: rotate(-45deg);
+}
+
+/* Node list: one row per lens; the open one shows its nodes as chips. */
+.m-nodelist {
+	padding: 40px var(--m-gutter) 20px;
+}
+
+.m-nodelist__stage {
+	color: var(--m-stage-color);
+	margin-bottom: 20px;
+}
+
+.m-nodelist__head {
+	align-items: center;
+	background: none;
+	border: 0;
+	color: inherit;
+	display: flex;
+	font: inherit;
+	font-size: 18px;
+	font-weight: 700;
+	gap: 10px;
+	padding: 0;
+	position: relative;
+	text-align: left;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* A box holding a chevron: up while closed, down (and filled) when open. */
+.m-nodelist__head::before {
+	border: 1px solid currentColor;
+	box-sizing: border-box;
+	content: "";
+	flex: 0 0 auto;
+	height: 22px;
+	width: 22px;
+}
+
+.m-nodelist__head::after {
+	border-left: 1.5px solid currentColor;
+	border-top: 1.5px solid currentColor;
+	content: "";
+	height: 6px;
+	left: 8px;
+	position: absolute;
+	top: calc(50% - 2px);
+	transform: rotate(45deg);
+	width: 6px;
+}
+
+.m-nodelist__stage.is-open .m-nodelist__head::before {
+	background: currentColor;
+}
+
+.m-nodelist__stage.is-open .m-nodelist__head::after {
+	border-color: var(--color-dark);
+	top: calc(50% - 6px);
+	transform: rotate(225deg);
+}
+
+.m-nodelist__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 14px 0 6px 32px;
+}
+
+.m-nodelist__chip {
+	background: none;
+	border: 1px solid var(--m-stage-color);
+	border-radius: 0;
+	color: inherit;
+	font: inherit;
+	font-size: 14px;
+	line-height: 1.1;
+	padding: 8px 11px;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.m-nodelist__chip.is-selected {
+	background: var(--m-stage-color);
+	color: var(--color-dark);
 }
 
 /* --- Closing (no mockup) ------------------------------------------------- */

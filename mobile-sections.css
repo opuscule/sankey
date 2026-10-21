@@ -100,3 +100,9 @@
 .split-pagination .swiper-pagination-bullet {
 	display: block;
 }
+
+/* MobileSections setLocked(true): an overlay owns input, the page holds still. */
+html.sections-locked {
+	overflow: hidden;
+	overscroll-behavior: none;
+}

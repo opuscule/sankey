@@ -124,6 +124,9 @@
 		// --- page moves
 
 		let pageScrolling = false;
+		// setLocked(true): an overlay (a drawer) owns input; no swipe, wheel or
+		// scroll moves the page or any swiper until it's unlocked.
+		let locked = false;
 		let pageScrollFallback = null;
 		let lastResting = -1; // section the page last came to rest on; re-pinned on resize
 
@@ -211,7 +214,7 @@
 		function syncSwiperInput() {
 			const resting = restingIndex();
 			sections.forEach(({ swiper }, i) => {
-				const active = i === resting;
+				const active = !locked && i === resting;
 				swiper.allowTouchMove = active;
 				swiper.el.style.touchAction = active ? "" : "pan-y";
 			});
@@ -221,8 +224,15 @@
 
 		// Capture on window so this runs before Swiper's own wheel listeners.
 		window.addEventListener("wheel", (e) => {
-			const locked = wheelGate(e);
-			if (pageScrolling || locked) {
+			if (locked) {
+				// Keep it from every swiper; let it scroll only an element marked
+				// as scrollable while locked (the drawer's own content).
+				e.stopImmediatePropagation();
+				if (!e.target.closest?.("[data-sections-lock-scroll]")) e.preventDefault();
+				return;
+			}
+			const gated = wheelGate(e);
+			if (pageScrolling || gated) {
 				e.preventDefault();
 				e.stopImmediatePropagation();
 				return;
@@ -254,15 +264,27 @@
 			// Edge state is read at touchStart: by touchEnd a drag may already
 			// have nudged the swiper's progress.
 			let edgeAtTouchStart = { isBeginning: false, isEnd: false };
+			// The gesture is measured here rather than read from Swiper's
+			// touches.diff, which Swiper stops updating once it decides a drag is
+			// sideways -- a horizontal swipe would hand off with the previous
+			// gesture's stale diff.
+			let startPoint = null;
+			const pointOf = (e) => {
+				const t = e?.changedTouches?.[0] || e;
+				return t && Number.isFinite(t.clientY) ? { x: t.clientX, y: t.clientY } : null;
+			};
 
 			swiper.on("slideChange", lockWheel);
-			swiper.on("touchStart", (s) => {
+			swiper.on("touchStart", (s, e) => {
 				edgeAtTouchStart = { isBeginning: s.isBeginning, isEnd: s.isEnd };
+				startPoint = pointOf(e);
 			});
-			swiper.on("touchEnd", (s) => {
-				if (pageScrolling) return;
-				// touches.diff = currentY - startY; negative = finger moved up = go down
-				const diff = s.touches.diff;
+			swiper.on("touchEnd", (s, e) => {
+				const endPoint = pointOf(e);
+				if (pageScrolling || locked || !startPoint || !endPoint) return;
+				// negative = finger moved up = go down
+				const diff = endPoint.y - startPoint.y;
+				if (Math.abs(endPoint.x - startPoint.x) > Math.abs(diff)) return; // sideways
 				const goingDown = diff < -opts.touchHandoffPx && edgeAtTouchStart.isEnd;
 				const goingUp = diff > opts.touchHandoffPx && edgeAtTouchStart.isBeginning;
 				if (!goingDown && !goingUp) return;
@@ -353,6 +375,16 @@
 				lastResting = index;
 				scrollPageTo(pageTop(section.el), smooth);
 			},
+			// Freeze (true) or release (false) all page and slide movement, for
+			// overlays such as drawers. While locked, the page itself can't
+			// scroll (html.sections-locked); wheel input only reaches elements
+			// inside [data-sections-lock-scroll].
+			setLocked(value) {
+				locked = Boolean(value);
+				document.documentElement.classList.toggle("sections-locked", locked);
+				syncSwiperInput();
+			},
+			isLocked: () => locked,
 		};
 	}
 

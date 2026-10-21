@@ -162,5 +162,11 @@ window.SITE_COPY = {
 	// --- Mobile explore mode (the full-screen Sankey slides)
 	"mobile.explore.nodeList": 'node list',
 	"mobile.explore.companyList": 'company list',
-	"mobile.explore.details": 'details'
+	"mobile.explore.details": 'details',
+	"mobile.explore.throughput": '{value} Gt CO2e',
+	"mobile.explore.share": '{pct}% of {stage}',
+	"mobile.explore.showLens": 'Show {lens}',
+	"mobile.explore.prevLenses": 'Previous lenses',
+	"mobile.explore.nextLenses": 'Next lenses',
+	"mobile.explore.close": 'Close'
 };

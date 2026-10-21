@@ -1052,6 +1052,11 @@
 			});
 			window.MobileSite.init({
 				siteCopy,
+				// Chapter 1's two charts, built (and rebuilt on resize) by mobile.js.
+				chapter1: {
+					narrative: (svgEl) => render({ el: svgEl, mobile: true, idPrefix: "mn-" }),
+					explore: (svgEl, options) => renderExploreChart(svgEl, options)
+				},
 				themesModel: buildThemesModel(initData),
 				// The avoided amount comes from the rendered impacts graph, which
 				// mobile doesn't build yet.
@@ -5192,19 +5197,30 @@
 			.to(scanLine, { opacity: 0, duration: 0.2 });
 	}
 
-	function render() {
-		if (state.rendered?.layoutScrollTrigger) {
+	// The Chapter 1 narrative chart. Desktop draws it into #sankey-chart and
+	// scrubs it from ScrollTrigger. Mobile ({ el, mobile: true }) draws the
+	// same choreography into a phone-sized <svg> and gets drawMaster back, to
+	// drive from its own slide changes (mobile.js); nothing there is clickable.
+	function render(opts = {}) {
+		const mobile = Boolean(opts.mobile);
+		const chartEl = opts.el || chart;
+		// Gradient ids are document-global; a second chart on the page needs its own.
+		const gradientId = (sourceStage, targetStage) =>
+			`${opts.idPrefix || ""}${linkGradientId(sourceStage, targetStage)}`;
+
+		if (!mobile && state.rendered?.layoutScrollTrigger) {
 			state.rendered.layoutScrollTrigger.kill();
 		}
 
-		const bounds = chart.getBoundingClientRect();
-		const width = Math.max(920, Math.floor(bounds.width));
-		const height = Math.max(560, Math.floor(bounds.height));
+		const bounds = chartEl.getBoundingClientRect();
+		const width = mobile ? Math.max(280, Math.floor(bounds.width)) : Math.max(920, Math.floor(bounds.width));
+		const height = mobile ? Math.max(320, Math.floor(bounds.height)) : Math.max(560, Math.floor(bounds.height));
+		const nodeW = mobile ? 14 : 20;
 
-		d3.select(chart).selectAll("*").remove();
+		d3.select(chartEl).selectAll("*").remove();
 
 		const svg = d3
-			.select(chart)
+			.select(chartEl)
 			.attr("viewBox", `0 0 ${width} ${height}`)
 			.attr("preserveAspectRatio", "xMidYMid meet");
 
@@ -5214,10 +5230,10 @@
 		};
 
 		// Extra top headroom so the horizontal stage headers fit inside the viewBox.
-		const sankeyExtentTop = 70;
-		const sankeyExtentBottom = height - 34;
-		const sankeyExtentLeft = 28;
-		const sankeyExtentRight = width - 28;
+		const sankeyExtentTop = mobile ? 30 : 70;
+		const sankeyExtentBottom = mobile ? height - 4 : height - 34;
+		const sankeyExtentLeft = mobile ? 2 : 28;
+		const sankeyExtentRight = mobile ? width - 2 : width - 28;
 
 		const computeLayout = (nodePadding) => {
 			const layoutGraph = {
@@ -5228,7 +5244,7 @@
 			d3
 				.sankey()
 				.nodeId((d) => d.id)
-				.nodeWidth(20)
+				.nodeWidth(nodeW)
 				.nodePadding(nodePadding)
 				.nodeAlign(d3.sankeyJustify)
 				.extent([
@@ -5310,7 +5326,6 @@
 		// across the full chart width (same vertical geometry, so no distortion);
 		// stages 4-7 pushed off the right edge.
 		const computeDetailLayout = (expandedLayout) => {
-			const nodeW = 20;
 			const labelRoom = Math.min(320, width * 0.26);
 			const detailRight = sankeyExtentRight - labelRoom;
 			const x0ByStage = {
@@ -5333,8 +5348,8 @@
 			return { nodes, links };
 		};
 
-		const expandedGraph = computeLayout(9);
-		spreadNodesForLabels(chart, expandedGraph, sankeyExtentTop, sankeyExtentBottom);
+		const expandedGraph = computeLayout(mobile ? 4 : 9);
+		spreadNodesForLabels(chartEl, expandedGraph, sankeyExtentTop, sankeyExtentBottom);
 		const collapsedGraph = derivePackedLayout(expandedGraph);
 		const detailGraph = computeDetailLayout(expandedGraph);
 
@@ -5383,7 +5398,7 @@
 			const targetX = stageBounds.get(targetStage)?.x0 ?? width;
 			const gradient = defs
 				.append("linearGradient")
-				.attr("id", linkGradientId(sourceStage, targetStage))
+				.attr("id", gradientId(sourceStage, targetStage))
 				.attr("gradientUnits", "userSpaceOnUse")
 				.attr("x1", sourceX)
 				.attr("y1", 0)
@@ -5421,7 +5436,7 @@
 			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
 
 			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
-				return `url(#${linkGradientId(sourceStage, targetStage)})`;
+				return `url(#${gradientId(sourceStage, targetStage)})`;
 			}
 
 			return "rgba(208, 222, 235, 0.38)";
@@ -5508,12 +5523,19 @@
 		const introGroup = svg.append("g").attr("class", "sankey-intro");
 		const introCards = [];
 		{
-			const extentH = sankeyExtentBottom - sankeyExtentTop;
 			const extentW = sankeyExtentRight - sankeyExtentLeft;
-			const groupWidth = extentW * 0.52;
+			const groupWidth = extentW * (mobile ? 0.86 : 0.52);
 			const groupLeft = sankeyExtentLeft + (extentW - groupWidth) / 2;
 			const slotGap = groupWidth / 6;
-			const cardTop = sankeyExtentTop;
+			// Cards span the chart height on desktop. A phone's slots are too
+			// narrow for that (the art would overlap), so there each card is as
+			// tall as fits 80% of its slot's width, centred vertically.
+			const fullH = sankeyExtentBottom - sankeyExtentTop;
+			const artViewBox = [...(state.introAssets?.values() || [])].find(Boolean)?.viewBox;
+			const extentH = mobile && artViewBox
+				? Math.min(fullH, (artViewBox.height * slotGap * 0.8) / artViewBox.width)
+				: fullH;
+			const cardTop = sankeyExtentTop + (fullH - extentH) / 2;
 
 			// Bars sit as a short stub at the bottom of each card (per the mock-up)
 			// rather than spanning the full card height. Each card uses its own
@@ -5541,12 +5563,14 @@
 				// Short bottom-anchored stub, matching the mock-up; the wordmark reads
 				// upward above it. barRect is appended before mark so the mark paints
 				// on top and stays legible instead of being occluded by the bar. Width
-				// is a fixed 27px per card, independent of the photo/mark's own barW.
+				// is a fixed 27px per card, independent of the photo/mark's own barW
+				// (scaled with the art on mobile, whose cards are smaller).
 				const barH = naturalBarHeightByStage[stage - 1] ?? extentH * 0.3;
+				const stubW = mobile ? Math.round(27 * scale) : 27;
 				const barScreen = {
-					x: cx - 27 / 2,
+					x: cx - stubW / 2,
 					y: cardTop + extentH - barH,
-					w: 27,
+					w: stubW,
 					h: barH
 				};
 				const barRect = card
@@ -5601,7 +5625,7 @@
 		// Horizontal stage headers over the chart columns (visible from the
 		// packed state onward, per the mock-up).
 		const headerGroup = svg.append("g").attr("class", "sankey-stage-headers");
-		const headerY = sankeyExtentTop - 26;
+		const headerY = sankeyExtentTop - (mobile ? 12 : 26);
 		const headerSelection = renderStageHeaders(headerGroup, expandedGraph, headerY).style("opacity", 0);
 
 		// Column centers in the "detail" (cars-example zoom) layout, for stages
@@ -5620,7 +5644,9 @@
 		const stage1Right = stage1Nodes.length
 			? d3.max(stage1Nodes, (node) => node.x1)
 			: sankeyExtentLeft + 20;
-		const lensAxisX = stage1Right + 180;
+		// (Mobile: closer in, just clear of the wrapped labels.)
+		const lensAxisX = stage1Right + (mobile ? 118 : 180);
+		const lensTickW = mobile ? 12 : 20;
 
 		const lensAxisGroup = svg.append("g").attr("class", "lens-focus-axis").style("opacity", 0);
 		lensAxisGroup
@@ -5634,7 +5660,7 @@
 			lensAxisGroup
 				.append("line")
 				.attr("class", "lens-focus-axis__tick")
-				.attr("x1", lensAxisX - 20)
+				.attr("x1", lensAxisX - lensTickW)
 				.attr("x2", lensAxisX)
 				.attr("y1", y)
 				.attr("y2", y);
@@ -5642,14 +5668,15 @@
 		lensAxisGroup
 			.append("text")
 			.attr("class", "lens-focus-axis__label")
-			.attr("x", lensAxisX + 12)
+			.attr("x", lensAxisX + (mobile ? 8 : 12))
 			.attr("y", (sankeyExtentTop + sankeyExtentBottom) / 2)
 			.attr("dy", "0.35em")
 			.attr("text-anchor", "start")
 			.text("54 Gt");
 
 		const setSankeyInteraction = (enabled) => {
-			if (state.sankeyInteractive === enabled) {
+			// Mobile explores a separate chart (renderExploreChart).
+			if (mobile || state.sankeyInteractive === enabled) {
 				return;
 			}
 
@@ -5826,6 +5853,11 @@
 			}
 			return 0;
 		};
+		// A phone has no room for every stage 1-3 label in the zoom; it labels
+		// only the nodes on the highlighted chain.
+		const carsChainNodeIds = new Set(
+			expandedGraph.links.filter(isChainLink).flatMap((link) => [link.source.id, link.target.id])
+		);
 
 		const drawMaster = (progress) => {
 			// Remap section progress onto the animation span; the HOLD_TAIL at the
@@ -6019,6 +6051,22 @@
 				});
 			}
 
+			let labelOpacityFn = (d) => stageLabelOpacity[d.stage] ?? 0;
+			if (mobile) {
+				// Seven headers don't fit across a phone: none until the lens
+				// focus, then only the columns on screen.
+				if (p < B["lens-focus"].start) {
+					stageHeaderOpacity.fill(0);
+				} else if (p < B["cars-example"].start) {
+					stageHeaderOpacity.fill(0);
+					stageHeaderOpacity[1] = smoothstep(clamp01(tFocus / 0.4));
+				}
+				if (layoutPair === "expanded-detail") {
+					labelOpacityFn = (d) =>
+						carsChainNodeIds.has(d.id) ? stageLabelOpacity[d.stage] ?? 0 : d.stage === 1 ? 1 - layoutT : 0;
+				}
+			}
+
 			if (interactiveNow) {
 				// Hand opacity control to CSS so the click-to-isolate classes work.
 				nodeSelection.style("opacity", null);
@@ -6026,7 +6074,7 @@
 				linkPaths.style("opacity", null);
 			} else {
 				nodeSelection.style("opacity", (d) => stageNodeOpacity[d.stage] ?? 0);
-				nodeSelection.select("text").style("opacity", (d) => stageLabelOpacity[d.stage] ?? 0);
+				nodeSelection.select("text").style("opacity", labelOpacityFn);
 				linkPaths.style("opacity", linkOpacityFn);
 			}
 
@@ -6037,6 +6085,12 @@
 			lensAxisGroup.style("opacity", axisOpacity);
 			setSankeyInteraction(interactiveNow);
 		};
+
+		if (mobile) {
+			// Mobile's slides land on points of the scene timeline (0-1), not
+			// on scroll progress, so hand back the timeline-to-progress mapping.
+			return { draw: (sceneProgress) => drawMaster(clamp01(sceneProgress) * ANIM_SPAN) };
+		}
 
 		let layoutScrollTrigger = null;
 		if (DEV_SCRUB !== null) {
@@ -6098,6 +6152,7 @@
 			linkSelection: linkPaths,
 			graph: expandedGraph,
 			chainGroup,
+			gradientId,
 			layoutScrollTrigger
 		};
 
@@ -6118,59 +6173,80 @@
 			return;
 		}
 
-		const { nodeSelection, linkSelection, graph, chainGroup } = state.rendered;
-
-		chainGroup.selectAll("*").remove();
-
-		if (!state.selectedNodeId) {
-			linkSelection.classed("is-faded", false).classed("is-active", false);
-			nodeSelection.classed("is-faded", false).classed("is-selected", false);
+		const selectedId = state.selectedNodeId;
+		if (!selectedId) {
+			isolateNode(state.rendered, null);
 			statusEl.textContent = siteCopy("sankey.status.clickHint");
 			hideNodePanel();
 			return;
 		}
 
-		const selectedId = state.selectedNodeId;
-
 		// Populate the left-column info panel for the selected node (shown in
 		// all selection modes, before chain data resolves).
-		{
-			const panelNode = graph.nodes.find((node) => node.id === selectedId);
-			if (panelNode) {
-				const inflowByNode = new Map();
-				const outflowByNode = new Map();
-				graph.links.forEach((link) => {
-					inflowByNode.set(link.target.id, (inflowByNode.get(link.target.id) || 0) + link.value);
-					outflowByNode.set(link.source.id, (outflowByNode.get(link.source.id) || 0) + link.value);
-				});
-				const throughputOf = (id) =>
-					(inflowByNode.get(id) || 0) > 0 ? inflowByNode.get(id) : outflowByNode.get(id) || 0;
-				const throughputMt = throughputOf(selectedId);
-				const stageTotal = d3.sum(
-					graph.nodes.filter((node) => node.stage === panelNode.stage),
-					(node) => throughputOf(node.id)
-				);
-				showNodePanel({
-					stageLabel: STAGE_META[panelNode.stage]?.label ?? `Stage ${panelNode.stage}`,
-					name: panelNode.label,
-					description: panelNode.description,
-					stageVar: stageColorVars[panelNode.stage],
-					throughputMt,
-					sharePct: stageTotal > 0 ? (throughputMt / stageTotal) * 100 : 0
-				});
-			}
+		const panelInfo = nodePanelInfo(state.rendered.graph, selectedId);
+		if (panelInfo) {
+			showNodePanel(panelInfo);
 		}
 
-		// Full-chain isolation needs node_details.json; show the direct-neighbor
-		// fallback until it arrives, then upgrade in place if still selected.
+		statusEl.textContent = isolateNode(state.rendered, selectedId, () => {
+			if (state.selectedNodeId === selectedId) {
+				applySelection();
+			}
+		});
+	}
+
+	// What the info panel shows for a selected node: its stage, name,
+	// description, and throughput as a share of its stage.
+	function nodePanelInfo(graph, selectedId) {
+		const panelNode = graph.nodes.find((node) => node.id === selectedId);
+		if (!panelNode) {
+			return null;
+		}
+		const inflowByNode = new Map();
+		const outflowByNode = new Map();
+		graph.links.forEach((link) => {
+			inflowByNode.set(link.target.id, (inflowByNode.get(link.target.id) || 0) + link.value);
+			outflowByNode.set(link.source.id, (outflowByNode.get(link.source.id) || 0) + link.value);
+		});
+		const throughputOf = (id) =>
+			(inflowByNode.get(id) || 0) > 0 ? inflowByNode.get(id) : outflowByNode.get(id) || 0;
+		const throughputMt = throughputOf(selectedId);
+		const stageTotal = d3.sum(
+			graph.nodes.filter((node) => node.stage === panelNode.stage),
+			(node) => throughputOf(node.id)
+		);
+		return {
+			stage: panelNode.stage,
+			stageLabel: STAGE_META[panelNode.stage]?.label ?? `Stage ${panelNode.stage}`,
+			name: panelNode.label,
+			description: panelNode.description,
+			stageVar: stageColorVars[panelNode.stage],
+			throughputMt,
+			sharePct: stageTotal > 0 ? (throughputMt / stageTotal) * 100 : 0
+		};
+	}
+
+	// Isolates `selectedId` in a rendered chart ({ nodeSelection,
+	// linkSelection, graph, chainGroup, gradientId }), or clears it when null,
+	// and returns the status-line text. Full-chain isolation needs
+	// node_details.json: until it arrives this shows the direct-neighbor
+	// fallback and calls `onChainReady` once it lands, to re-apply.
+	function isolateNode(rendered, selectedId, onChainReady) {
+		const { nodeSelection, linkSelection, graph, chainGroup } = rendered;
+		const gradientId = rendered.gradientId || linkGradientId;
+
+		chainGroup.selectAll("*").remove();
+
+		if (!selectedId) {
+			linkSelection.classed("is-faded", false).classed("is-active", false);
+			nodeSelection.classed("is-faded", false).classed("is-selected", false);
+			return siteCopy("sankey.status.clickHint");
+		}
+
 		if (!state.nodeDetails) {
-			applyDirectSelection(selectedId);
-			ensureNodeDetails().then(() => {
-				if (state.selectedNodeId === selectedId) {
-					applySelection();
-				}
-			});
-			return;
+			const status = applyDirectSelection(rendered, selectedId);
+			ensureNodeDetails().then(() => onChainReady?.());
+			return status;
 		}
 
 		const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
@@ -6178,8 +6254,7 @@
 
 		// Chain not generated for this node yet -> direct-neighbor fallback.
 		if (!chainLinks) {
-			applyDirectSelection(selectedId);
-			return;
+			return applyDirectSelection(rendered, selectedId);
 		}
 
 		// --- Full-chain isolation: fade the whole baseline chart and draw the
@@ -6237,7 +6312,7 @@
 			.attr("class", "sankey-chain-link")
 			.style("stroke", (d) =>
 				stageColorVars[d.source.stage] && stageColorVars[d.target.stage]
-					? `url(#${linkGradientId(d.source.stage, d.target.stage)})`
+					? `url(#${gradientId(d.source.stage, d.target.stage)})`
 					: "rgba(208, 222, 235, 0.6)"
 			)
 			.attr("d", d3.sankeyLinkHorizontal())
@@ -6247,14 +6322,14 @@
 		const inflow = d3.sum(datums, (d) => (d.target.id === selectedId ? d.value : 0));
 		const outflow = d3.sum(datums, (d) => (d.source.id === selectedId ? d.value : 0));
 		const throughput = inflow > 0 ? inflow : outflow;
-		statusEl.textContent = `${selectedNode?.label ?? selectedId}: ${formatMass(throughput)} traced end-to-end`;
+		return `${selectedNode?.label ?? selectedId}: ${formatMass(throughput)} traced end-to-end`;
 	}
 
 	// Direct-neighbor isolation (one hop each way): the behavior for nodes
 	// whose full chain hasn't been generated yet, and while node_details.json
-	// is still loading.
-	function applyDirectSelection(selectedId) {
-		const { nodeSelection, linkSelection, graph } = state.rendered;
+	// is still loading. Returns the status-line text.
+	function applyDirectSelection(rendered, selectedId) {
+		const { nodeSelection, linkSelection, graph } = rendered;
 
 		const connectedLinks = graph.links.filter(
 			(link) => link.source.id === selectedId || link.target.id === selectedId
@@ -6276,8 +6351,7 @@
 
 		const selectedNode = graph.nodes.find((node) => node.id === selectedId);
 		if (!selectedNode) {
-			statusEl.textContent = siteCopy("sankey.status.clickHint");
-			return;
+			return siteCopy("sankey.status.clickHint");
 		}
 
 		const total = d3.sum(connectedLinks, (link) => link.value);
@@ -6289,11 +6363,192 @@
 			.sort((a, b) => b.value - a.value)[0];
 
 		if (!topConnection || total <= 0) {
-			statusEl.textContent = `${selectedNode.label} selected`;
-			return;
+			return `${selectedNode.label} selected`;
 		}
 
-		statusEl.textContent = `${selectedNode.label}: ${formatMass(total)} total, top path ${topConnection.label} (${fmtPct((topConnection.value / total) * 100)}%)`;
+		return `${selectedNode.label}: ${formatMass(total)} total, top path ${topConnection.label} (${fmtPct((topConnection.value / total) * 100)}%)`;
+	}
+
+	// --- Mobile explore mode (Chapter 1, mockup pages 15-21) -----------------
+	// The full Sankey at phone scale, laid out wider than the screen: three
+	// lenses fit across it and mobile.js pans between them. Tapping a node or
+	// its label toggles the same full-chain isolation as desktop and reports
+	// the selection through onSelect (null when cleared).
+	function renderExploreChart(svgEl, { onSelect } = {}) {
+		const frame = svgEl.parentElement.getBoundingClientRect();
+		const viewW = Math.max(280, Math.floor(frame.width));
+		const height = Math.max(360, Math.floor(frame.height));
+		const nodeW = 14;
+		const padX = 16;
+		// Three columns per screen, the third one's labels running off its edge.
+		const columnGap = Math.round((viewW - padX) / 3.1);
+		const labelW = columnGap - 32;
+		const top = 30;
+		const bottom = height - 6;
+		const left = padX;
+		const right = left + 6 * columnGap + nodeW;
+		const width = right + padX;
+		const gradientId = (sourceStage, targetStage) => `mx-${linkGradientId(sourceStage, targetStage)}`;
+
+		const svg = d3.select(svgEl);
+		svg.selectAll("*").remove();
+		svg.attr("viewBox", `0 0 ${width} ${height}`).attr("width", width).attr("height", height);
+
+		const graph = {
+			nodes: state.nodes.map((node) => ({ ...node })),
+			links: state.links.map((link) => ({ ...link }))
+		};
+		d3
+			.sankey()
+			.nodeId((d) => d.id)
+			.nodeWidth(nodeW)
+			.nodePadding(4)
+			.nodeAlign(d3.sankeyJustify)
+			.extent([
+				[left, top],
+				[right, bottom]
+			])
+			.iterations(64)(graph);
+		spreadStageHeights(graph, top, bottom);
+		spreadNodesForLabels(svgEl, graph, top, bottom);
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
+		new Set(graph.links.map((link) => `${link.source.stage}-${link.target.stage}`)).forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map(Number);
+			if (!stageColorVars[sourceStage] || !stageColorVars[targetStage]) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", gradientId(sourceStage, targetStage))
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${stageColorVars[sourceStage]})`).attr("stop-opacity", 0.3);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${stageColorVars[targetStage]})`).attr("stop-opacity", 0.3);
+		});
+
+		const linkSelection = svg
+			.append("g")
+			.attr("class", "sankey-links")
+			.selectAll("path")
+			.data(graph.links, (d) => d.id)
+			.join("path")
+			.attr("class", "sankey-link")
+			.style("stroke", (d) =>
+				stageColorVars[d.source.stage] && stageColorVars[d.target.stage]
+					? `url(#${gradientId(d.source.stage, d.target.stage)})`
+					: null
+			)
+			.attr("d", d3.sankeyLinkHorizontal())
+			.attr("stroke-width", (d) => Math.max(1, d.width));
+
+		const chainGroup = svg.append("g").attr("class", "sankey-chain");
+
+		let selectedId = null;
+		const nodeSelection = svg
+			.append("g")
+			.attr("class", "sankey-nodes")
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`)
+			.on("click", (event, d) => {
+				event.stopPropagation();
+				select(selectedId === d.id ? null : d.id);
+			});
+
+		// Emissions sits at the right edge, so its labels read leftward.
+		const labelsLeft = (d) => d.stage === 7;
+		const nodeH = (d) => Math.max(2, d.y1 - d.y0);
+		nodeSelection.append("rect").attr("width", nodeW).attr("height", nodeH);
+		const labels = nodeSelection
+			.append("text")
+			.attr("x", (d) => (labelsLeft(d) ? -6 : nodeW + 6))
+			.attr("y", (d) => nodeH(d) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (labelsLeft(d) ? "end" : "start"))
+			.text((d) => d.label);
+		wrapNodeLabels(labels, labelW);
+		// Most nodes are a few px tall: the tap target is the node plus its label.
+		nodeSelection
+			.append("rect")
+			.attr("class", "m-explore__hit")
+			.attr("x", (d) => (labelsLeft(d) ? -labelW - 6 : 0))
+			.attr("y", (d) => Math.min(0, nodeH(d) / 2 - 12))
+			.attr("width", nodeW + labelW + 6)
+			.attr("height", (d) => Math.max(nodeH(d), 24));
+
+		svg
+			.append("g")
+			.attr("class", "sankey-stage-headers")
+			.selectAll("text")
+			.data([...stageBounds.entries()].filter(([stage]) => STAGE_META[stage]))
+			.join("text")
+			.attr("class", "stage-header")
+			.attr("x", ([stage, bounds]) => (stage === 7 ? bounds.x1 : bounds.x0))
+			.attr("y", top - 14)
+			.attr("text-anchor", ([stage]) => (stage === 7 ? "end" : "start"))
+			.attr("fill", ([stage]) => `var(${stageColorVars[stage]})`)
+			.text(([stage]) => STAGE_META[stage].label);
+
+		svg.on("click", () => {
+			if (selectedId) {
+				select(null);
+			}
+		});
+
+		const rendered = { nodeSelection, linkSelection, graph, chainGroup, gradientId };
+
+		function select(id) {
+			selectedId = id && graph.nodes.some((node) => node.id === id) ? id : null;
+			const requested = selectedId;
+			isolateNode(rendered, requested, () => {
+				if (selectedId === requested) {
+					isolateNode(rendered, requested);
+				}
+			});
+			svgEl.classList.toggle("has-selection", Boolean(selectedId));
+			const info = selectedId ? nodePanelInfo(graph, selectedId) : null;
+			onSelect?.(
+				info && {
+					...info,
+					id: selectedId,
+					throughputText: siteCopy("mobile.explore.throughput", { value: fmtMt(info.throughputMt / 1000) }),
+					shareText: siteCopy("mobile.explore.share", {
+						pct: d3.format(".1f")(info.sharePct),
+						stage: info.stageLabel
+					})
+				}
+			);
+		}
+
+		// Prefetch the chain data so the first tap can isolate the full chain.
+		ensureNodeDetails();
+
+		return {
+			width,
+			columnGap,
+			select,
+			selectedId: () => selectedId,
+			// Per stage, its nodes top to bottom: the node list drawer's contents.
+			stages: Object.keys(STAGE_META).map((key) => {
+				const stage = Number(key);
+				return {
+					stage,
+					label: STAGE_META[stage].label,
+					colorVar: stageColorVars[stage],
+					nodes: graph.nodes
+						.filter((node) => node.stage === stage)
+						.sort((a, b) => a.y0 - b.y0)
+						.map((node) => ({ id: node.id, label: node.label }))
+				};
+			})
+		};
 	}
 
 	// --- Portfolio Themes section --------------------------------------------

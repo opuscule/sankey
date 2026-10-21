@@ -454,44 +454,48 @@
 					</div>
 				</div>
 
-				<!-- Chapter 1 story: pages 06-13 -->
+				<!-- Chapter 1 story: pages 06-13. The chart is desktop's narrative
+					 choreography (render() in main.js); each slide's data-m-progress
+					 is the point on its scene timeline (0-1) that the slide rests at. -->
 				<div class="split-section m-section" data-chapter="global-emissions" data-m-anchor="global-emissions-landscape">
 					<div class="split-top">
-						<div class="m-visual" data-m-visual="ch1"></div>
+						<div class="m-visual" data-m-visual="ch1">
+							<svg class="m-visual__chart" data-m-narrative aria-hidden="true"></svg>
+						</div>
 					</div>
 					<div class="swiper split-swiper">
 						<div class="swiper-wrapper">
-							<div class="swiper-slide" data-top-state="empty"><!-- m-page 06 -->
+							<div class="swiper-slide" data-top-state="empty" data-m-progress="0"><!-- m-page 06 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="one-strip" data-placeholder="one photo strip"><!-- m-page 07 -->
+							<div class="swiper-slide" data-top-state="one-strip" data-m-progress="0.09"><!-- m-page 07 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="seven-strips" data-placeholder="seven lens photo strips"><!-- m-page 08 -->
+							<div class="swiper-slide" data-top-state="seven-strips" data-m-progress="0.17"><!-- m-page 08 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat2"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="lens-bars" data-placeholder="seven labelled lens bars"><!-- m-page 09 -->
+							<div class="swiper-slide" data-top-state="lens-bars" data-m-progress="0.27"><!-- m-page 09 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat3"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="stacked" data-placeholder="lenses stacked into one column"><!-- m-page 10 -->
+							<div class="swiper-slide" data-top-state="stacked" data-m-progress="0.49"><!-- m-page 10: the stripe row, before it merges -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat6"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="sankey" data-placeholder="full Sankey, fitted to width"><!-- m-page 11 -->
+							<div class="swiper-slide" data-top-state="sankey" data-m-progress="0.75"><!-- m-page 11 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat8"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="final-service" data-placeholder="Final Service column, labelled, 54 Gt"><!-- m-page 12 -->
+							<div class="swiper-slide" data-top-state="final-service" data-m-progress="0.82"><!-- m-page 12 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat8"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="travel-path" data-placeholder="Travel → Passenger transport → Car"><!-- m-page 13 -->
+							<div class="swiper-slide" data-top-state="travel-path" data-m-progress="0.92"><!-- m-page 13 -->
 								<div class="split-slide-spacer"></div>
-								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat10"></p></div>
+								<div class="split-slide-content"><p class="m-text m-text--dense" data-copy="sankey.beat10"></p></div>
 							</div>
 						</div>
 					</div>
@@ -504,12 +508,34 @@
 							<p class="m-text m-text--prompt" data-copy="sankey.beat11"></p>
 						</div>
 						<div class="swiper-slide m-slide m-slide--explore"><!-- m-pages 15-21 -->
+							<!-- Built by mobile.js: the lens navigator, the chart (renderExploreChart
+								 in main.js) and the node list. While a drawer is open, page swiping
+								 is locked (MobileSections setLocked). -->
 							<div class="m-explore" data-m-explore="nodes">
-								<div class="m-explore__lenses" aria-hidden="true"></div>
-								<div class="m-explore__chart" data-placeholder="explore Sankey: 3 lenses at a time, pan sideways"></div>
+								<div class="m-lensnav" data-m-lensnav></div>
+								<div class="m-explore__chart">
+									<svg class="m-explore__svg" data-m-explore-chart></svg>
+								</div>
+								<div class="m-explore__info" data-m-info hidden>
+									<h3 class="m-explore__title" data-m-title></h3>
+									<div class="m-explore__callout">
+										<p class="m-explore__value" data-m-value></p>
+										<p class="m-explore__share" data-m-share></p>
+									</div>
+								</div>
 								<div class="m-explore__bar">
-									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.nodeList"></button>
-									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.details" hidden></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="nodes" aria-expanded="false"><span data-copy="mobile.explore.nodeList"></span></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="details" aria-expanded="false" hidden><span data-copy="mobile.explore.details"></span></button>
+								</div>
+								<div class="m-drawer m-drawer--nodes" data-m-drawer="nodes" data-sections-lock-scroll hidden>
+									<div class="m-nodelist" data-m-nodelist></div>
+								</div>
+								<div class="m-drawer m-drawer--details" data-m-drawer="details" hidden>
+									<button type="button" class="m-drawer__close" data-m-drawer-close></button>
+									<div class="m-drawer__body" data-sections-lock-scroll>
+										<h3 class="m-explore__title" data-m-title></h3>
+										<p class="m-drawer__desc" data-m-desc></p>
+									</div>
 								</div>
 							</div>
 						</div>

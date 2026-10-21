@@ -165,7 +165,16 @@ next scroll settles.
 const mobileSections = MobileSections.init(options);
 mobileSections.sections;                     // [{ el, swiper }] in page order
 mobileSections.scrollToSection(i, { smooth = true });
+mobileSections.setLocked(true | false);      // freeze all page/slide movement (drawers)
+mobileSections.isLocked();
 ```
+
+**Locking.** While an overlay such as explore mode's node list or details drawer is open, call
+`setLocked(true)`: every swiper stops taking touch, wheel input is swallowed, and
+`html.sections-locked` stops the page itself scrolling. Wheel scrolling still reaches anything
+inside an element marked `data-sections-lock-scroll` (give it `overscroll-behavior: contain`).
+`setLocked(false)` when it closes. Anything that moves the page (a chapter link) should close the
+overlay first.
 
 | Option | Default | |
 |---|---|---|
