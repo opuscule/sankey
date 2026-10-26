@@ -67,6 +67,8 @@ window.SITE_COPY = {
 	"impacts.walkSentence": 'By 2040, emissions are forecasted to be reduced by {amount} through the adoption of {technology} at transformative scale.',
 	"impacts.loading": 'loading...',
 	"impacts.dataPending": 'data pending',
+	"impacts.avoidedPct": '{pct}% avoided',
+	"impacts.noDetails": 'data not found',
 	"impacts.noNode": 'No mapped node available',
 
 	// --- Closing transition
@@ -168,5 +170,6 @@ window.SITE_COPY = {
 	"mobile.explore.showLens": 'Show {lens}',
 	"mobile.explore.prevLenses": 'Previous lenses',
 	"mobile.explore.nextLenses": 'Next lenses',
-	"mobile.explore.close": 'Close'
+	"mobile.explore.close": 'Close',
+	"mobile.explore.logoAlt": '{company} logo'
 };

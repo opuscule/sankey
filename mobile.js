@@ -9,7 +9,11 @@
 //   portfolioFinale   (svg) -> { draw(t) }: Chapter 2's finale chart
 //                     (renderThemesSankey in main.js)
 //   themesModel       buildThemesModel(initData): themes -> companies
-//   walkSentenceHtml  the Fervo walk's "By 2040, emissions are..." sentence
+//   impacts           Chapter 3: { ready, walkCompany, walk(svg), explore(svg,
+//                     { company }) } -- the Fervo walk's chart and the company
+//                     explorer's (renderImpactsWalkChart and
+//                     renderImpactsExploreChart in main.js); both carve once
+//                     `ready` (avoided.json + node_details.json) resolves
 //
 // Page movement belongs to mobile-sections.js; this file fills content,
 // mirrors slide state onto sections for CSS, and drives the chapter bar.
@@ -44,29 +48,6 @@
 			const theme = themesModel.find((entry) => entry.slug === el.dataset.mThemeBlurb);
 			el.innerHTML = theme ? theme.blurb : "";
 			el.style.setProperty("--m-theme-color", `var(${THEME_COLOR_VARS[el.dataset.mThemeBlurb] || "--color-white"})`);
-		});
-	}
-
-	// The seven-lens indicator above each explore chart.
-	const LENS_COLOR_VARS = [
-		"--color-final-service",
-		"--color-sector",
-		"--color-equipment",
-		"--color-device",
-		"--color-final-energy",
-		"--color-fuel",
-		"--color-emissions"
-	];
-
-	function fillLensIndicators() {
-		document.querySelectorAll(".m-explore__lenses").forEach((row) => {
-			row.innerHTML = "";
-			LENS_COLOR_VARS.forEach((colorVar) => {
-				const lens = document.createElement("span");
-				lens.className = "m-explore__lens";
-				lens.style.setProperty("--m-lens-color", `var(${colorVar})`);
-				row.append(lens);
-			});
 		});
 	}
 
@@ -204,43 +185,26 @@
 		};
 	}
 
-	// --- Chapter 1 explore mode (pages 15-21)
+	// --- Explore mode (pages 15-21, 38-41)
 	//
-	// The full Sankey, wider than the screen: three lenses at a time, panned
-	// by swiping sideways or with the lens navigator above it. Tapping a node
-	// isolates its chain and fills the info bar; "node list" and "details"
-	// open drawers, and while one is open the page can't be swiped.
+	// A Sankey wider than the screen: three lenses at a time, panned by
+	// swiping sideways or with the lens navigator above it. "node list" /
+	// "company list" and "details" open drawers, and while one is open the
+	// page can't be swiped.
 
 	const LENS_COUNT = 7;
 	const LENSES_ON_SCREEN = 3;
 	const LAST_WINDOW = LENS_COUNT - LENSES_ON_SCREEN;
 
-	function setupExplore(build, mobileSections) {
-		const root = document.querySelector('[data-m-explore="nodes"]');
-		const svg = root?.querySelector("[data-m-explore-chart]");
-		if (!svg || !build) {
-			return null;
-		}
+	// The pan and the lens navigator. `getChart()` is the chart on screen now
+	// (both explorers rebuild theirs): { width, columnGap, stages }.
+	function setupPan(root, getChart) {
+		const svg = root.querySelector("[data-m-explore-chart]");
 		const viewport = svg.parentElement;
-		const toggles = Object.fromEntries(
-			[...root.querySelectorAll("[data-m-drawer-toggle]")].map((el) => [el.dataset.mDrawerToggle, el])
-		);
-		const drawers = Object.fromEntries(
-			[...root.querySelectorAll("[data-m-drawer]")].map((el) => [el.dataset.mDrawer, el])
-		);
-		const infoEl = root.querySelector("[data-m-info]");
-		const nodeList = root.querySelector("[data-m-nodelist]");
-
 		let windowStart = 0; // first of the three lenses on screen
-		let selection = null; // what onSelect last reported
-		let openDrawer = null;
-		let openStage = null; // the node list's expanded stage
 
-		// --- the chart and its pan
-
-		let chart = build(svg, { onSelect });
-
-		function applyPan(animate) {
+		function apply(animate) {
+			const chart = getChart();
 			const maxOffset = Math.max(0, chart.width - viewport.clientWidth);
 			const offset = Math.min(windowStart * chart.columnGap, maxOffset);
 			svg.style.transition = animate && !reduceMotion ? "" : "none";
@@ -257,13 +221,8 @@
 			const next = Math.max(0, Math.min(LAST_WINDOW, start));
 			if (next !== windowStart) {
 				windowStart = next;
-				applyPan(animate);
+				apply(animate);
 			}
-		}
-
-		// Brings a stage on screen, in the middle column where there is one.
-		function showStage(stage) {
-			setWindow(stage - 2);
 		}
 
 		// --- lens navigator: seven swatches, a frame around the three on screen
@@ -273,7 +232,7 @@
 			navRoot.innerHTML = "";
 			const track = document.createElement("div");
 			track.className = "m-lensnav__track";
-			const lenses = chart.stages.map((entry) => {
+			const lenses = getChart().stages.map((entry) => {
 				const lens = document.createElement("button");
 				lens.type = "button";
 				lens.className = "m-lensnav__lens";
@@ -349,6 +308,89 @@
 			}
 		}, { passive: true });
 
+		apply(false);
+
+		return {
+			viewport,
+			apply,
+			setWindow,
+			windowStart: () => windowStart
+		};
+	}
+
+	// The drawers and their toggles. `onOpen(name)` fills a drawer as it opens.
+	function setupDrawers(root, mobileSections, onOpen) {
+		const toggles = Object.fromEntries(
+			[...root.querySelectorAll("[data-m-drawer-toggle]")].map((el) => [el.dataset.mDrawerToggle, el])
+		);
+		const drawers = Object.fromEntries(
+			[...root.querySelectorAll("[data-m-drawer]")].map((el) => [el.dataset.mDrawer, el])
+		);
+		let openDrawer = null;
+
+		function set(name) {
+			openDrawer = name;
+			Object.entries(drawers).forEach(([key, el]) => {
+				el.hidden = key !== name;
+			});
+			Object.entries(toggles).forEach(([key, el]) => {
+				el.classList.toggle("is-open", key === name);
+				el.setAttribute("aria-expanded", String(key === name));
+			});
+			root.classList.toggle("has-drawer", Boolean(name));
+			if (name) {
+				onOpen?.(name);
+				drawers[name].querySelector("[data-sections-lock-scroll]")?.scrollTo?.(0, 0);
+				drawers[name].scrollTo?.(0, 0);
+			}
+			mobileSections.setLocked(Boolean(name));
+		}
+
+		Object.entries(toggles).forEach(([key, el]) => {
+			el.addEventListener("click", () => set(openDrawer === key ? null : key));
+		});
+		const close = root.querySelector("[data-m-drawer-close]");
+		close.setAttribute("aria-label", siteCopy("mobile.explore.close"));
+		close.addEventListener("click", () => set(null));
+
+		return {
+			toggles,
+			set,
+			open: () => openDrawer
+		};
+	}
+
+	// --- Chapter 1 explore mode (pages 15-21)
+	//
+	// Every node of the global Sankey. Tapping a node isolates its chain and
+	// fills the info bar; the node list picks one by lens.
+
+	function setupExplore(build, mobileSections) {
+		const root = document.querySelector('[data-m-explore="nodes"]');
+		const svg = root?.querySelector("[data-m-explore-chart]");
+		if (!svg || !build) {
+			return null;
+		}
+		const infoEl = root.querySelector("[data-m-info]");
+		const nodeList = root.querySelector("[data-m-nodelist]");
+
+		let selection = null; // what onSelect last reported
+		let openStage = null; // the node list's expanded stage
+
+		let chart = build(svg, { onSelect });
+		const pan = setupPan(root, () => chart);
+		const drawers = setupDrawers(root, mobileSections, (name) => {
+			if (name === "nodes") {
+				openStage = selection ? selection.stage : pan.windowStart() + 1;
+				fillNodeList();
+			}
+		});
+
+		// Brings a stage on screen, in the middle column where there is one.
+		function showStage(stage) {
+			pan.setWindow(stage - 2);
+		}
+
 		// --- selection: the info bar and the details drawer
 
 		function fillTitle(el, info) {
@@ -365,10 +407,10 @@
 			root.classList.toggle("has-selection", Boolean(info));
 			root.style.setProperty("--m-stage-color", info ? `var(${info.stageVar})` : "var(--color-white)");
 			infoEl.hidden = !info;
-			toggles.details.hidden = !info;
+			drawers.toggles.details.hidden = !info;
 			if (!info) {
-				if (openDrawer === "details") {
-					setDrawer(null);
+				if (drawers.open() === "details") {
+					drawers.set(null);
 				}
 				return;
 			}
@@ -377,36 +419,6 @@
 			root.querySelector("[data-m-share]").textContent = info.shareText;
 			root.querySelector("[data-m-desc]").textContent = info.description || "";
 		}
-
-		// --- drawers
-
-		function setDrawer(name) {
-			openDrawer = name;
-			Object.entries(drawers).forEach(([key, el]) => {
-				el.hidden = key !== name;
-			});
-			Object.entries(toggles).forEach(([key, el]) => {
-				el.classList.toggle("is-open", key === name);
-				el.setAttribute("aria-expanded", String(key === name));
-			});
-			root.classList.toggle("has-drawer", Boolean(name));
-			if (name === "nodes") {
-				openStage = selection ? selection.stage : windowStart + 1;
-				fillNodeList();
-			}
-			if (name) {
-				drawers[name].querySelector("[data-sections-lock-scroll]")?.scrollTo?.(0, 0);
-				drawers[name].scrollTo?.(0, 0);
-			}
-			mobileSections.setLocked(Boolean(name));
-		}
-
-		Object.entries(toggles).forEach(([key, el]) => {
-			el.addEventListener("click", () => setDrawer(openDrawer === key ? null : key));
-		});
-		const close = root.querySelector("[data-m-drawer-close]");
-		close.setAttribute("aria-label", siteCopy("mobile.explore.close"));
-		close.addEventListener("click", () => setDrawer(null));
 
 		// The node list: one row per lens, the open one showing its nodes as
 		// chips. Choosing a node selects it and pans its lens on screen.
@@ -442,7 +454,7 @@
 						chip.addEventListener("click", () => {
 							chart.select(node.id);
 							showStage(entry.stage);
-							setDrawer(null);
+							drawers.set(null);
 						});
 						chips.append(chip);
 					});
@@ -452,19 +464,252 @@
 			});
 		}
 
-		applyPan(false);
-
-		onResize(viewport, () => {
+		onResize(pan.viewport, () => {
 			const selectedId = chart.selectedId();
 			chart = build(svg, { onSelect });
 			if (selectedId) {
 				chart.select(selectedId);
 			}
-			applyPan(false);
+			pan.apply(false);
 		});
 
 		return {
-			closeDrawer: () => setDrawer(null)
+			closeDrawer: () => drawers.set(null)
+		};
+	}
+
+	// --- Chapter 3 Fervo walk (pages 32-36)
+	//
+	// Fervo's node as a bar that fills to its avoided share (33-34), its
+	// carved chain fading in behind it (35), then desktop's walk chart rippling
+	// the avoided emissions through every stage (36). The chart's resting
+	// points are beats on desktop's walk timeline.
+
+	function setupImpactsWalk(impacts) {
+		const svg = document.querySelector("[data-m-walk-chart]");
+		if (!svg || !impacts) {
+			return null;
+		}
+		const section = svg.closest(".m-section");
+		const bar = section.querySelector("[data-m-walk-bar]");
+		const pctEl = section.querySelector("[data-m-walk-pct]");
+		let chart = impacts.walk(svg);
+		const clock = { p: 0, fill: 0 };
+		let tween = null;
+
+		function paint() {
+			chart?.draw(clock.p);
+			const pct = clock.fill * 100;
+			bar.style.setProperty("--impacts-node-avoided-height", `${pct}%`);
+			bar.style.setProperty("--impacts-node-remaining-height", `${100 - pct}%`);
+			pctEl.textContent = siteCopy("impacts.avoidedPct", { pct: pct.toFixed(1) });
+		}
+
+		function fillFacts() {
+			const facts = chart?.facts;
+			if (!facts) {
+				return;
+			}
+			section.querySelector("[data-m-walk-name]").textContent = facts.nodeLabel;
+			bar.style.setProperty("--impacts-node-color", `var(${facts.stageVar})`);
+			section.querySelectorAll("[data-m-walk-sentence]").forEach((el) => {
+				el.innerHTML = facts.sentenceHtml;
+			});
+		}
+
+		function go(topState, animate) {
+			if (!chart) {
+				return;
+			}
+			const p = chart.at(topState === "sankey" ? "ripple-cascade" : "avoided-in");
+			const fill = topState === "empty" || topState === "bar-0" ? 0 : chart.facts.avoidedRatio;
+			tween?.kill();
+			if (!animate || reduceMotion || !window.gsap) {
+				clock.p = p;
+				clock.fill = fill;
+				paint();
+				return;
+			}
+			// The ripple through every stage gets more time than the bar filling.
+			const duration = Math.abs(p - clock.p) > 0.01 ? 2.4 : 1.2;
+			tween = gsap.to(clock, { p, fill, duration, ease: "sine.inOut", onUpdate: paint });
+		}
+
+		const rebuild = () => {
+			chart = impacts.walk(svg);
+			fillFacts();
+			paint();
+		};
+		fillFacts();
+		paint();
+		// The first build has no avoided data: the chart can't carve yet.
+		impacts.ready.then(() => {
+			rebuild();
+			go(section.dataset.topState, false);
+		});
+		onResize(svg.parentElement, rebuild);
+
+		return {
+			owns: (swiper) => swiper.el.closest(".m-section") === section,
+			show(swiper, animate) {
+				const slide = swiper.slides[swiper.activeIndex];
+				const jump = Math.abs(swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex)) > 1;
+				go(slide?.dataset.topState, animate && !jump);
+			}
+		};
+	}
+
+	// --- Chapter 3 company explore (pages 38-41)
+	//
+	// The impacts Sankey carved to one portfolio company's chain, panned like
+	// Chapter 1's. It opens on the walk's company; the company list picks
+	// another (or, tapping the selected one again, none: the full graph).
+
+	function setupCompanyExplore(impacts, themesModel, mobileSections) {
+		const root = document.querySelector('[data-m-explore="companies"]');
+		const svg = root?.querySelector("[data-m-explore-chart]");
+		if (!svg || !impacts) {
+			return null;
+		}
+		const infoEl = root.querySelector("[data-m-company]");
+		const companyList = root.querySelector("[data-m-companylist]");
+		const bar = root.querySelector("[data-m-company-bar]");
+		const more = root.querySelector("[data-m-company-more]");
+		const tabs = [...root.querySelectorAll("[data-m-tab]")];
+		const panels = Object.fromEntries(
+			[...root.querySelectorAll("[data-m-tab-panel]")].map((el) => [el.dataset.mTabPanel, el])
+		);
+		const logos = [...root.querySelectorAll("[data-m-company-logo]")];
+		logos.forEach((logo) => {
+			logo.addEventListener("error", () => {
+				logo.hidden = true;
+			});
+		});
+
+		let selected =
+			themesModel.flatMap((theme) => theme.companies).find((company) => company.businessId === impacts.walkCompany) ||
+			null;
+		let chart = impacts.explore(svg, { company: selected });
+		const pan = setupPan(root, () => chart);
+		const drawers = setupDrawers(root, mobileSections, (name) => {
+			if (name === "companies") {
+				fillCompanyList();
+			}
+		});
+
+		function select(company, animate = true) {
+			selected = company;
+			chart = impacts.explore(svg, { company });
+			fillInfo();
+			pan.apply(false);
+			focus(animate);
+		}
+
+		// The company's own lens first, as far right as the pan goes.
+		function focus(animate) {
+			if (chart.focusStage) {
+				pan.setWindow(chart.focusStage - 1, animate);
+			}
+		}
+
+		function fillInfo() {
+			const facts = chart.facts;
+			infoEl.hidden = !facts;
+			drawers.toggles.details.hidden = !facts;
+			root.classList.toggle("has-selection", Boolean(facts));
+			if (!facts) {
+				if (drawers.open() === "details") {
+					drawers.set(null);
+				}
+				return;
+			}
+			root.style.setProperty("--m-stage-color", `var(${facts.nodeStageVar})`);
+			logos.forEach((logo) => {
+				logo.hidden = false;
+				logo.src = facts.logoSrc;
+				logo.alt = siteCopy("mobile.explore.logoAlt", { company: selected.label });
+			});
+			const pct = facts.loading ? 0 : Math.round(facts.avoidedRatio * 100);
+			bar.style.setProperty("--impacts-node-color", `var(${facts.nodeStageVar})`);
+			bar.style.setProperty("--impacts-node-avoided-height", `${pct}%`);
+			bar.style.setProperty("--impacts-node-remaining-height", `${100 - pct}%`);
+			root.querySelector("[data-m-company-node]").textContent = facts.nodeLabelText;
+			root.querySelector("[data-m-company-pct]").textContent = facts.loading
+				? siteCopy("impacts.loading")
+				: facts.percentageText;
+			root.querySelectorAll("[data-m-company-sentence]").forEach((el) => {
+				el.innerHTML = facts.sentenceHtml;
+			});
+			fillList(panels.analysis, selected.bullets);
+			fillList(panels.overview, selected.overview);
+			more.hidden = !selected.url;
+			more.href = selected.url || "#";
+		}
+
+		// Authored copy that may carry inline markup, as on desktop's card.
+		function fillList(el, items) {
+			el.innerHTML = "";
+			(items?.length ? items : [siteCopy("impacts.noDetails")]).forEach((text) => {
+				const li = document.createElement("li");
+				li.innerHTML = text;
+				el.append(li);
+			});
+		}
+
+		function setTab(id) {
+			tabs.forEach((tab) => {
+				const active = tab.dataset.mTab === id;
+				tab.classList.toggle("is-active", active);
+				tab.setAttribute("aria-selected", String(active));
+			});
+			Object.entries(panels).forEach(([key, el]) => {
+				el.hidden = key !== id;
+			});
+		}
+		tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.mTab)));
+		setTab("analysis");
+
+		// The company list: one group per theme, in its colour.
+		function fillCompanyList() {
+			companyList.innerHTML = "";
+			themesModel.forEach((theme) => {
+				const group = document.createElement("section");
+				group.className = "m-companylist__theme";
+				group.style.setProperty("--m-theme-color", `var(${THEME_COLOR_VARS[theme.slug] || "--color-white"})`);
+				const title = document.createElement("h3");
+				title.className = "m-companylist__title";
+				title.textContent = theme.label;
+				const chips = document.createElement("div");
+				chips.className = "m-companylist__chips";
+				theme.companies.forEach((company) => {
+					const chip = document.createElement("button");
+					chip.type = "button";
+					chip.className = "m-companylist__chip";
+					chip.classList.toggle("is-selected", company === selected);
+					chip.setAttribute("aria-pressed", String(company === selected));
+					chip.textContent = company.label;
+					chip.addEventListener("click", () => {
+						select(company === selected ? null : company);
+						drawers.set(null);
+					});
+					chips.append(chip);
+				});
+				group.append(title, chips);
+				companyList.append(group);
+			});
+		}
+
+		fillInfo();
+		focus(false);
+		// The first build has no avoided data: it can't carve yet.
+		impacts.ready.then(() => select(selected, false));
+		onResize(pan.viewport, () => {
+			chart = impacts.explore(svg, { company: selected });
+			pan.apply(false);
+		});
+
+		return {
+			closeDrawer: () => drawers.set(null)
 		};
 	}
 
@@ -543,32 +788,28 @@
 	}
 
 	function jumpToSection(mobileSections, index) {
-		explore?.closeDrawer(); // a drawer locks the page
+		explorers.forEach((explorer) => explorer?.closeDrawer()); // a drawer locks the page
 		mobileSections.sections[index].swiper.slideTo(0, 0);
 		mobileSections.scrollToSection(index);
 	}
 
 	let siteCopy = null;
-	let explore = null;
+	let explorers = [];
 
 	function init(ctx) {
 		siteCopy = ctx.siteCopy;
 		fillThemes(ctx.themesModel || []);
-		fillLensIndicators();
-		document.querySelectorAll("[data-m-walk-sentence]").forEach((el) => {
-			el.innerHTML = ctx.walkSentenceHtml || "";
-		});
 
 		const narrative = setupNarrative(ctx.chapter1?.narrative);
 		const finale = setupPortfolioFinale(ctx.portfolioFinale);
+		const walk = setupImpactsWalk(ctx.impacts);
 		const onSlide = (animate) => (swiper) => {
 			syncSlideState(swiper);
-			if (narrative?.owns(swiper)) {
-				narrative.show(swiper, animate);
-			}
-			if (finale?.owns(swiper)) {
-				finale.show(swiper, animate);
-			}
+			[narrative, finale, walk].forEach((scene) => {
+				if (scene?.owns(swiper)) {
+					scene.show(swiper, animate);
+				}
+			});
 		};
 
 		const mobileSections = MobileSections.init({
@@ -579,7 +820,10 @@
 				}
 			}
 		});
-		explore = setupExplore(ctx.chapter1?.explore, mobileSections);
+		explorers = [
+			setupExplore(ctx.chapter1?.explore, mobileSections),
+			setupCompanyExplore(ctx.impacts, ctx.themesModel || [], mobileSections)
+		];
 
 		setupChapterBar(mobileSections);
 		// In-page links (chapter cards, the "Conclusion" link inside the nav

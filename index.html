@@ -609,7 +609,19 @@
 				<!-- Chapter 3 Fervo walk: pages 32-36 -->
 				<div class="split-section m-section" data-chapter="technology-impacts">
 					<div class="split-top">
-						<div class="m-visual" data-m-visual="ch3"></div>
+						<div class="m-visual m-walk" data-m-visual="ch3">
+							<div class="m-walk__chart">
+								<svg class="m-visual__chart m-impacts-svg" data-m-walk-chart aria-hidden="true"></svg>
+							</div>
+							<div class="m-walk__node" data-m-walk-node>
+								<div class="impacts-node-visual__bar m-walk__bar" data-m-walk-bar>
+									<div class="impacts-node-avoided"></div>
+									<div class="impacts-node-remaining"></div>
+								</div>
+								<p class="m-walk__name" data-m-walk-name></p>
+								<p class="m-walk__pct" data-m-walk-pct></p>
+							</div>
+						</div>
 					</div>
 					<div class="swiper split-swiper">
 						<div class="swiper-wrapper">
@@ -617,19 +629,19 @@
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy1"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="bar-0" data-placeholder="Electricity and heat bar, 0% avoided"><!-- m-page 33 -->
+							<div class="swiper-slide" data-top-state="bar-0"><!-- m-page 33 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy1"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="bar-avoided" data-placeholder="bar fills to the avoided %"><!-- m-page 34 -->
+							<div class="swiper-slide" data-top-state="bar-avoided"><!-- m-page 34 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-m-walk-sentence></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="bar-flows" data-placeholder="flows appear around the bar"><!-- m-page 35 -->
+							<div class="swiper-slide" data-top-state="bar-flows"><!-- m-page 35 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-m-walk-sentence></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="sankey" data-placeholder="impacts Sankey, fitted to width"><!-- m-page 36 -->
+							<div class="swiper-slide" data-top-state="sankey"><!-- m-page 36 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="impactsWalk.copy3"></p></div>
 							</div>
@@ -645,11 +657,44 @@
 						</div>
 						<div class="swiper-slide m-slide m-slide--explore"><!-- m-pages 38-41 -->
 							<div class="m-explore" data-m-explore="companies">
-								<div class="m-explore__lenses" aria-hidden="true"></div>
-								<div class="m-explore__chart" data-placeholder="impacts Sankey: 3 lenses at a time, pan sideways"></div>
+								<div class="m-lensnav" data-m-lensnav></div>
+								<div class="m-explore__chart">
+									<svg class="m-explore__svg m-impacts-svg" data-m-explore-chart aria-hidden="true"></svg>
+								</div>
+								<div class="m-company" data-m-company hidden>
+									<div class="m-company__head">
+										<img class="m-company__logo" data-m-company-logo alt="" />
+										<div class="impacts-node-visual__bar m-company__bar" data-m-company-bar>
+											<div class="impacts-node-avoided"></div>
+											<div class="impacts-node-remaining"></div>
+										</div>
+										<div class="m-company__node">
+											<p class="m-company__node-name" data-m-company-node></p>
+											<p class="m-company__pct" data-m-company-pct></p>
+										</div>
+									</div>
+									<p class="m-company__sentence" data-m-company-sentence></p>
+								</div>
 								<div class="m-explore__bar">
-									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.companyList"></button>
-									<button type="button" class="m-explore__toggle" data-copy="mobile.explore.details" hidden></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="companies" aria-expanded="false"><span data-copy="mobile.explore.companyList"></span></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="details" aria-expanded="false" hidden><span data-copy="mobile.explore.details"></span></button>
+								</div>
+								<div class="m-drawer m-drawer--list" data-m-drawer="companies" data-sections-lock-scroll hidden>
+									<div class="m-companylist" data-m-companylist></div>
+								</div>
+								<div class="m-drawer m-drawer--details m-drawer--company" data-m-drawer="details" hidden>
+									<button type="button" class="m-drawer__close" data-m-drawer-close></button>
+									<div class="m-drawer__body" data-sections-lock-scroll>
+										<img class="m-company__logo" data-m-company-logo alt="" />
+										<p class="m-company__sentence" data-m-company-sentence></p>
+										<div class="m-tabs" role="tablist">
+											<button type="button" class="m-tabs__tab" role="tab" data-m-tab="analysis" data-copy="impacts.tab.analysis"></button>
+											<button type="button" class="m-tabs__tab" role="tab" data-m-tab="overview" data-copy="impacts.tab.overview"></button>
+										</div>
+										<ul class="m-tabs__panel" data-m-tab-panel="analysis"></ul>
+										<ul class="m-tabs__panel" data-m-tab-panel="overview" hidden></ul>
+										<a class="m-company__more" data-m-company-more href="#" target="_blank" rel="noopener" data-copy="impacts.learnMore" hidden></a>
+									</div>
 								</div>
 							</div>
 						</div>

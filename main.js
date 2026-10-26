@@ -1043,13 +1043,6 @@
 		// none of the desktop sections below.
 		if (VIEW === "mobile") {
 			await window.mobileDepsReady;
-			const walkCompany = initData?.intervention?.companies?.find(
-				(entry) => normalizeBusinessSlug(entry?.company || entry?.company_label) === IMPACTS_WALK_COMPANY
-			);
-			const walkTechnology = resolveImpactsTechnologyLabel({
-				technologyLabel: String(walkCompany?.technology || "").trim(),
-				label: String(walkCompany?.company_label || walkCompany?.company || "").trim()
-			});
 			window.MobileSite.init({
 				siteCopy,
 				// Chapter 1's two charts, built (and rebuilt on resize) by mobile.js.
@@ -1060,9 +1053,14 @@
 				// The page-30 finale chart, built (and rebuilt on resize) by mobile.js.
 				portfolioFinale: (svgEl) => renderThemesSankey({ el: svgEl, mobile: true }),
 				themesModel: (state.themesModel = buildThemesModel(initData)),
-				// The avoided amount comes from the rendered impacts graph, which
-				// mobile doesn't build yet.
-				walkSentenceHtml: impactsWalkSentenceHtml(walkTechnology, siteCopy("impacts.dataPending"))
+				// Chapter 3's two charts. Both carve by avoided.json and
+				// node_details.json, so mobile.js rebuilds them once `ready` resolves.
+				impacts: {
+					ready: Promise.all([ensureAvoidedData(), ensureNodeDetails()]),
+					walkCompany: IMPACTS_WALK_COMPANY,
+					walk: (svgEl) => renderImpactsWalkChart({ el: svgEl, mobile: true }),
+					explore: (svgEl, options) => renderImpactsExploreChart(svgEl, options)
+				}
 			});
 			return;
 		}
@@ -2345,7 +2343,13 @@
 			nodeOrder,
 			avoidedMap,
 			targetKy,
-			worldValueById
+			worldValueById,
+			// Mobile's charts are smaller than desktop's: narrower nodes and
+			// margins, tighter padding, and the walk's chart has no labels.
+			side = 28,
+			nodeWidth = 20,
+			nodePadding: nodePaddingOverride,
+			labels = true
 		}
 	) {
 		const graph = {
@@ -2370,17 +2374,17 @@
 				avoided: avoidedMap ? avoidedMap.get(`${link.source}|${link.target}`) || 0 : 0
 			}))
 		};
-		const nodePadding = Math.max(4, 9 * scaleFactor);
+		const nodePadding = nodePaddingOverride ?? Math.max(4, 9 * scaleFactor);
 		const buildSankeyLayout = (top, bottom) => {
 			const layout = d3
 				.sankey()
 				.nodeId((d) => d.id)
-				.nodeWidth(20)
+				.nodeWidth(nodeWidth)
 				.nodePadding(nodePadding)
 				.nodeAlign(d3.sankeyJustify)
 				.extent([
-					[28, top],
-					[width - 28, bottom]
+					[side, top],
+					[width - side, bottom]
 				])
 				.iterations(64);
 			if (nodeOrder) {
@@ -2417,7 +2421,9 @@
 		if (spread) {
 			spreadStageHeights(graph, bandTop, axisBottom);
 		}
-		spreadNodesForLabels(chartEl, graph, bandTop, axisBottom + 8);
+		if (labels) {
+			spreadNodesForLabels(chartEl, graph, bandTop, axisBottom + 8);
+		}
 		return graph;
 	}
 
@@ -2468,6 +2474,28 @@
 		const subNodes = Array.from(subNodeIds, (id) => nodeById.get(id)).filter(Boolean);
 
 		return { subNodes, subLinks };
+	}
+
+	// Per-node avoided amount, summed on the node's height-defining side so it
+	// aligns with the carved ribbons entering/leaving that side.
+	function assignNodeAvoided(graph) {
+		graph.nodes.forEach((node) => {
+			let inBase = 0;
+			let outBase = 0;
+			let inAvoided = 0;
+			let outAvoided = 0;
+			graph.links.forEach((link) => {
+				if (link.target === node) {
+					inBase += link.value;
+					inAvoided += link.avoided || 0;
+				}
+				if (link.source === node) {
+					outBase += link.value;
+					outAvoided += link.avoided || 0;
+				}
+			});
+			node.avoided = inBase >= outBase ? inAvoided : outAvoided;
+		});
 	}
 
 	function renderImpactsChart(chartEl, options = {}) {
@@ -2631,26 +2659,8 @@
 			});
 		}
 
-		// Per-node avoided amount, summed on the node's height-defining side so it
-		// aligns with the carved ribbons entering/leaving that side.
 		if (carve) {
-			graph.nodes.forEach((node) => {
-				let inBase = 0;
-				let outBase = 0;
-				let inAvoided = 0;
-				let outAvoided = 0;
-				graph.links.forEach((link) => {
-					if (link.target === node) {
-						inBase += link.value;
-						inAvoided += link.avoided || 0;
-					}
-					if (link.source === node) {
-						outBase += link.value;
-						outAvoided += link.avoided || 0;
-					}
-				});
-				node.avoided = inBase >= outBase ? inAvoided : outAvoided;
-			});
+			assignNodeAvoided(graph);
 		}
 
 		const defs = svg.append("defs");
@@ -2876,9 +2886,15 @@
 	// therefore unstable across layouts, so the two sides are matched on
 	// "sourceId|targetId" (same technique as the timeline chart). Anything present
 	// on only one side collapses to zero height at its own position.
-	function renderImpactsWalkChart() {
-		if (!impactsChart || !state.initData || !state.baselinesData) {
-			return;
+	// On mobile (opts.mobile, drawn into opts.el) it is pages 35-36's chart:
+	// fitted to the screen, no labels or headers, and it returns
+	// { draw(p), at(beatId), facts } -- the walk at progress p, where a beat
+	// ends, and impactsWalkFacts -- instead of joining the scroll.
+	function renderImpactsWalkChart(opts = {}) {
+		const mobile = Boolean(opts.mobile);
+		const chartEl = opts.el || impactsChart;
+		if (!chartEl || !state.initData || !state.baselinesData) {
+			return null;
 		}
 
 		const scenarioRequest = resolveScenarioRequest(IMPACTS_SCENARIO_ID);
@@ -2892,14 +2908,14 @@
 			? avoidedValueMapForCompany(companyKey, scenarioKey, baselineNodeById)
 			: new Map();
 
-		const bounds = impactsChart.getBoundingClientRect();
-		const width = Math.max(820, Math.floor(bounds.width));
-		const height = Math.max(480, Math.floor(bounds.height));
-		const { axisBottom, gtToY, layoutGt, scaleFactor } = createGtScale(
-			height,
-			scenarioRequest.scenarioId
-		);
-		const bandTop = gtToY(layoutGt);
+		const bounds = chartEl.getBoundingClientRect();
+		const width = mobile ? Math.max(280, Math.floor(bounds.width)) : Math.max(820, Math.floor(bounds.width));
+		const height = mobile ? Math.max(320, Math.floor(bounds.height)) : Math.max(480, Math.floor(bounds.height));
+		const gtScale = createGtScale(height, scenarioRequest.scenarioId);
+		const { scaleFactor } = gtScale;
+		const axisBottom = mobile ? height - 2 : gtScale.axisBottom;
+		const bandTop = mobile ? 2 : gtScale.gtToY(gtScale.layoutGt);
+		const mobileLayout = mobile ? { side: 2, nodeWidth: 12, nodePadding: 3, labels: false } : {};
 
 		const layoutGraph = (nodes, links, spread, nodeOrder, targetKy, worldValueById) =>
 			layoutStageGraph(nodes, links, {
@@ -2908,11 +2924,12 @@
 				axisBottom,
 				scaleFactor,
 				spread,
-				chartEl: impactsChart,
+				chartEl,
 				nodeOrder,
 				avoidedMap,
 				targetKy,
-				worldValueById
+				worldValueById,
+				...mobileLayout
 			});
 
 		// Matches renderImpactsChart: the full graph gets stage-height spreading,
@@ -2953,25 +2970,7 @@
 				: fullGraph;
 		}
 
-		// Per-node avoided amount, summed on the node's height-defining side so it
-		// aligns with the ribbons entering/leaving that side.
-		carveGraph.nodes.forEach((node) => {
-			let inBase = 0;
-			let outBase = 0;
-			let inAvoided = 0;
-			let outAvoided = 0;
-			carveGraph.links.forEach((link) => {
-				if (link.target === node) {
-					inBase += link.value;
-					inAvoided += link.avoided || 0;
-				}
-				if (link.source === node) {
-					outBase += link.value;
-					outAvoided += link.avoided || 0;
-				}
-			});
-			node.avoided = inBase >= outBase ? inAvoided : outAvoided;
-		});
+		assignNodeAvoided(carveGraph);
 
 		const linkKey = (link) => `${link.source.id}|${link.target.id}`;
 		const nodeGeomMap = (graph) => {
@@ -3077,13 +3076,14 @@
 		});
 
 		const svg = d3
-			.select(impactsChart)
+			.select(chartEl)
 			.attr("viewBox", `0 0 ${width} ${height}`)
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("pointer-events", "none");
 		svg.selectAll("*").remove();
 
 		const defs = svg.append("defs");
+		const gradientPrefix = mobile ? "m-impacts-walk-gradient" : "impacts-walk-gradient";
 		const stageBounds = stageXBounds(fullGraph);
 		const stagePairs = Array.from(
 			new Set(
@@ -3099,7 +3099,7 @@
 			}
 			const gradient = defs
 				.append("linearGradient")
-				.attr("id", `impacts-walk-gradient-${sourceStage}-${targetStage}`)
+				.attr("id", `${gradientPrefix}-${sourceStage}-${targetStage}`)
 				.attr("gradientUnits", "userSpaceOnUse")
 				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
 				.attr("y1", 0)
@@ -3121,7 +3121,7 @@
 			const sourceStage = Number.isFinite(link.source?.stage) ? link.source.stage : null;
 			const targetStage = Number.isFinite(link.target?.stage) ? link.target.stage : null;
 			if (sourceStage && targetStage && stageColorVars[sourceStage] && stageColorVars[targetStage]) {
-				return `url(#impacts-walk-gradient-${sourceStage}-${targetStage})`;
+				return `url(#${gradientPrefix}-${sourceStage}-${targetStage})`;
 			}
 			return "rgba(208, 222, 235, 0.38)";
 		};
@@ -3167,6 +3167,35 @@
 			.attr("x", 0)
 			.attr("y", 0);
 
+		const headersGroup = svg
+			.append("g")
+			.attr("class", "sankey-stage-headers")
+			.style("opacity", 0);
+
+		const rendered = {
+			svg,
+			nodeSelection,
+			linkSelection,
+			headersGroup,
+			fullNodeOf,
+			carveNodeOf,
+			fullLinkOf,
+			carveLinkOf,
+			nodePresence,
+			linkPresence,
+			avoidedRatioById,
+			linkAvoidedRatioById,
+			rippleOrderById
+		};
+
+		if (mobile) {
+			return {
+				draw: (p) => drawImpactsWalkChart(p, rendered),
+				at: (beatId) => IMPACTS_WALK_BOUNDS[beatId]?.end ?? 0,
+				facts: impactsWalkFacts(carveGraph)
+			};
+		}
+
 		nodeSelection
 			.append("title")
 			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
@@ -3183,27 +3212,9 @@
 
 		wrapNodeLabels(nodeSelection.selectAll("text"), computeLabelMaxWidth(carveGraph));
 
-		const headersGroup = svg
-			.append("g")
-			.attr("class", "sankey-stage-headers")
-			.style("opacity", 0);
 		renderStageHeaders(headersGroup, carveGraph, 24);
 
-		state.impactsWalkRendered = {
-			svg,
-			nodeSelection,
-			linkSelection,
-			headersGroup,
-			fullNodeOf,
-			carveNodeOf,
-			fullLinkOf,
-			carveLinkOf,
-			nodePresence,
-			linkPresence,
-			avoidedRatioById,
-			linkAvoidedRatioById,
-			rippleOrderById
-		};
+		state.impactsWalkRendered = rendered;
 
 		// The company card reads its numbers off state.impactsRendered, so point it
 		// at the carved graph the walkthrough lands on.
@@ -3216,12 +3227,12 @@
 		};
 
 		drawImpactsWalkChart(state.impactsWalkProgress || 0);
+		return null;
 	}
 
 	// Right column: chart fade-in, the full -> carved layout morph, and the
 	// avoided-emissions ripple spreading stage by stage.
-	function drawImpactsWalkChart(p) {
-		const r = state.impactsWalkRendered;
+	function drawImpactsWalkChart(p, r = state.impactsWalkRendered) {
 		if (!r) {
 			return;
 		}
@@ -3366,8 +3377,9 @@
 		return siteCopy("impacts.noNode");
 	}
 
-	function impactsNodeMetrics(nodeId) {
-		if (!nodeId || !Array.isArray(state.impactsRendered?.graph?.nodes)) {
+	// `graph` defaults to whichever impacts graph desktop last rendered.
+	function impactsNodeMetrics(nodeId, graph = state.impactsRendered?.graph) {
+		if (!nodeId || !Array.isArray(graph?.nodes)) {
 			return {
 				totalMt: 0,
 				avoidedMt: 0,
@@ -3376,7 +3388,7 @@
 			};
 		}
 
-		const node = state.impactsRendered.graph.nodes.find(
+		const node = graph.nodes.find(
 			(entry) => String(entry?.id || "").trim() === String(nodeId || "").trim()
 		);
 
@@ -3476,6 +3488,45 @@
 		});
 	}
 
+	// What the company card shows for `selection`, read off the impacts graph
+	// it was carved from (`graph`, as impactsNodeMetrics). Shared by desktop's
+	// card and mobile's company explorer. Until avoided.json lands only the
+	// fields both states share are set, and `loading` is true.
+	function impactsCardFacts(selection, graph) {
+		const nodeLabel = resolveImpactsNodeLabel(selection);
+		const nodeStage = deriveStageFromId(selection.nodeId);
+		const nodeMetrics = impactsNodeMetrics(selection.nodeId, graph);
+		const avoidedRatio = Math.min(1, Math.max(0, nodeMetrics.avoidedRatio));
+		const technologyLabel = resolveImpactsTechnologyLabel(selection);
+		const facts = {
+			nodeLabelText: nodeLabel || siteCopy("impacts.noNode"),
+			nodeStageVar: stageColorVars[nodeStage] || "--color-final-energy",
+			logoSrc: impactsLogoByBusiness[selection.businessId] || impactsLogoFallback,
+			nodeMetrics,
+			avoidedRatio,
+			loading: Boolean(selection.businessId && !state.avoidedData)
+		};
+
+		if (facts.loading) {
+			facts.sentenceHtml = impactsSentenceHtml(technologyLabel, siteCopy("impacts.loading"));
+			return facts;
+		}
+
+		const nodeAvoidedGt = nodeMetrics.avoidedMt / 1000;
+		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? formatAvoidedShortText(nodeAvoidedGt) : "N/A";
+		facts.nodeSavingsText = nodeAvoidedGtText === "N/A" ? "- N/A" : `-${nodeAvoidedGtText}`;
+		const sentenceAmountText = facts.nodeSavingsText.replace(/^\s*-\s*/, "");
+		facts.percentageText =
+			nodeMetrics.totalMt > 0
+				? siteCopy("impacts.avoidedPct", { pct: d3.format(".1f")(avoidedRatio * 100) })
+				: "";
+		facts.sentenceHtml = impactsSentenceHtml(
+			technologyLabel,
+			nodeAvoidedGtText !== "N/A" ? sentenceAmountText : siteCopy("impacts.dataPending")
+		);
+		return facts;
+	}
+
 	function updateImpactsCompanyCard(selection) {
 		const card = state.impactsCard;
 		if (!card) {
@@ -3489,24 +3540,16 @@
 			return;
 		}
 
-		const nodeLabel = resolveImpactsNodeLabel(selection);
-		const nodeLabelText = nodeLabel || siteCopy("impacts.noNode");
-		const nodeStage = deriveStageFromId(selection.nodeId);
-		const nodeStageVar = stageColorVars[nodeStage] || "--color-final-energy";
-		const logoSrc = impactsLogoByBusiness[selection.businessId] || impactsLogoFallback;
-		const nodeMetrics = impactsNodeMetrics(selection.nodeId);
-		const avoidedHeightPct = Math.round(Math.min(1, Math.max(0, nodeMetrics.avoidedRatio)) * 100);
-		const remainingHeightPct = Math.max(0, 100 - avoidedHeightPct);
-		const technologyLabel = resolveImpactsTechnologyLabel(selection);
+		const facts = impactsCardFacts(selection);
+		card.logo.src = facts.logoSrc;
+		card.logo.alt = `${selection.label} logo`;
+		card.sentence.innerHTML = facts.sentenceHtml;
+		card.nodeBar.style.setProperty("--impacts-node-color", `var(${facts.nodeStageVar})`);
+		card.nodeName.textContent = facts.nodeLabelText;
 
-		if (selection.businessId && !state.avoidedData) {
-			card.logo.src = logoSrc;
-			card.logo.alt = `${selection.label} logo`;
-			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, siteCopy("impacts.loading"));
-			card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
+		if (facts.loading) {
 			card.nodeBar.style.setProperty("--impacts-node-avoided-height", "0%");
 			card.nodeBar.style.setProperty("--impacts-node-remaining-height", "100%");
-			card.nodeName.textContent = nodeLabelText;
 			if (card.nodeSavings) {
 				card.nodeSavings.textContent = `- ${siteCopy("impacts.loading")}`;
 			}
@@ -3525,44 +3568,20 @@
 			return;
 		}
 
-		card.logo.src = logoSrc;
-		card.logo.alt = `${selection.label} logo`;
-		card.nodeBar.style.setProperty("--impacts-node-color", `var(${nodeStageVar})`);
+		const avoidedHeightPct = Math.round(facts.avoidedRatio * 100);
 		card.nodeBar.style.setProperty("--impacts-node-avoided-height", `${avoidedHeightPct}%`);
-		card.nodeBar.style.setProperty("--impacts-node-remaining-height", `${remainingHeightPct}%`);
-		card.nodeName.textContent = nodeLabelText;
+		card.nodeBar.style.setProperty("--impacts-node-remaining-height", `${Math.max(0, 100 - avoidedHeightPct)}%`);
 		card.nodeBar.setAttribute(
 			"aria-label",
-			`Avoided ${formatMass(nodeMetrics.avoidedMt)}; remaining ${formatMass(nodeMetrics.remainingMt)}.`
+			`Avoided ${formatMass(facts.nodeMetrics.avoidedMt)}; remaining ${formatMass(facts.nodeMetrics.remainingMt)}.`
 		);
 
-		const nodeAvoidedGt = nodeMetrics.avoidedMt / 1000;
-		const nodeAvoidedGtText = nodeAvoidedGt > 0 ? formatAvoidedShortText(nodeAvoidedGt) : "N/A";
-		const nodeSavingsText = nodeAvoidedGtText === "N/A" ? "- N/A" : `-${nodeAvoidedGtText}`;
-		const sentenceAmountText = nodeSavingsText.replace(/^\s*-\s*/, "");
-		const showNodePercentage = nodeMetrics.totalMt > 0;
-		const nodeAvoidedPctText = `${d3.format(".1f")(Math.max(0, Math.min(1, nodeMetrics.avoidedRatio)) * 100)}% avoided`;
-
 		if (card.nodePercentage) {
-			if (showNodePercentage) {
-				card.nodePercentage.hidden = false;
-				card.nodePercentage.textContent = nodeAvoidedPctText;
-			} else {
-				card.nodePercentage.hidden = true;
-				card.nodePercentage.textContent = "";
-			}
+			card.nodePercentage.hidden = !facts.percentageText;
+			card.nodePercentage.textContent = facts.percentageText;
 		}
-
-		if (nodeAvoidedGtText !== "N/A") {
-			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, sentenceAmountText);
-			if (card.nodeSavings) {
-				card.nodeSavings.textContent = nodeSavingsText;
-			}
-		} else {
-			card.sentence.innerHTML = impactsSentenceHtml(technologyLabel, siteCopy("impacts.dataPending"));
-			if (card.nodeSavings) {
-				card.nodeSavings.textContent = nodeSavingsText;
-			}
+		if (card.nodeSavings) {
+			card.nodeSavings.textContent = facts.nodeSavingsText;
 		}
 
 		renderImpactsCardTabs(selection);
@@ -3584,7 +3603,7 @@
 		if (card.bullets) {
 			card.bullets.innerHTML = "";
 			const bullets = Array.isArray(selection?.bullets) ? selection.bullets : [];
-			const items = bullets.length ? bullets : ["data not found"];
+			const items = bullets.length ? bullets : [siteCopy("impacts.noDetails")];
 			items.forEach((text) => {
 				const li = document.createElement("li");
 				li.innerHTML = text;
@@ -3595,7 +3614,7 @@
 		if (card.overview) {
 			card.overview.innerHTML = "";
 			const points = Array.isArray(selection?.overview) ? selection.overview : [];
-			const items = points.length ? points : ["data not found"];
+			const items = points.length ? points : [siteCopy("impacts.noDetails")];
 			items.forEach((text) => {
 				const li = document.createElement("li");
 				li.innerHTML = text;
@@ -3825,7 +3844,7 @@
 			c.nodeBar.style.setProperty("--impacts-node-remaining-height", `${100 - avoidedPct}%`);
 		}
 		if (c.nodePercentage) {
-			c.nodePercentage.textContent = `${d3.format(".1f")(avoidedPct)}% avoided`;
+			c.nodePercentage.textContent = siteCopy("impacts.avoidedPct", { pct: d3.format(".1f")(avoidedPct) });
 		}
 
 		if (c.roster) {
@@ -3980,6 +3999,30 @@
 			});
 	}
 
+	// The walk's figures -- the focal company's node, its avoided share and
+	// beat 2's sentence -- read off the carved graph the walk lands on (`graph`,
+	// as impactsNodeMetrics). Shared by desktop's copy column and mobile.
+	function impactsWalkFacts(graph) {
+		const nodeId = state.portfolioBusinessNodeMap.get(IMPACTS_WALK_COMPANY) || "";
+		const metrics = impactsNodeMetrics(nodeId, graph);
+		const company = state.initData?.intervention?.companies?.find(
+			(entry) =>
+				normalizeBusinessSlug(entry?.company || entry?.company_label) === IMPACTS_WALK_COMPANY
+		);
+		const technologyLabel = resolveImpactsTechnologyLabel({
+			technologyLabel: String(company?.technology || "").trim(),
+			label: String(company?.company_label || company?.company || "").trim()
+		});
+		const avoidedGt = metrics.avoidedMt / 1000;
+		const amountText = avoidedGt > 0 ? formatAvoidedShortText(avoidedGt) : siteCopy("impacts.dataPending");
+		return {
+			nodeLabel: findNodeLabelById(nodeId) || "",
+			stageVar: stageColorVars[deriveStageFromId(nodeId)] || "--color-final-energy",
+			avoidedRatio: Math.max(0, Math.min(1, metrics.avoidedRatio)),
+			sentenceHtml: impactsWalkSentenceHtml(technologyLabel, amountText)
+		};
+	}
+
 	// Beat 2's sentence and the node visual's labels are derived from the focal
 	// company's own data rather than hardcoded in markup.
 	function populateImpactsWalkCopy() {
@@ -3988,30 +4031,18 @@
 			return;
 		}
 
-		const nodeId = state.portfolioBusinessNodeMap.get(IMPACTS_WALK_COMPANY) || "";
-		const metrics = impactsNodeMetrics(nodeId);
-		c.avoidedRatio = Math.max(0, Math.min(1, metrics.avoidedRatio));
+		const facts = impactsWalkFacts();
+		c.avoidedRatio = facts.avoidedRatio;
 
 		if (c.nodeName) {
-			c.nodeName.textContent = findNodeLabelById(nodeId) || "";
+			c.nodeName.textContent = facts.nodeLabel;
 		}
 		if (c.nodeBar) {
-			const stageVar = stageColorVars[deriveStageFromId(nodeId)] || "--color-final-energy";
-			c.nodeBar.style.setProperty("--impacts-node-color", `var(${stageVar})`);
+			c.nodeBar.style.setProperty("--impacts-node-color", `var(${facts.stageVar})`);
 		}
 
 		if (c.copies[1]) {
-			const company = state.initData?.intervention?.companies?.find(
-				(entry) =>
-					normalizeBusinessSlug(entry?.company || entry?.company_label) === IMPACTS_WALK_COMPANY
-			);
-			const technologyLabel = resolveImpactsTechnologyLabel({
-				technologyLabel: String(company?.technology || "").trim(),
-				label: String(company?.company_label || company?.company || "").trim()
-			});
-			const avoidedGt = metrics.avoidedMt / 1000;
-			const amountText = avoidedGt > 0 ? formatAvoidedShortText(avoidedGt) : siteCopy("impacts.dataPending");
-			c.copies[1].innerHTML = impactsWalkSentenceHtml(technologyLabel, amountText);
+			c.copies[1].innerHTML = facts.sentenceHtml;
 		}
 	}
 
@@ -6550,6 +6581,222 @@
 						.map((node) => ({ id: node.id, label: node.label }))
 				};
 			})
+		};
+	}
+
+	// Mobile's company explorer (pages 38-41): the impacts Sankey at
+	// renderExploreChart's scale -- wider than the screen, three lenses at a
+	// time -- carved to `company`'s avoided-emissions chain the way
+	// renderImpactsChart carves it on desktop, or the full uncarved graph when
+	// there's no company (or no data for it). Nodes aren't tappable: companies
+	// are picked from the company list. Returns what mobile.js pans and fills
+	// the info bar with.
+	function renderImpactsExploreChart(svgEl, { company = null } = {}) {
+		const frame = svgEl.parentElement.getBoundingClientRect();
+		const viewW = Math.max(280, Math.floor(frame.width));
+		const height = Math.max(360, Math.floor(frame.height));
+		const nodeW = 14;
+		const padX = 16;
+		// Same columns as renderExploreChart, so the lens navigator pans both alike.
+		const columnGap = Math.round((viewW - padX) / 3.1);
+		const labelW = columnGap - 32;
+		const top = 30;
+		const bottom = height - 6;
+		const width = padX + 6 * columnGap + nodeW + padX;
+		const gradientId = (sourceStage, targetStage) => `mi-${linkGradientId(sourceStage, targetStage)}`;
+
+		const scenarioKey = resolveScenarioRequest(IMPACTS_SCENARIO_ID).resolvedScenarioKey;
+		const built = buildGraph(state.initData, state.baselinesData, scenarioKey);
+		const nodeById = new Map(built.nodes.map((node) => [node.id, node]));
+		const businessId = normalizeBusinessSlug(company?.businessId);
+		const companyKey = supportedPortfolioBusinesses.has(businessId) ? avoidedCompanyKeyForBusiness(businessId) : null;
+		const avoidedMap = companyKey ? avoidedValueMapForCompany(companyKey, scenarioKey, nodeById) : new Map();
+		const carve = avoidedMap.size > 0;
+
+		const layout = (nodes, links, extra) =>
+			layoutStageGraph(nodes, links, {
+				width,
+				bandTop: top,
+				axisBottom: bottom,
+				scaleFactor: 1,
+				chartEl: svgEl,
+				avoidedMap,
+				side: padX,
+				nodeWidth: nodeW,
+				nodePadding: 4,
+				...extra
+			});
+
+		const fullGraph = layout(built.nodes, built.links, { spread: true });
+		let graph = fullGraph;
+		if (carve) {
+			const chainCarve = resolveImpactsChainCarve(businessId, nodeById, scenarioKey);
+			let subNodes;
+			let subLinks;
+			if (chainCarve) {
+				({ subNodes, subLinks } = chainCarve);
+			} else {
+				subLinks = built.links.filter((link) => avoidedMap.has(`${link.source}|${link.target}`));
+				const subNodeIds = new Set();
+				subLinks.forEach((link) => {
+					subNodeIds.add(link.source);
+					subNodeIds.add(link.target);
+				});
+				subNodes = built.nodes.filter((node) => subNodeIds.has(node.id));
+			}
+			graph = layout(subNodes, subLinks, {
+				spread: false,
+				nodeOrder: buildFullOrderMap(fullGraph),
+				targetKy: sankeyValueScale(fullGraph),
+				worldValueById: new Map(fullGraph.nodes.map((node) => [node.id, node.value]))
+			});
+			assignNodeAvoided(graph);
+		}
+		// A chain that skips a stage would otherwise be justified across fewer
+		// columns; pin every stage to its lens so panning lines up.
+		graph.nodes.forEach((node) => {
+			node.x0 = padX + (node.stage - 1) * columnGap;
+			node.x1 = node.x0 + nodeW;
+		});
+
+		const svg = d3.select(svgEl);
+		svg.selectAll("*").remove();
+		svg.attr("viewBox", `0 0 ${width} ${height}`).attr("width", width).attr("height", height);
+
+		const defs = svg.append("defs");
+		const stageBounds = stageXBounds(graph);
+		new Set(graph.links.map((link) => `${link.source.stage}-${link.target.stage}`)).forEach((pair) => {
+			const [sourceStage, targetStage] = pair.split("-").map(Number);
+			if (!stageColorVars[sourceStage] || !stageColorVars[targetStage]) {
+				return;
+			}
+			const gradient = defs
+				.append("linearGradient")
+				.attr("id", gradientId(sourceStage, targetStage))
+				.attr("gradientUnits", "userSpaceOnUse")
+				.attr("x1", stageBounds.get(sourceStage)?.x1 ?? 0)
+				.attr("y1", 0)
+				.attr("x2", stageBounds.get(targetStage)?.x0 ?? width)
+				.attr("y2", 0);
+			gradient.append("stop").attr("offset", "0%").style("stop-color", `var(${stageColorVars[sourceStage]})`).attr("stop-opacity", 0.4);
+			gradient.append("stop").attr("offset", "100%").style("stop-color", `var(${stageColorVars[targetStage]})`).attr("stop-opacity", 0.4);
+		});
+		const linkFill = (link) =>
+			stageColorVars[link.source.stage] && stageColorVars[link.target.stage]
+				? `url(#${gradientId(link.source.stage, link.target.stage)})`
+				: null;
+
+		const linksGroup = svg.append("g").attr("class", "sankey-links");
+		if (carve) {
+			// Filled "remaining" band + faded "avoided" band (avoided at top), as
+			// renderImpactsChart draws them.
+			linksGroup
+				.selectAll("g")
+				.data(graph.links, (d) => d.id)
+				.join("g")
+				.attr("class", "impacts-link")
+				.each(function (link) {
+					const group = d3.select(this);
+					const w = Math.max(1, link.width);
+					const ratio = link.value > 0 ? Math.min(1, (link.avoided || 0) / link.value) : 0;
+					const avoidedW = w * ratio;
+					const sx = link.source.x1;
+					const tx = link.target.x0;
+					const sTop = link.y0 - w / 2;
+					const tTop = link.y1 - w / 2;
+					group
+						.append("path")
+						.attr("class", "impacts-link-remaining")
+						.attr("d", impactsRibbonArea(sx, tx, sTop + avoidedW, sTop + w, tTop + avoidedW, tTop + w))
+						.style("fill", linkFill(link));
+					if (avoidedW > 0.25) {
+						group
+							.append("path")
+							.attr("class", "impacts-link-avoided")
+							.attr("d", impactsRibbonArea(sx, tx, sTop, sTop + avoidedW, tTop, tTop + avoidedW))
+							.style("fill", linkFill(link));
+					}
+				});
+		} else {
+			linksGroup
+				.selectAll("path")
+				.data(graph.links, (d) => d.id)
+				.join("path")
+				.attr("class", "sankey-link")
+				.style("stroke", linkFill)
+				.attr("d", d3.sankeyLinkHorizontal())
+				.attr("stroke-width", (d) => Math.max(1, d.width));
+		}
+
+		const interventionNodeId = carve ? state.portfolioBusinessNodeMap.get(businessId) || null : null;
+		const nodeH = (d) => Math.max(2, d.y1 - d.y0);
+		const nodeSelection = svg
+			.append("g")
+			.attr("class", "sankey-nodes")
+			.selectAll("g")
+			.data(graph.nodes, (d) => d.id)
+			.join("g")
+			.attr("class", (d) => `sankey-node stage-${d.stage}`)
+			.attr("transform", (d) => `translate(${d.x0},${d.y0})`)
+			.each(function (node) {
+				const group = d3.select(this);
+				const ratio = carve && node.value > 0 ? Math.min(1, (node.avoided || 0) / node.value) : 0;
+				const avoidedH = nodeH(node) * ratio;
+				if (avoidedH > 0.5) {
+					group.append("rect").attr("class", "impacts-node-avoided").attr("width", nodeW).attr("height", avoidedH);
+				}
+				group
+					.append("rect")
+					.attr("class", "impacts-node-remaining")
+					.attr("y", avoidedH)
+					.attr("width", nodeW)
+					.attr("height", Math.max(0, nodeH(node) - avoidedH));
+				if (node.id === interventionNodeId) {
+					group
+						.append("rect")
+						.attr("class", "impacts-node-intervention")
+						.attr("width", nodeW)
+						.attr("height", nodeH(node));
+				}
+			});
+
+		// Emissions sits at the right edge, so its labels read leftward.
+		const labelsLeft = (d) => d.stage === 7;
+		const labels = nodeSelection
+			.append("text")
+			.attr("x", (d) => (labelsLeft(d) ? -6 : nodeW + 6))
+			.attr("y", (d) => nodeH(d) / 2)
+			.attr("dy", "0.35em")
+			.attr("text-anchor", (d) => (labelsLeft(d) ? "end" : "start"))
+			.text((d) => d.label);
+		wrapNodeLabels(labels, labelW);
+
+		svg
+			.append("g")
+			.attr("class", "sankey-stage-headers")
+			.selectAll("text")
+			.data([...stageBounds.entries()].filter(([stage]) => STAGE_META[stage]))
+			.join("text")
+			.attr("class", "stage-header")
+			.attr("x", ([stage, bounds]) => (stage === 7 ? bounds.x1 : bounds.x0))
+			.attr("y", top - 14)
+			.attr("text-anchor", ([stage]) => (stage === 7 ? "end" : "start"))
+			.attr("fill", ([stage]) => `var(${stageColorVars[stage]})`)
+			.text(([stage]) => STAGE_META[stage].label);
+
+		const focusNode = graph.nodes.find((node) => node.id === state.portfolioBusinessNodeMap.get(businessId));
+		return {
+			width,
+			columnGap,
+			// The lens navigator's swatches.
+			stages: Object.keys(STAGE_META).map((key) => ({
+				stage: Number(key),
+				label: STAGE_META[key].label,
+				colorVar: stageColorVars[key]
+			})),
+			// The company's own node's stage, to pan to.
+			focusStage: focusNode ? focusNode.stage : null,
+			facts: company ? impactsCardFacts(company, graph) : null
 		};
 	}
 

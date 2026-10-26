@@ -327,8 +327,7 @@ html {
    A dashed box with a caption naming what goes there. Each one is replaced
    as its chapter's visuals are built. */
 
-.m-visual[data-placeholder]:not([data-placeholder=""])::after,
-.m-explore__chart[data-placeholder]::after {
+.m-visual[data-placeholder]:not([data-placeholder=""])::after {
 	align-items: center;
 	border: 1.5px dashed var(--m-placeholder);
 	box-sizing: border-box;
@@ -465,6 +464,88 @@ html {
 	font-size: 15px;
 }
 
+/* --- Chapter 3 Fervo walk (pages 32-36) --------------------------------- */
+
+.m-walk__chart {
+	inset: 0;
+	opacity: 0;
+	position: absolute;
+	transition: opacity 0.6s ease, filter 0.6s ease;
+}
+
+/* Page 35: Fervo's chain behind the bar, out of focus. Page 36: the chart. */
+[data-top-state="bar-flows"] .m-walk__chart {
+	filter: blur(3px);
+	opacity: 0.55;
+}
+
+[data-top-state="sankey"] .m-walk__chart {
+	opacity: 1;
+}
+
+.m-walk__node {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	opacity: 0;
+	position: relative;
+	transition: opacity 0.5s ease;
+}
+
+[data-top-state^="bar"] .m-walk__node {
+	opacity: 1;
+}
+
+/* Page 35 drops the percentage while the flows come in. */
+[data-top-state="bar-flows"] .m-walk__pct {
+	opacity: 0;
+}
+
+.m-walk__bar.impacts-node-visual__bar {
+	height: 116px;
+	margin-bottom: 26px;
+	max-height: 116px;
+	padding-bottom: 0;
+	width: 38px;
+}
+
+.m-walk__name {
+	font-size: 16px;
+	line-height: 1.2;
+	margin: 0 0 6px;
+}
+
+.m-walk__pct {
+	font-size: 26px;
+	font-weight: 700;
+	line-height: 1;
+	margin: 0;
+	transition: opacity 0.5s ease;
+}
+
+/* The walk sentence's figure stays white, as in desktop's walk copy. */
+.m-text .impacts-company-card__sentence-accent {
+	color: inherit;
+}
+
+/* --- Impacts charts (pages 35-36, 38-41) --------------------------------
+   Avoided emissions: white node caps and faded ribbon bands, as on
+   desktop's #impacts-sankey-chart. */
+
+.m-impacts-svg .sankey-node rect.impacts-node-avoided {
+	fill: var(--color-white);
+}
+
+.m-impacts-svg .impacts-link-avoided {
+	opacity: 0.4;
+}
+
+.m-impacts-svg .sankey-node rect.impacts-node-intervention {
+	fill: none;
+	stroke: #d4ecff;
+	stroke-width: 1.6;
+}
+
 /* --- Explore mode (pages 15-21, 38-41) ---------------------------------- */
 
 .m-slide--explore {
@@ -480,31 +561,12 @@ html {
 	position: relative;
 }
 
-/* The Chapter 3 placeholder's lens row (company explore, still to build). */
-.m-explore__lenses {
-	display: flex;
-	gap: 6px;
-	justify-content: center;
-	padding: 18px 0 12px;
-}
-
-.m-explore__lens {
-	background: var(--m-lens-color);
-	height: 22px;
-	width: 22px;
-}
-
+/* The chart is wider than the screen; mobile.js pans it. */
 .m-explore__chart {
 	flex: 1 1 auto;
-	margin: 0 var(--m-gutter);
-	position: relative;
-}
-
-/* Chapter 1's chart is wider than the screen; mobile.js pans it. */
-.m-explore[data-m-explore="nodes"] .m-explore__chart {
-	margin: 0;
 	min-height: 0;
 	overflow: hidden;
+	position: relative;
 }
 
 .m-explore__svg {
@@ -526,6 +588,11 @@ html {
 .m-explore__svg .sankey-node {
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
+}
+
+/* Companies are picked from the list, not the chart. */
+.m-explore__svg.m-impacts-svg .sankey-node {
+	cursor: default;
 }
 
 /* (Specific enough to beat styles.css's per-stage `.sankey-node rect` fills.) */
@@ -700,6 +767,77 @@ html {
 	margin: 7px 0 0;
 }
 
+/* --- Company info bar (pages 38-41) -------------------------------------- */
+
+.m-company {
+	padding: 10px var(--m-gutter) 0;
+}
+
+.m-company[hidden],
+.m-explore.has-drawer .m-company {
+	display: none;
+}
+
+.m-company__head {
+	align-items: center;
+	display: flex;
+	gap: 14px;
+}
+
+.m-company__logo {
+	display: block;
+	max-height: 34px;
+	max-width: 120px;
+	object-fit: contain;
+	object-position: left center;
+}
+
+.m-company__head .m-company__logo {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.m-company__logo[hidden] {
+	display: none;
+}
+
+.m-company__bar.impacts-node-visual__bar {
+	flex: 0 0 auto;
+	height: 58px;
+	max-height: 58px;
+	padding-bottom: 0;
+	width: 26px;
+}
+
+.m-company__node {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.m-company__node-name {
+	color: var(--m-stage-color);
+	font-size: 13px;
+	line-height: 1.2;
+	margin: 0 0 5px;
+}
+
+.m-company__pct {
+	font-size: 21px;
+	font-weight: 700;
+	line-height: 1;
+	margin: 0;
+}
+
+.m-company__sentence {
+	font-size: 15px;
+	line-height: 1.35;
+	margin: 12px 0 0;
+}
+
+.m-company__sentence .impacts-company-card__sentence-accent {
+	color: var(--color-emissions);
+}
+
 .m-explore__bar {
 	display: flex;
 	gap: 10px;
@@ -746,7 +884,8 @@ html {
 	transform: translateY(-2px) rotate(225deg);
 }
 
-.m-explore__toggle[data-m-drawer-toggle="nodes"].is-open {
+.m-explore__toggle[data-m-drawer-toggle="nodes"].is-open,
+.m-explore__toggle[data-m-drawer-toggle="companies"].is-open {
 	background: var(--color-white);
 	color: var(--color-dark);
 }
@@ -770,7 +909,8 @@ html {
 	display: none;
 }
 
-.m-drawer--nodes {
+.m-drawer--nodes,
+.m-drawer--list {
 	background: var(--color-dark);
 	overflow-y: auto;
 	overscroll-behavior: contain;
@@ -916,6 +1056,111 @@ html {
 .m-nodelist__chip.is-selected {
 	background: var(--m-stage-color);
 	color: var(--color-dark);
+}
+
+/* Company list: one group of company chips per theme, in its colour. */
+.m-companylist {
+	padding: 40px var(--m-gutter) 20px;
+}
+
+.m-companylist__theme {
+	margin-bottom: 26px;
+}
+
+.m-companylist__title {
+	color: var(--m-theme-color);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 0 0 12px;
+}
+
+.m-companylist__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.m-companylist__chip {
+	background: none;
+	border: 1px solid rgb(255 255 255 / 0.6);
+	border-radius: 0;
+	color: var(--color-white);
+	font: inherit;
+	font-size: 14px;
+	line-height: 1.1;
+	padding: 9px 11px;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.m-companylist__chip.is-selected {
+	background: var(--color-white);
+	color: var(--color-dark);
+}
+
+/* Company details: opaque, the logo and sentence above two tabs. */
+.m-drawer--company {
+	background: var(--color-dark);
+	justify-content: flex-start;
+}
+
+.m-drawer--company .m-drawer__body {
+	padding-top: 60px;
+}
+
+.m-drawer--company .m-company__sentence {
+	margin-top: 16px;
+}
+
+.m-tabs {
+	display: flex;
+	gap: 20px;
+	margin: 26px 0 16px;
+}
+
+.m-tabs__tab {
+	background: none;
+	border: 0;
+	border-bottom: 1px solid transparent;
+	border-radius: 0;
+	color: var(--m-stage-color);
+	font: inherit;
+	font-size: 17px;
+	opacity: 0.55;
+	padding: 0 0 3px;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.m-tabs__tab.is-active {
+	border-bottom-color: currentColor;
+	opacity: 1;
+}
+
+.m-tabs__panel {
+	font-size: 14px;
+	line-height: 1.45;
+	margin: 0;
+	padding-left: 18px;
+}
+
+.m-tabs__panel[hidden] {
+	display: none;
+}
+
+.m-tabs__panel li + li {
+	margin-top: 10px;
+}
+
+.m-company__more {
+	color: var(--color-white);
+	display: inline-block;
+	font-size: 12px;
+	margin-top: 22px;
+	text-decoration: underline;
+}
+
+.m-company__more[hidden] {
+	display: none;
 }
 
 /* --- Closing (no mockup) ------------------------------------------------- */
