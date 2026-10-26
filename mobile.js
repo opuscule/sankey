@@ -6,6 +6,8 @@
 //   siteCopy          copy lookup (view.js)
 //   chapter1          { narrative(svg), explore(svg, { onSelect }) }: Chapter 1's
 //                     charts, drawn by main.js (render, renderExploreChart)
+//   portfolioFinale   (svg) -> { draw(t) }: Chapter 2's finale chart
+//                     (renderThemesSankey in main.js)
 //   themesModel       buildThemesModel(initData): themes -> companies
 //   walkSentenceHtml  the Fervo walk's "By 2040, emissions are..." sentence
 //
@@ -150,6 +152,54 @@
 				const slide = swiper.slides[swiper.activeIndex];
 				const jump = Math.abs(swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex)) > 1;
 				go(Number(slide?.dataset.mProgress) || 0, animate && !jump);
+			}
+		};
+	}
+
+	// --- Chapter 2 finale chart (page 30)
+	//
+	// Desktop's themes finale: every company lights its full chain in turn and
+	// the links spider-web out from it. It plays from the start each time the
+	// page comes on screen; the chips page before it simply fades it out.
+
+	const FINALE_DURATION = 3;
+
+	function setupPortfolioFinale(build) {
+		const svg = document.querySelector("[data-m-finale]");
+		if (!svg || !build) {
+			return null;
+		}
+		let chart = build(svg);
+		const clock = { t: 0 };
+		let tween = null;
+
+		function go(target, animate) {
+			tween?.kill();
+			if (!animate || reduceMotion || !window.gsap) {
+				clock.t = target;
+				chart?.draw(target);
+				return;
+			}
+			clock.t = 0;
+			chart?.draw(0);
+			tween = gsap.to(clock, { t: target, duration: FINALE_DURATION, ease: "none", onUpdate: () => chart?.draw(clock.t) });
+		}
+
+		onResize(svg.parentElement, () => {
+			chart = build(svg);
+			chart?.draw(clock.t);
+		});
+
+		const section = svg.closest(".m-section");
+		return {
+			owns: (swiper) => swiper.el.closest(".m-section") === section,
+			show(swiper, animate) {
+				const slide = swiper.slides[swiper.activeIndex];
+				if (slide?.dataset.topState !== "sankey") {
+					return;
+				}
+				const jump = Math.abs(swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex)) > 1;
+				go(1, animate && !jump);
 			}
 		};
 	}
@@ -510,10 +560,14 @@
 		});
 
 		const narrative = setupNarrative(ctx.chapter1?.narrative);
+		const finale = setupPortfolioFinale(ctx.portfolioFinale);
 		const onSlide = (animate) => (swiper) => {
 			syncSlideState(swiper);
 			if (narrative?.owns(swiper)) {
 				narrative.show(swiper, animate);
+			}
+			if (finale?.owns(swiper)) {
+				finale.show(swiper, animate);
 			}
 		};
 

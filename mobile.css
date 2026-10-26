@@ -398,6 +398,45 @@ html {
 	color: var(--m-theme-color);
 }
 
+/* --- Chapter 2 finale chart (page 30) -----------------------------------
+   Takes the chips' place. Opacities match desktop's #themes-sankey-chart;
+   drawFinale (main.js) sets the per-node and per-link values inline. */
+
+.m-finale {
+	inset: 0;
+	opacity: 0;
+	pointer-events: none;
+	position: absolute;
+	transition: opacity 0.4s ease;
+}
+
+[data-top-state="sankey"] .m-finale {
+	opacity: 1;
+}
+
+.m-finale .sankey-link {
+	opacity: 0;
+}
+
+/* Desktop's ribbon opacity crowds a phone-width chart; the mockup's are
+   fainter. This scales drawFinale's per-link values. */
+.m-finale .sankey-links {
+	opacity: 0.5;
+}
+
+.m-finale .sankey-node {
+	opacity: 0.05;
+}
+
+.m-finale .sankey-node rect {
+	opacity: 0.6;
+}
+
+.m-finale .sankey-node.is-selected rect {
+	opacity: 1;
+	stroke: none;
+}
+
 /* --- Chapter 1 narrative chart (pages 06-13) ---------------------------- */
 
 .m-visual__chart {

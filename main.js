@@ -1057,7 +1057,9 @@
 					narrative: (svgEl) => render({ el: svgEl, mobile: true, idPrefix: "mn-" }),
 					explore: (svgEl, options) => renderExploreChart(svgEl, options)
 				},
-				themesModel: buildThemesModel(initData),
+				// The page-30 finale chart, built (and rebuilt on resize) by mobile.js.
+				portfolioFinale: (svgEl) => renderThemesSankey({ el: svgEl, mobile: true }),
+				themesModel: (state.themesModel = buildThemesModel(initData)),
 				// The avoided amount comes from the rendered impacts graph, which
 				// mobile doesn't build yet.
 				walkSentenceHtml: impactsWalkSentenceHtml(walkTechnology, siteCopy("impacts.dataPending"))
@@ -6729,19 +6731,27 @@
 
 	// Non-interactive full baseline Sankey for the themes section. Nodes start
 	// dark; drawThemes drives per-node opacity so only the active theme lights up.
-	function renderThemesSankey() {
-		if (!themesChart || !state.nodes.length || !state.links.length) {
-			return;
+	// On mobile (opts.mobile, drawn into opts.el) it is the page-30 finale chart:
+	// fitted to the screen, no labels or headers, and it returns
+	// { draw(t) } -- the finale at t (0-1) -- instead of joining the scroll.
+	function renderThemesSankey(opts = {}) {
+		const mobile = Boolean(opts.mobile);
+		const chartEl = opts.el || themesChart;
+		if (!chartEl || !state.nodes.length || !state.links.length) {
+			return null;
 		}
 
-		const bounds = themesChart.getBoundingClientRect();
-		const width = Math.max(820, Math.floor(bounds.width));
-		const height = Math.max(560, Math.floor(bounds.height));
+		const bounds = chartEl.getBoundingClientRect();
+		const width = mobile ? Math.max(280, Math.floor(bounds.width)) : Math.max(820, Math.floor(bounds.width));
+		const height = mobile ? Math.max(320, Math.floor(bounds.height)) : Math.max(560, Math.floor(bounds.height));
+		const top = mobile ? 2 : 44;
+		const bottom = mobile ? height - 2 : height - 34;
+		const side = mobile ? 2 : 28;
 
-		d3.select(themesChart).selectAll("*").remove();
+		d3.select(chartEl).selectAll("*").remove();
 
 		const svg = d3
-			.select(themesChart)
+			.select(chartEl)
 			.attr("viewBox", `0 0 ${width} ${height}`)
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("pointer-events", "none");
@@ -6754,18 +6764,20 @@
 		d3
 			.sankey()
 			.nodeId((d) => d.id)
-			.nodeWidth(20)
-			.nodePadding(9)
+			.nodeWidth(mobile ? 16 : 20)
+			.nodePadding(mobile ? 4 : 9)
 			.nodeAlign(d3.sankeyJustify)
 			.extent([
-				[28, 44],
-				[width - 28, height - 34]
+				[side, top],
+				[width - side, bottom]
 			])
 			.iterations(64)(graph);
 
 		// Align every stage top *and* bottom so the expanded columns are equal height.
-		spreadStageHeights(graph, 44, height - 34);
-		spreadNodesForLabels(themesChart, graph, 44, height - 34);
+		spreadStageHeights(graph, top, bottom);
+		if (!mobile) {
+			spreadNodesForLabels(chartEl, graph, top, bottom);
+		}
 
 		// Per-stage-pair link gradients (themes-specific ids, anchored in user
 		// space to this chart's columns) so each ribbon reads in its stage colors.
@@ -6826,6 +6838,24 @@
 			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
 			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
 
+		state.themesRendered = { nodeSelection, linkSelection, graph };
+
+		if (mobile) {
+			// The finale's full chains need node_details.json; until it lands
+			// each company lights only its direct neighbours.
+			let finaleT = 0;
+			const draw = (t) => {
+				finaleT = clamp01(t);
+				drawFinale(finaleT * 100, false);
+			};
+			ensureNodeDetails().then(() => {
+				state.finaleChains = null;
+				draw(finaleT);
+			});
+			draw(0);
+			return { draw };
+		}
+
 		nodeSelection
 			.append("title")
 			.text((d) => (d.description ? `${d.label}\n${d.description}` : `${d.label}`));
@@ -6843,8 +6873,8 @@
 		const headersGroup = svg.append("g").attr("class", "sankey-stage-headers");
 		renderStageHeaders(headersGroup, graph, 24);
 
-		state.themesRendered = { nodeSelection, linkSelection, graph };
 		drawThemes(state.themesProgress || 0, state.themesSlideT ?? 0);
+		return null;
 	}
 
 	// Split scroll progress into one equal window per theme. Within the active
