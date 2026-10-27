@@ -60,7 +60,9 @@ html {
 .bottom-sticky-nav__item {
 	font-size: 13px;
 	font-weight: 500;
-	padding: 0 14px;
+	/* Nudges the title down to centre its capitals, as desktop's 10px/5px
+	   padding does (see "Boxed labels" below). */
+	padding: 4px 14px 0;
 	color: transparent;
 	text-shadow: none;
 	-webkit-tap-highlight-color: transparent;
@@ -181,8 +183,8 @@ html {
 }
 
 .m-slide--conclusion {
-	background: var(--color-fuel);
-	color: var(--color-dark);
+	background: var(--color-emissions);
+	color: var(--color-white);
 }
 
 /* --- Hero (page 01) ------------------------------------------------------ */
@@ -1203,4 +1205,31 @@ html {
 .m-methodology .methodology-content {
 	font-size: 15px;
 	line-height: 1.5;
+}
+
+/* --- Boxed labels: centre the capitals ---------------------------------- */
+
+/* Helvetica Neue's ascent equals its cap height (714/1000) but its descent
+   is 286, so text in a padded box sits ~0.29em high. Trimming the label to
+   cap height and baseline centres the capitals; each padding grows by
+   (line-height - cap height) / 2 so the boxes keep their size. Browsers
+   without text-box (Firefox) keep the untrimmed padding above. */
+@supports (text-box: trim-both cap alphabetic) {
+	.m-chapters__card > a,
+	.m-chip,
+	.m-nodelist__chip,
+	.m-companylist__chip,
+	.m-explore__value,
+	.m-explore__toggle > span,
+	.m-nodelist__head > span {
+		text-box: trim-both cap alphabetic;
+	}
+
+	.m-chapters__card > a { padding-block: 19px; }
+	.m-chip { padding-block: 11px; }
+	.m-nodelist__chip { padding-block: 11px; }
+	.m-companylist__chip { padding-block: 12px; }
+	.m-explore__value { padding-block: 13px; }
+	.m-explore__toggle { padding-block: 11px; }
+	.m-nodelist__head { padding-block: 1.6px; }
 }

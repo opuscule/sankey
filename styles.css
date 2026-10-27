@@ -1417,15 +1417,15 @@
 			   over the still-playing video from the bottom (#conclusion sits above
 			   .closing-transition__pin). main.js adds .is-fuel at that point, which
 			   is what holds the color field after the pin hides and before
-			   .methodology-layout (also --color-fuel) covers the viewport. */
+			   .methodology-layout (--color-fuel) covers the viewport. */
 			.acknowledgements-intro {
-				color: var(--color-dark);
+				color: var(--color-white);
 				min-height: 320vh;
 				position: relative;
 			}
 
 			.acknowledgements-intro.is-fuel {
-				background: var(--color-fuel);
+				background: var(--color-emissions);
 			}
 
 			.acknowledgements-intro__pin {
@@ -1441,7 +1441,7 @@
 			}
 
 			.acknowledgements-intro__bg {
-				background: var(--color-fuel);
+				background: var(--color-emissions);
 				inset: 0;
 				/* Driven by drawAcknowledgementsIntro in main.js. */
 				opacity: 0;
@@ -2943,7 +2943,7 @@
 				   fuel background is unconditional here rather than waiting on the
 				   .is-fuel toggle, since there's no crossfade to hand off from. */
 				.acknowledgements-intro {
-					background: var(--color-fuel);
+					background: var(--color-emissions);
 					min-height: 52vh;
 					padding: 0;
 				}

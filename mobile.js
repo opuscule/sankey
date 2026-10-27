@@ -435,7 +435,9 @@
 				head.type = "button";
 				head.className = "m-nodelist__head";
 				head.setAttribute("aria-expanded", String(isOpen));
-				head.textContent = entry.label;
+				const label = document.createElement("span");
+				label.textContent = entry.label;
+				head.append(label);
 				head.addEventListener("click", () => {
 					openStage = isOpen ? null : entry.stage;
 					fillNodeList();

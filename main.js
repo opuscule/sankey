@@ -4611,8 +4611,8 @@
 	// fuel panel washes in over the video's held last frame instead of the video
 	// fading to the starfield first. After that it behaves like every other color-
 	// background intro (.impacts-intro et al): headline in, brief hold, headline
-	// out as .methodology-layout -- also --color-fuel -- scrolls up underneath, so
-	// the color field never breaks and ordinary scrolling resumes to the page foot.
+	// out as .methodology-layout (--color-fuel) scrolls up underneath and ordinary
+	// scrolling resumes to the page foot.
 	//
 	// 384vh total = 64vh pre-roll crossfade + 100vh to the section's own lock point
 	// + 220vh of section beat (see .acknowledgements-intro's 320vh min-height).
