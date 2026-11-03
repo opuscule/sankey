@@ -18,7 +18,7 @@
 // Page movement belongs to mobile-sections.js; this file fills content,
 // mirrors slide state onto sections for CSS, and drives the chapter bar.
 (function () {
-	// Theme slug -> the colour its chips and blurb highlight use.
+	// Theme slug -> the colour its company list and blurb highlight use.
 	const THEME_COLOR_VARS = {
 		Materials: "--color-sector",
 		Energy: "--color-fuel",
@@ -35,10 +35,10 @@
 				group.dataset.theme = theme.slug;
 				group.style.setProperty("--m-theme-color", `var(${THEME_COLOR_VARS[theme.slug] || "--color-white"})`);
 				theme.companies.forEach((company) => {
-					const chip = document.createElement("span");
-					chip.className = "m-chip";
-					chip.textContent = company.label;
-					group.append(chip);
+					const name = document.createElement("span");
+					name.className = "m-chips__name";
+					name.textContent = company.label;
+					group.append(name);
 				});
 				chips.append(group);
 			});
@@ -107,7 +107,9 @@
 		const clock = { p: 0 };
 		let tween = null;
 
-		function go(target, animate) {
+		// `enter` is the slide's own timing ({ duration, delay, ease }), used
+		// when it is reached going forward.
+		function go(target, animate, enter = {}) {
 			tween?.kill();
 			if (!animate || reduceMotion || !window.gsap) {
 				clock.p = target;
@@ -115,8 +117,14 @@
 				return;
 			}
 			// Longer stretches of timeline (the peel into the Sankey) get more time.
-			const duration = Math.min(2.2, 0.6 + Math.abs(target - clock.p) * 4);
-			tween = gsap.to(clock, { p: target, duration, ease: "sine.inOut", onUpdate: () => chart.draw(clock.p) });
+			const duration = enter.duration ?? Math.min(2.2, 0.6 + Math.abs(target - clock.p) * 4);
+			tween = gsap.to(clock, {
+				p: target,
+				duration,
+				delay: enter.delay ?? 0,
+				ease: enter.ease ?? "sine.inOut",
+				onUpdate: () => chart.draw(clock.p)
+			});
 		}
 
 		onResize(svg.parentElement, () => {
@@ -131,8 +139,16 @@
 			// section) lands without playing everything in between.
 			show(swiper, animate) {
 				const slide = swiper.slides[swiper.activeIndex];
-				const jump = Math.abs(swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex)) > 1;
-				go(Number(slide?.dataset.mProgress) || 0, animate && !jump);
+				const step = swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex);
+				// data-m-duration / -delay / -ease time a slide's own entrance;
+				// stepping back onto it plays the default reverse.
+				const data = (step === 1 && slide?.dataset) || {};
+				const enter = {
+					duration: data.mDuration ? Number(data.mDuration) : undefined,
+					delay: data.mDelay ? Number(data.mDelay) : undefined,
+					ease: data.mEase
+				};
+				go(Number(slide?.dataset.mProgress) || 0, animate && Math.abs(step) <= 1, enter);
 			}
 		};
 	}

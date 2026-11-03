@@ -469,7 +469,9 @@
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="one-strip" data-m-progress="0.09"><!-- m-page 07 -->
+							<!-- The strip rises once the text has settled; linear because
+								 drawMaster already smoothsteps its growth. -->
+							<div class="swiper-slide" data-top-state="one-strip" data-m-progress="0.09" data-m-delay="0.3" data-m-duration="0.75" data-m-ease="none"><!-- m-page 07 -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text m-text--lead" data-copy="sankey.beat1"></p></div>
 							</div>
@@ -554,7 +556,7 @@
 					</div>
 				</div>
 
-				<!-- Chapter 2 themes: pages 24-30. Chips and blurbs come from the
+				<!-- Chapter 2 themes: pages 24-30. Company lists and blurbs come from the
 					 init data (buildThemesModel), filled in by mobile.js. -->
 				<div class="split-section m-section" data-chapter="portfolio">
 					<div class="split-top">

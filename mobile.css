@@ -346,31 +346,40 @@ html {
 	text-align: center;
 }
 
-/* --- Chapter 2 company chips (pages 25-29) ------------------------------ */
+/* --- Chapter 2 company lists (pages 25-29) ------------------------------
+   Plain names in two columns under a rule, one group per theme. The rule
+   and names share the group's colour, so each state sets it once. Spacing
+   is in em and the size follows the top part (a size container), so short
+   or narrow phones get the same layout smaller: 15px from an iPhone 13 up. */
+
+.m-visual[data-m-visual="ch2"] {
+	container-type: size;
+}
 
 .m-chips {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	/* The lists stand about 25em tall; the longest name is about 10em. */
+	font-size: min(15px, 4cqh, 4.45cqw);
+	gap: 1.73em;
 	opacity: 0;
 	transition: opacity 0.4s ease;
 	width: 100%;
 }
 
 .m-chips__group {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
+	border-top: 1px solid rgb(255 255 255 / 0.4);
+	color: rgb(255 255 255 / 0.6);
+	column-gap: 1.33em;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	padding-top: 0.93em;
+	row-gap: 0.67em;
+	transition: color 0.4s ease, border-color 0.4s ease, opacity 0.4s ease;
 }
 
-.m-chip {
-	border: 1px solid rgb(255 255 255 / 0.5);
-	color: rgb(255 255 255 / 0.85);
-	font-size: 14px;
-	line-height: 1;
-	padding: 9px 9px;
-	transition: color 0.4s ease, border-color 0.4s ease, opacity 0.4s ease;
-	white-space: nowrap;
+.m-chips__name {
+	line-height: 1.2;
 }
 
 [data-top-state^="chips"] .m-chips {
@@ -379,17 +388,17 @@ html {
 
 /* The highlighted theme takes its colour; themes already passed stay
    coloured but dimmed; the finale (chips-all) colours every theme. */
-[data-top-state="chips-Materials"] .m-chips__group[data-theme="Materials"] .m-chip,
-[data-top-state="chips-Energy"] .m-chips__group[data-theme="Energy"] .m-chip,
-[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Electrification"] .m-chip,
-[data-top-state="chips-all"] .m-chip {
+[data-top-state="chips-Materials"] .m-chips__group[data-theme="Materials"],
+[data-top-state="chips-Energy"] .m-chips__group[data-theme="Energy"],
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Electrification"],
+[data-top-state="chips-all"] .m-chips__group {
 	border-color: var(--m-theme-color);
 	color: var(--m-theme-color);
 }
 
-[data-top-state="chips-Energy"] .m-chips__group[data-theme="Materials"] .m-chip,
-[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Materials"] .m-chip,
-[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Energy"] .m-chip {
+[data-top-state="chips-Energy"] .m-chips__group[data-theme="Materials"],
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Materials"],
+[data-top-state="chips-Electrification"] .m-chips__group[data-theme="Energy"] {
 	border-color: var(--m-theme-color);
 	color: var(--m-theme-color);
 	opacity: 0.45;
@@ -1216,7 +1225,6 @@ html {
    without text-box (Firefox) keep the untrimmed padding above. */
 @supports (text-box: trim-both cap alphabetic) {
 	.m-chapters__card > a,
-	.m-chip,
 	.m-nodelist__chip,
 	.m-companylist__chip,
 	.m-explore__value,
@@ -1226,7 +1234,6 @@ html {
 	}
 
 	.m-chapters__card > a { padding-block: 19px; }
-	.m-chip { padding-block: 11px; }
 	.m-nodelist__chip { padding-block: 11px; }
 	.m-companylist__chip { padding-block: 12px; }
 	.m-explore__value { padding-block: 13px; }
