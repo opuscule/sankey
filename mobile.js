@@ -90,7 +90,7 @@
 
 	const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-	// --- Chapter 1 narrative (pages 06-13)
+	// --- Chapter 1 narrative (pages 07-13)
 	//
 	// The chart is desktop's scroll choreography (render() in main.js). Each
 	// slide names the point on its scene timeline it rests at
@@ -127,28 +127,61 @@
 			});
 		}
 
+		function slideTiming(slide) {
+			const data = slide?.dataset || {};
+			return {
+				duration: data.mDuration ? Number(data.mDuration) : undefined,
+				delay: data.mDelay ? Number(data.mDelay) : undefined,
+				ease: data.mEase
+			};
+		}
+
 		onResize(svg.parentElement, () => {
 			chart = build(svg);
 			chart.draw(clock.p);
 		});
 
 		const section = svg.closest(".m-section");
+		let currentSwiper = null;
+		let firstEntryPending = true;
+		let entryTimer = null;
+		// Chapter jumps can scroll past this section without stopping on it.
+		// Wait until the page settles here before playing the first entrance.
+		function scheduleFirstEntry() {
+			clearTimeout(entryTimer);
+			entryTimer = setTimeout(() => {
+				if (Math.abs(section.getBoundingClientRect().top) > 2) {
+					return;
+				}
+				window.removeEventListener("scroll", scheduleFirstEntry);
+				window.removeEventListener("resize", scheduleFirstEntry);
+				firstEntryPending = false;
+				if (currentSwiper?.activeIndex === 0) {
+					const slide = currentSwiper.slides[0];
+					go(Number(slide?.dataset.mProgress) || 0, true, slideTiming(slide));
+				}
+			}, 150);
+		}
+		window.addEventListener("scroll", scheduleFirstEntry, { passive: true });
+		window.addEventListener("resize", scheduleFirstEntry);
+		scheduleFirstEntry();
+
 		return {
 			owns: (swiper) => swiper.el.closest(".m-section") === section,
 			// A jump of more than one slide (a chapter link rewinding the
 			// section) lands without playing everything in between.
 			show(swiper, animate) {
+				currentSwiper = swiper;
 				const slide = swiper.slides[swiper.activeIndex];
+				if (firstEntryPending && !animate && swiper.activeIndex === 0) {
+					go(0, false);
+					return;
+				}
 				const step = swiper.activeIndex - (swiper.previousIndex ?? swiper.activeIndex);
 				// data-m-duration / -delay / -ease time a slide's own entrance;
 				// stepping back onto it plays the default reverse.
-				const data = (step === 1 && slide?.dataset) || {};
-				const enter = {
-					duration: data.mDuration ? Number(data.mDuration) : undefined,
-					delay: data.mDelay ? Number(data.mDelay) : undefined,
-					ease: data.mEase
-				};
-				go(Number(slide?.dataset.mProgress) || 0, animate && Math.abs(step) <= 1, enter);
+				go(Number(slide?.dataset.mProgress) || 0, animate && Math.abs(step) <= 1,
+					step === 1 ? slideTiming(slide) : {});
 			}
 		};
 	}
@@ -496,7 +529,7 @@
 		};
 	}
 
-	// --- Chapter 3 Fervo walk (pages 32-36)
+	// --- Chapter 3 Fervo walk (pages 33-36)
 	//
 	// Fervo's node as a bar that fills to its avoided share (33-34), its
 	// carved chain fading in behind it (35), then desktop's walk chart rippling
