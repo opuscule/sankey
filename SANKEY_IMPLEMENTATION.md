@@ -28,11 +28,12 @@ click-to-isolate on the main chart and the portfolio highlight.
 `avoided-08132026.json` (avoided emissions, `2040A` only) is fetched lazily for
 the Climate Impacts view.
 
-Design assets in the repo root, one pair per stage
+Design assets in the repo root, one set per stage
 (`final-service, sector, equipment, device, final-energy, fuel, emissions`):
 
-- `{stage}.svg` — title-card art: a 20-unit-wide bar `<rect>` + the stage name as
-  vector-path wordmark, ~410-unit-tall viewBox.
+- `{stage}.svg` — desktop title-card art: a bar and a vector-path wordmark.
+- `{stage}-mobile-band.svg` — mobile title-card art, with a wider band and
+  wordmark proportioned for the phone layout.
 - `{stage}.webp` — photo cover for that stage's intro card (preloaded via
   `<link rel="preload" as="image">` in `index.html`).
 
@@ -150,17 +151,18 @@ don't drift while hidden).
 
 Built in `render()` from assets fetched once at load by `loadIntroAssets()`:
 
-- Each `{stage}.svg` is fetched and parsed with `DOMParser`. A regex
-  (`/M([\d.]+)[ ,]([\d.]+)h20v([\d.]+)h-20z/`) splits the **bar subpath** out of
-  the artwork so the bar becomes an independent `<rect>` that can morph, while
-  the remaining paths form the wordmark `<g>`. All fills are rewritten to the
-  stage's `:root` CSS var (the shipped SVGs are slightly off-palette; the CSS
-  vars match `TIF Sankey Color Codes.pdf` exactly).
+- The appropriate desktop or mobile SVG is fetched and parsed with `DOMParser`.
+  The tallest rectangular subpath is split out as an independent `<rect>` that
+  can morph, while the remaining paths form the wordmark `<g>`. All fills use
+  the stage's `:root` CSS var.
 - Cards are laid out evenly spaced and centred as a group (`groupWidth =
-  extentW * 0.52`), scaled uniformly to the chart height.
+  extentW * 0.52` on desktop, `0.86` on mobile). Mobile cards are scaled to fit
+  their slots and their bars use the width and position from the mobile SVGs.
 - Each card gets a `{stage}.webp` photo `<image>` inside a clip-pathed `<g>`.
   The wipe animates the image translating **upward** inside a fixed clip window
   (scene 5), staggered per card by `WIPE_JITTER` over `WIPE_SPAN = 0.5`.
+  Mobile wordmarks are also clipped to the uncovered area so letterforms wider
+  than the photo do not appear before the wipe reaches them.
 - `STAGE_META` (module scope) maps stage number → slug/label/CSS var.
 
 If asset fetch fails, cards fall back to plain colour rects (no wordmark).

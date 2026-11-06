@@ -550,8 +550,9 @@
 		7: "--color-emissions"
 	};
 
-	// Per-stage asset slug + human label. The `{slug}.svg` files are the designed
-	// title cards (color bar + vector wordmark); `{slug}.webp` are the photo covers.
+	// Per-stage asset slug + human label. The desktop `{slug}.svg` and mobile
+	// `{slug}-mobile-band.svg` files contain the bar and wordmark; `{slug}.webp`
+	// files are the photo covers.
 	const STAGE_META = {
 		1: { slug: "final-service", label: "Final Service" },
 		2: { slug: "sector", label: "Sector" },
@@ -920,24 +921,21 @@
 	};
 
 	// --- Intro title-card assets -----------------------------------------------
-	// Each {slug}.svg bundles one plain-rect bar subpath ("M{x} {y}h{w}v{h}h-{w}z",
-	// or the absolute-close variant "...H{x}z") with the wordmark letterforms, all
-	// in a single fill. Bar size varies per asset, and some letterforms are
-	// themselves small rects (e.g. "I"), so every path is scanned for rect
-	// candidates and the tallest one wins -- a stray letter-rect is always much
-	// shorter than the real bar. We split the bar out at parse time so the bar
-	// rect can morph independently of the wordmark, and recolor everything with
-	// the official palette CSS vars (the shipped asset fills are slightly
-	// off-palette or, for newer assets, unset).
-	async function loadIntroAssets() {
+	// Each title-card SVG bundles one plain-rect bar subpath with the wordmark
+	// letterforms. The bar uses relative h and relative or absolute v commands;
+	// some letterforms are themselves small rects (e.g. "I"), so the tallest
+	// rectangle wins. Splitting it out lets it morph independently of the
+	// wordmark, and both are recolored with the official palette CSS vars.
+	async function loadIntroAssets(mobile) {
 		const parser = new DOMParser();
-		const barPattern = /M([\d.]+)[ ,]([\d.]+)h([\d.]+)v([\d.]+)(?:h-\3|H\1)z/g;
+		const barPattern = /M([\d.]+)[ ,]([\d.]+)h([\d.]+)([vV])([\d.]+)(?:h-\3|H\1)z/g;
 
 		const entries = await Promise.all(
 			Object.entries(STAGE_META).map(async ([stageRaw, meta]) => {
 				const stage = Number.parseInt(stageRaw, 10);
+				const assetPath = `${meta.slug}${mobile ? "-mobile-band" : ""}.svg`;
 				try {
-					const response = await fetch(`${meta.slug}.svg`);
+					const response = await fetch(assetPath);
 					if (!response.ok) {
 						throw new Error(`HTTP ${response.status}`);
 					}
@@ -958,7 +956,11 @@
 					paths.forEach((path, pathIndex) => {
 						const d = path.getAttribute("d") || "";
 						for (const match of d.matchAll(barPattern)) {
-							const height = Number.parseFloat(match[4]);
+							const vertical = Number.parseFloat(match[5]);
+							const height = match[4] === "v" ? vertical : vertical - Number.parseFloat(match[2]);
+							if (height <= 0) {
+								continue;
+							}
 							if (!bestCandidate || height > bestCandidate.height) {
 								bestCandidate = {
 									pathIndex,
@@ -995,7 +997,7 @@
 
 					return [stage, { viewBox, bar, markPaths }];
 				} catch (err) {
-					console.warn(`[Sankey] Could not load intro asset ${meta.slug}.svg:`, err);
+					console.warn(`[Sankey] Could not load intro asset ${assetPath}:`, err);
 					return [stage, null];
 				}
 			})
@@ -1015,7 +1017,7 @@
 		const [initResponse, baselinesResponse, introAssets] = await Promise.all([
 			fetch(initPath),
 			fetch(baselinesPath),
-			loadIntroAssets()
+			loadIntroAssets(VIEW === "mobile")
 		]);
 
 		if (!initResponse.ok) {
@@ -5581,7 +5583,11 @@
 					return null;
 				}
 				const assetScale = extentH / asset.viewBox.height;
-				return asset.bar.height * assetScale;
+				// Some mobile bars extend slightly past their SVG's viewBox.
+				const barHeight = mobile
+					? Math.min(asset.bar.height, asset.viewBox.height - asset.bar.y)
+					: asset.bar.height;
+				return barHeight * assetScale;
 			});
 
 			for (let stage = 1; stage <= 7; stage += 1) {
@@ -5595,14 +5601,13 @@
 
 				// Short bottom-anchored stub, matching the mock-up; the wordmark reads
 				// upward above it. barRect is appended before mark so the mark paints
-				// on top and stays legible instead of being occluded by the bar. Width
-				// is a fixed 27px per card, independent of the photo/mark's own barW
-				// (scaled with the art on mobile, whose cards are smaller).
+				// on top and stays legible instead of being occluded by the bar. Desktop
+				// uses a fixed 27px width; mobile uses the designed band's width.
 				const barH = naturalBarHeightByStage[stage - 1] ?? extentH * 0.3;
-				const stubW = mobile ? Math.round(27 * scale) : 27;
+				const stubW = mobile ? (asset?.bar.width ?? 27) * scale : 27;
 				const barScreen = {
 					x: cx - stubW / 2,
-					y: cardTop + extentH - barH,
+					y: mobile && asset ? cardTop + asset.bar.y * scale : cardTop + extentH - barH,
 					w: stubW,
 					h: barH
 				};
@@ -5617,15 +5622,28 @@
 					.style("opacity", 0);
 
 				let mark = null;
+				let markClipRect = null;
 				if (asset && asset.markPaths.length) {
-					mark = card
+					const markX = cx - (asset.bar.x + asset.bar.width / 2) * scale;
+					let markParent = card;
+					if (mobile) {
+						// Letterforms can extend past the narrower photo strip.
+						const markClipId = `${opts.idPrefix || ""}intro-mark-clip-${stage}`;
+						markClipRect = defs
+							.append("clipPath")
+							.attr("id", markClipId)
+							.append("rect")
+							.attr("x", markX)
+							.attr("y", cardTop + extentH)
+							.attr("width", asset.viewBox.width * scale)
+							.attr("height", 0);
+						markParent = card.append("g").attr("clip-path", `url(#${markClipId})`);
+					}
+					mark = markParent
 						.append("g")
 						.attr("class", "intro-card-mark")
 						.attr("fill", `var(${stageColorVars[stage]})`)
-						.attr(
-							"transform",
-							`translate(${cx - (asset.bar.x + asset.bar.width / 2) * scale}, ${cardTop}) scale(${scale})`
-						)
+						.attr("transform", `translate(${markX}, ${cardTop}) scale(${scale})`)
 						.style("opacity", 0);
 					asset.markPaths.forEach((d) => mark.append("path").attr("d", d));
 				}
@@ -5651,7 +5669,7 @@
 					.attr("height", photoGeom.h)
 					.attr("preserveAspectRatio", "xMidYMid slice");
 
-				introCards.push({ stage, group: card, slotCx: cx, mark, barRect, photo, clipRect, photoGeom, barScreen });
+				introCards.push({ stage, group: card, slotCx: cx, mark, markClipRect, barRect, photo, clipRect, photoGeom, barScreen });
 			}
 		}
 
@@ -5944,6 +5962,12 @@
 					card.photo.attr("transform", `translate(0, ${-wipe * (photoGeom.h + 4)})`);
 
 					if (card.mark) {
+						if (card.markClipRect) {
+							const revealedH = Math.min(photoGeom.h, wipe * (photoGeom.h + 4));
+							card.markClipRect
+								.attr("y", photoGeom.y + photoGeom.h - revealedH)
+								.attr("height", revealedH);
+						}
 						const markFade = 1 - smoothstep(clamp01(tCollapse / 0.35));
 						card.mark.style("opacity", artReady * markFade);
 					}
