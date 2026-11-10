@@ -342,6 +342,7 @@
 								<svg id="impacts-sankey-chart" role="img" aria-label="Isolated node emissions and avoided emissions"></svg>
 							</div>
 						</div>
+						<p class="impacts-layout__notice" data-copy="impacts.aboutEstimates"></p>
 					</div>
 				</div>
 			</section>
@@ -479,7 +480,7 @@
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat3"></p></div>
 							</div>
-							<div class="swiper-slide" data-top-state="stacked" data-m-progress="0.49"><!-- m-page 10: the stripe row, before it merges -->
+							<div class="swiper-slide" data-top-state="stacked" data-m-progress="0.52"><!-- m-page 10: fully merged stack, before the columns peel out -->
 								<div class="split-slide-spacer"></div>
 								<div class="split-slide-content"><p class="m-text" data-copy="sankey.beat6"></p></div>
 							</div>
@@ -524,6 +525,7 @@
 								<div class="m-explore__bar">
 									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="nodes" aria-expanded="false"><span data-copy="mobile.explore.nodeList"></span></button>
 									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="details" aria-expanded="false" hidden><span data-copy="mobile.explore.details"></span></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="about" aria-expanded="false" aria-controls="m-nodes-about"><span data-copy="mobile.explore.about"></span></button>
 								</div>
 								<div class="m-drawer m-drawer--nodes" data-m-drawer="nodes" data-sections-lock-scroll hidden>
 									<div class="m-nodelist" data-m-nodelist></div>
@@ -533,6 +535,12 @@
 									<div class="m-drawer__body" data-sections-lock-scroll>
 										<h3 class="m-explore__title" data-m-title></h3>
 										<p class="m-drawer__desc" data-m-desc></p>
+									</div>
+								</div>
+								<div class="m-drawer m-drawer--details m-drawer--about" id="m-nodes-about" data-m-drawer="about" hidden>
+									<button type="button" class="m-drawer__close" data-m-drawer-close></button>
+									<div class="m-drawer__body" data-sections-lock-scroll>
+										<p class="m-drawer__desc" data-copy="impacts.aboutEstimates"></p>
 									</div>
 								</div>
 							</div>
@@ -668,6 +676,7 @@
 								<div class="m-explore__bar">
 									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="companies" aria-expanded="false"><span data-copy="mobile.explore.companyList"></span></button>
 									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="details" aria-expanded="false" hidden><span data-copy="mobile.explore.details"></span></button>
+									<button type="button" class="m-explore__toggle" data-m-drawer-toggle="about" aria-expanded="false" aria-controls="m-companies-about"><span data-copy="mobile.explore.about"></span></button>
 								</div>
 								<div class="m-drawer m-drawer--list" data-m-drawer="companies" data-sections-lock-scroll hidden>
 									<div class="m-companylist" data-m-companylist></div>
@@ -684,6 +693,12 @@
 										<ul class="m-tabs__panel" data-m-tab-panel="analysis"></ul>
 										<ul class="m-tabs__panel" data-m-tab-panel="overview" hidden></ul>
 										<a class="m-company__more" data-m-company-more href="#" target="_blank" rel="noopener" data-copy="impacts.learnMore" hidden></a>
+									</div>
+								</div>
+								<div class="m-drawer m-drawer--details m-drawer--about" id="m-companies-about" data-m-drawer="about" hidden>
+									<button type="button" class="m-drawer__close" data-m-drawer-close></button>
+									<div class="m-drawer__body" data-sections-lock-scroll>
+										<p class="m-drawer__desc" data-copy="impacts.aboutEstimates"></p>
 									</div>
 								</div>
 							</div>

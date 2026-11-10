@@ -79,6 +79,13 @@ take over desktop scrolling. `loadAndRender()` in `main.js` loads the data, then
 It must run **after** `view.js` has cloned the `<template data-view-variant="mobile">` markup.
 That's already true for anything called from `loadAndRender()`.
 
+The mobile chapter bar does not wait for this data-dependent initialization to fill
+the viewport: `mobile.css` expands and shows the intro label whenever no chapter
+has `.is-active`. Initial segment sizing is unanimated; normal chapter transitions
+start once `setupChapterBar()` selects the chapter on screen. Mobile label colors
+change immediately (without the desktop fade), so collapsed chapter labels stay
+hidden from first paint. The intro title uses balanced text wrapping.
+
 ### 3. Markup
 
 All text goes through `data-copy` slots. The keys below are examples: add real ones to `copy.js`.
@@ -135,6 +142,18 @@ class needed.
 
 ### 4. Section-specific behaviour
 
+Chapter 1's story slide (`data-active-slide="3"`, page 10) rests at timeline
+progress `0.52`, the end of collapse and start of unstack. All seven intro bars
+overlap there, with stage 7 on top and stages 6 through 1 behind it in order.
+The next slide plays the existing peel into the Sankey. This endpoint is mobile-only;
+desktop's scroll choreography is unchanged.
+
+Chapter 2's finale (`data-active-slide="5"`) starts with every node gray
+(`#808080`) at `0.6` opacity. Its existing company-chain timeline blends affected
+nodes into their stage colors; selected company nodes retain full opacity.
+Unactivated nodes remain gray and visible throughout. This treatment is mobile-only;
+desktop retains its original node-opacity animation.
+
 `swiperOptions` is merged into every vertical swiper's config, so Swiper's own events drive
 per-section effects. To find the section from a handler, use `s.el.closest(".split-section")`.
 For example, the demo's shape morph, driven by how far through its slides the swiper is:
@@ -175,6 +194,11 @@ mobileSections.isLocked();
 inside an element marked `data-sections-lock-scroll` (give it `overscroll-behavior: contain`).
 `setLocked(false)` when it closes. Anything that moves the page (a chapter link) should close the
 overlay first.
+
+Both mobile explore bars include an About drawer with static estimate-disclaimer copy from
+`copy.js` (`impacts.aboutEstimates`), also used by the desktop impacts notice, which reveals with
+the "Select any company" prompt. It shares the other drawers' exclusive open/close state, scroll
+locking, and close button behavior; the About toggle stays white regardless of the selected stage.
 
 | Option | Default | |
 |---|---|---|

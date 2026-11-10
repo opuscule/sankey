@@ -70,6 +70,7 @@ window.SITE_COPY = {
 	"impacts.avoidedPct": '{pct}% avoided',
 	"impacts.noDetails": 'data not found',
 	"impacts.noNode": 'No mapped node available',
+	"impacts.aboutEstimates": '<strong>About these estimates:</strong> These figures model each technology class&rsquo;s maximum technically addressable emissions-reduction potential in 2040&mdash;not portfolio company deployment, sales, market share, or impact. They do not represent emissions reductions attributable to any company, Capricorn, or either fund. Actual outcomes may differ materially.',
 
 	// --- Closing transition
 	"closing.line1": 'Taken together, the technologies across the TIF &amp; TIGF portfolios have the potential to meaningfully reduce the world&rsquo;s emissions trajectory by 2040.',
@@ -165,6 +166,7 @@ window.SITE_COPY = {
 	"mobile.explore.nodeList": 'node list',
 	"mobile.explore.companyList": 'company list',
 	"mobile.explore.details": 'details',
+	"mobile.explore.about": 'about',
 	"mobile.explore.throughput": '{value} Gt CO2e',
 	"mobile.explore.share": '{pct}% of {stage}',
 	"mobile.explore.showLens": 'Show {lens}',

@@ -238,8 +238,8 @@
 	//
 	// A Sankey wider than the screen: three lenses at a time, panned by
 	// swiping sideways or with the lens navigator above it. "node list" /
-	// "company list" and "details" open drawers, and while one is open the
-	// page can't be swiped.
+	// "company list", "details" and "about" open drawers, and while one is
+	// open the page can't be swiped.
 
 	const LENS_COUNT = 7;
 	const LENSES_ON_SCREEN = 3;
@@ -398,9 +398,10 @@
 		Object.entries(toggles).forEach(([key, el]) => {
 			el.addEventListener("click", () => set(openDrawer === key ? null : key));
 		});
-		const close = root.querySelector("[data-m-drawer-close]");
-		close.setAttribute("aria-label", siteCopy("mobile.explore.close"));
-		close.addEventListener("click", () => set(null));
+		root.querySelectorAll("[data-m-drawer-close]").forEach((close) => {
+			close.setAttribute("aria-label", siteCopy("mobile.explore.close"));
+			close.addEventListener("click", () => set(null));
+		});
 
 		return {
 			toggles,

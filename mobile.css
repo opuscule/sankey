@@ -35,18 +35,23 @@ html {
 	display: none; /* desktop's scroll-progress tint */
 }
 
-/* Inactive chapters are fixed squares; the active one takes the rest of
-   the bar and shows its title. */
+/* Until chapter tracking starts, the intro fills the bar from first paint.
+   Inactive chapters are fixed squares; the active one takes the rest. */
 .bottom-sticky-nav__list > li,
 .bottom-sticky-nav__list > li.bottom-sticky-nav__item--label {
 	flex: 0 0 var(--m-bar-h);
 	min-width: 0;
 	overflow: hidden;
+	transition: none;
+}
+
+.bottom-sticky-nav__list:has(.is-active) > li {
 	transition: flex-basis 0.35s ease;
 }
 
 .bottom-sticky-nav__list > li:has(> .is-active),
-.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label.is-active {
+.bottom-sticky-nav__list > li.bottom-sticky-nav__item--label.is-active,
+.bottom-sticky-nav__list:not(:has(.is-active)) > li.bottom-sticky-nav__item--label {
 	flex: 1 1 auto;
 }
 
@@ -65,12 +70,18 @@ html {
 	padding: 4px 14px 0;
 	color: transparent;
 	text-shadow: none;
+	transition: none;
 	-webkit-tap-highlight-color: transparent;
 }
 
-.bottom-sticky-nav__item.is-active {
+.bottom-sticky-nav__item.is-active,
+.bottom-sticky-nav__list:not(:has(.is-active)) > li.bottom-sticky-nav__item--label {
 	color: var(--color-dark);
 	text-shadow: none;
+}
+
+.bottom-sticky-nav__item[data-nav-group="conclusion"].is-active {
+	color: var(--color-white);
 }
 
 .bottom-sticky-nav__list > li.bottom-sticky-nav__item--label {
@@ -78,6 +89,7 @@ html {
 	font-weight: 700;
 	line-height: 1.05;
 	white-space: normal;
+	text-wrap: balance;
 	cursor: pointer;
 }
 
@@ -159,7 +171,7 @@ html {
 .m-text--prompt strong {
 	background: var(--color-white);
 	color: var(--color-dark);
-	padding: 2px 6px;
+	padding: 4px 6px 0;
 }
 
 /* Keyword colours from the Sankey copy (kw-* spans). */
@@ -197,6 +209,33 @@ html {
 	padding-top: calc(var(--m-bar-h) + 17vh);
 }
 
+/* Staggered intro: globe -> logo -> headline -> arrow. */
+.m-hero__globe,
+.m-hero__logo,
+.m-hero__headline,
+.m-hero__arrow {
+	animation: m-hero-fade-in 0.8s ease both;
+}
+
+.m-hero__globe { animation-duration: 1.2s; }
+.m-hero__logo { animation-delay: 0.5s; }
+.m-hero__headline { animation-delay: 1s; }
+.m-hero__arrow { animation-delay: 1.7s; }
+
+@keyframes m-hero-fade-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.m-hero__globe,
+	.m-hero__logo,
+	.m-hero__headline,
+	.m-hero__arrow {
+		animation: none;
+	}
+}
+
 .m-hero__globe {
 	height: auto;
 	left: 50%;
@@ -210,14 +249,16 @@ html {
 .m-hero__logo {
 	height: auto;
 	position: relative;
-	width: 54vw;
+	width: 46vw;
 }
 
 /* One word per line: min-content wraps at every space (the copy's <br>s
-   land on word boundaries too). */
+   land on word boundaries too). Font size tracks viewport height (7.2vh ≈
+   15.6vw on a 390x844 phone) but is capped by width so long words never
+   overflow on short, wide screens. */
 .m-hero__headline {
 	font-family: "Helvetica Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 15.6vw;
+	font-size: min(7.2vh, 15.6vw);
 	font-weight: 700;
 	letter-spacing: -0.03em;
 	line-height: 0.88;
@@ -225,12 +266,11 @@ html {
 	position: relative;
 	text-align: center;
 	text-transform: uppercase;
+	text-wrap: pretty;
 	width: min-content;
 }
 
-/* "arrow can fade in after a beat" */
 .m-hero__arrow {
-	animation: m-arrow-in 0.6s ease 2.2s both;
 	border-bottom: 2px solid var(--color-white);
 	border-right: 2px solid var(--color-white);
 	bottom: 9vh;
@@ -239,11 +279,6 @@ html {
 	position: absolute;
 	transform: translateX(-50%) rotate(45deg);
 	width: 14px;
-}
-
-@keyframes m-arrow-in {
-	from { opacity: 0; }
-	to { opacity: 1; }
 }
 
 /* --- Chapter cards (page 04) -------------------------------------------- */
@@ -260,8 +295,8 @@ html {
 }
 
 .m-chapters__card {
-	margin: 0 0 22px 13%;
-	width: 74%;
+	margin: 0 4% 1.5rem;
+	width: auto;
 }
 
 .m-chapters__card > a {
@@ -409,8 +444,8 @@ html {
 }
 
 /* --- Chapter 2 finale chart (page 30) -----------------------------------
-   Takes the chips' place. Opacities match desktop's #themes-sankey-chart;
-   drawFinale (main.js) sets the per-node and per-link values inline. */
+   Takes the chips' place. Nodes stay visible in gray; drawFinale (main.js)
+   blends each affected node into its stage color and reveals the links. */
 
 .m-finale {
 	inset: 0;
@@ -435,10 +470,11 @@ html {
 }
 
 .m-finale .sankey-node {
-	opacity: 0.05;
+	opacity: 1;
 }
 
 .m-finale .sankey-node rect {
+	fill: color-mix(in srgb, currentColor var(--m-finale-lit, 0%), #808080);
 	opacity: 0.6;
 }
 
@@ -881,6 +917,22 @@ html {
 	color: var(--m-stage-color);
 }
 
+.m-explore__toggle[data-m-drawer-toggle="about"] {
+	margin-left: auto;
+}
+
+@media (max-width: 370px) {
+	.m-explore__bar {
+		gap: 5px;
+		padding-inline: 10px;
+	}
+
+	.m-explore__toggle {
+		gap: 5px;
+		padding-inline: 6px;
+	}
+}
+
 /* Chevron: up when closed (the drawer opens upward), down when open. */
 .m-explore__toggle[data-m-drawer-toggle]::after {
 	border-left: 1.5px solid currentColor;
@@ -948,6 +1000,10 @@ html {
 
 .m-drawer__body .m-explore__title {
 	margin-bottom: 14px;
+}
+
+.m-drawer--about .m-drawer__body {
+	padding-top: 60px;
 }
 
 .m-drawer__desc {
@@ -1214,6 +1270,15 @@ html {
 .m-methodology .methodology-content {
 	font-size: 15px;
 	line-height: 1.5;
+}
+
+.acknowledgements-layout__partners {
+	gap: 1rem;
+	margin: 0 0 1.5rem;
+}
+
+.methodology-content h4 {
+	font-size: 1.2rem;
 }
 
 /* --- Boxed labels: centre the capitals ---------------------------------- */

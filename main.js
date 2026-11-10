@@ -3,10 +3,10 @@
 	const siteCopy = window.siteCopy;
 	// "desktop" | "mobile", decided once in <head>; view.js reloads on change.
 	const VIEW = document.documentElement.dataset.view === "mobile" ? "mobile" : "desktop";
-	const initPath = "init-09072026.json";
-	const baselinesPath = "baselines-09052026.json";
-	const nodeDetailsPath = "node_details-09052026.json";
-	const avoidedPath = "avoided-09052026.json";
+	const initPath = "init-11102026.json";
+	const baselinesPath = "baselines-11102026.json";
+	const nodeDetailsPath = "node_details-11102026.json";
+	const avoidedPath = "avoided-11102026.json";
 	const themesDataPath = initPath;
 	const defaultScenario = "2025";
 	const chart = document.getElementById("sankey-chart");
@@ -3858,6 +3858,7 @@
 			setOpacity(c.card, cardIn);
 			c.card.classList.toggle("is-live", state.impactsHandedOff);
 		}
+		setOpacity(c.notice, cardIn);
 	}
 
 	// One scroll clock drives both columns, plus the handoff into the live
@@ -3982,6 +3983,7 @@
 			nodePercentage: walkEl.querySelector("[data-impacts-walk-node-percentage]"),
 			roster: walkEl.querySelector(".impacts-businesses"),
 			card: walkEl.querySelector("[data-impacts-company-card]"),
+			notice: walkEl.querySelector(".impacts-layout__notice"),
 			avoidedRatio: 0,
 			centerOffset: 0
 		};
@@ -7109,9 +7111,10 @@
 			.attr("width", (d) => Math.max(1, d.x1 - d.x0))
 			.attr("height", (d) => Math.max(3, d.y1 - d.y0));
 
-		state.themesRendered = { nodeSelection, linkSelection, graph };
+		state.themesRendered = { nodeSelection, linkSelection, graph, mobile };
 
 		if (mobile) {
+			nodeSelection.style("color", (d) => `var(${stageColorVars[d.stage]})`);
 			// The finale's full chains need node_details.json; until it lands
 			// each company lights only its direct neighbours.
 			let finaleT = 0;
@@ -7433,21 +7436,25 @@
 		// #3 nodes: every chain node lights to its brightest owning company; the
 		// company main nodes also get the white selected border.
 		if (rendered && rendered.nodeSelection) {
-			rendered.nodeSelection
-				.style("opacity", (d) => {
-					const owners = chains.nodeOwners.get(d.id);
-					let lit = 0;
-					if (owners) {
-						for (const oi of owners) {
-							if (litByIndex[oi] > lit) lit = litByIndex[oi];
-						}
+			const nodeLit = (d) => {
+				const owners = chains.nodeOwners.get(d.id);
+				let lit = 0;
+				if (owners) {
+					for (const oi of owners) {
+						if (litByIndex[oi] > lit) lit = litByIndex[oi];
 					}
-					return 0.05 + 0.95 * lit;
-				})
+				}
+				return lit;
+			};
+			rendered.nodeSelection
+				.style("opacity", (d) => rendered.mobile ? 1 : 0.05 + 0.95 * nodeLit(d))
 				.classed("is-selected", (d) => {
 					const mains = chains.mainNodeIndices.get(d.id);
 					return mains ? mains.some((oi) => litByIndex[oi] > 0.45) : false;
 				});
+			if (rendered.mobile) {
+				rendered.nodeSelection.style("--m-finale-lit", (d) => `${100 * nodeLit(d)}%`);
+			}
 		}
 
 		// #4 links spider-web out from each company's main node.
